@@ -60,10 +60,10 @@ def upload_file(file: UploadFile, folder: str):
     )
     return result["public_id"]
 
-def generate_url(public_id):
+def generate_url(public_id, resource_type):
     url, _ = cloudinary.utils.cloudinary_url(
         public_id,
-        resource_type="image",
+        resource_type=f"{resource_type}",
     )
     return url
 

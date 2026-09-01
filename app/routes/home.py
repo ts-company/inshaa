@@ -1,40 +1,85 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFile, File, Form
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.users_model import User
 from app.models.home_projects_model import Project
 from app.models.home_projects_medias_model import ProjectMedia
-from app.core.security import verify_password
-from app.core.auth import create_access_token
+from app.models.permissions_model import Permission
+from app.core.auth import validate_user
 from app.database import get_db
-from app.schemas.user import UserLogin
+from app.utils import generate_url, upload_file
 from app.config import BASE_DIR
+from typing import List
 
-router = APIRouter("/home}")
+router = APIRouter("/home")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @router.get("/projects")
-def login_page(request: Request, db: Session = Depends(get_db)):
+def get_projects(request: Request, db: Session = Depends(get_db)):
 
     projects = db.query(Project).filter(Project.active == True).all()
     projects_ids = [row.id for row in projects]
 
     medias = db.query(ProjectMedia).filter(ProjectMedia.project_id.in_(projects_ids)).all()
-    project_id_lookup = [
-        {
-            media.project_id: []
-        }
-        for media in medias
-    ]
+    medias_by_project = {}
+    for m in medias:
+        medias_by_project.setdefault(m.project_id, []).append(m)
 
     return [
         {
             "id": p.id,
-            "name": p.name,
+            "title": p.title,
             "discription": p.discription,
-            "images": project_id_lookup[p.id]
+            "images": [generate_url(m.public_id, m.resource_type) for m in medias_by_project.get(p.id, [])],
         }
         for p in projects
     ]
+
+@router.post("/add_project")
+def add_project(request: Request, title: str = Form(...),
+                description: str = Form(...),
+                files: List[UploadFile] = File(default=[]),
+                types: List[str] = Form(...),
+                db: Session = Depends(get_db)):
+
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.name == "manage page").first()
+    if not permission:
+        if user_role != "super_admin":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    if len(files) != len(types):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    valid_types = {"image", "video"}
+    if any(t not in valid_types for t in types):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        new_project = Project(
+            title=title,
+            description=description
+        )
+        db.add(new_project)
+        db.flush()
+        for file, type in zip(files, types):
+            public_id = upload_file(file, "media")
+            project_media = ProjectMedia(project_id=new_project.id, public_id=public_id, resource_type=type)
+            db.add(project_media)
+        db.commit()
+    except RuntimeError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
