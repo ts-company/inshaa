@@ -1,0 +1,54 @@
+from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+from app.database import engine, Base, get_db
+from app.models.users_model import User
+from app.core.security import hash_password
+from app.core.auth import validate_user
+from app.config import BASE_DIR
+from app.routes import login
+from datetime import datetime, timezone
+
+load_dotenv()
+
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+app = FastAPI()
+
+app.mount("/static",StaticFiles(directory=BASE_DIR / "static"), name="static")
+
+# Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(login.router)
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request, db: Session = Depends(get_db)):
+
+    admin = db.query(User).filter(User.role == "admin").first()
+    if not admin:
+        new_admin = User(
+            first_name="Admin",
+            last_name="Admin",
+            username="admin",
+            password=hash_password("123"),
+            role="admin",
+            is_active=True
+        )
+        db.add(new_admin)
+        db.commit()
+
+    return templates.TemplateResponse("home.html", {"request": request})
