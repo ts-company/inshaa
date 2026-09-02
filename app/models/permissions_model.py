@@ -6,8 +6,8 @@ class Permission(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("user_id", "name", name="unique_user_permission"),
+        UniqueConstraint("user_id", "type", name="unique_user_permission"),
     )

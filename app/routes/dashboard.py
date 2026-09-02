@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFile, File, Form
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -12,27 +13,20 @@ from app.utils import generate_url, upload_file
 from app.config import BASE_DIR
 from typing import List
 
-router = APIRouter(prefix="/home")
+router = APIRouter(prefix="/dashboard")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-@router.get("/projects")
+@router.get("/")
 def get_projects(request: Request, db: Session = Depends(get_db)):
 
-    projects = db.query(Project).order_by(Project.id.desc()).all()
-    projects_ids = [row.id for row in projects]
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    medias = db.query(ProjectMedia).filter(ProjectMedia.project_id.in_(projects_ids)).all()
-    medias_by_project = {}
-    for m in medias:
-        medias_by_project.setdefault(m.project_id, []).append(m)
+    permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
+    perm_types = [row.type for row in permissions]
 
-    return [
-        {
-            "id": p.id,
-            "title": p.title,
-            "description": p.description,
-            "media_urls": [generate_url(m.public_id, m.resource_type) for m in medias_by_project.get(p.id, [])],
-        }
-        for p in projects
-    ]
+    return templates.TemplateResponse("dashboard.html", {"request": request, "permissions": perm_types})

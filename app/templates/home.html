@@ -1,10 +1,886 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Barlow', sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0; }
+button { font-family: 'Barlow', sans-serif; cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  html { scroll-behavior: auto; }
+}
+
+/* ===== Header ===== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--ink);
+  text-decoration: none;
+  background: none;
+  border: none;
+}
+
+.wordmark-mark { color: var(--steel); display: flex; }
+
+/* ===== Layout helpers ===== */
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.section-head { margin-bottom: 40px; max-width: 640px; }
+.section-head h1 { font-size: 42px; margin-bottom: 10px; }
+.section-head p { color: var(--steel-dark); font-size: 17px; }
+
+/* ===== Hero (full-bleed cover image) ===== */
+.hero-wrap { margin-top: -1px; }
+
+.hero {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+}
+
+.hero-cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  min-height: 420px;
+  overflow: hidden;
+  background: var(--concrete);
+}
+
+.hero-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-cover-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(20, 22, 24, 0.78) 0%, rgba(20, 22, 24, 0.45) 42%, rgba(20, 22, 24, 0.1) 68%);
+}
+
+.hero-cover-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero-copy {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 32px 48px;
+  box-sizing: border-box;
+  color: var(--paper);
+}
+
+.hero-kicker { font-size: 15px; color: var(--yellow); font-weight: 600; margin-bottom: 14px; letter-spacing: 0.2px; }
+.hero h1 { font-size: 52px; max-width: 13ch; margin-bottom: 18px; color: var(--paper); }
+.hero-lede { font-size: 18px; color: var(--concrete); max-width: 46ch; margin-bottom: 28px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.btn {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 26px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: none;
+  color: var(--ink);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.btn-primary:hover { background: var(--paper); border-color: var(--paper); }
+
+.hero-copy .btn-ghost { border-color: var(--paper); color: var(--paper); }
+.hero-copy .btn-ghost:hover { background: var(--paper); color: var(--ink); }
+
+.btn:active { transform: translateY(1px); }
+
+/* ===== Spec strip ===== */
+.spec-strip {
+  margin-top: 0;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.spec-item {
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-left: 1px solid var(--line);
+}
+
+.spec-item:first-child { border-left: none; }
+.spec-value { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 600; color: var(--steel-dark); }
+.spec-label { font-size: 14px; color: var(--steel-dark); opacity: 0.85; }
+
+/* ===== Services ===== */
+.services { margin-top: 84px; }
+.services h2 { font-size: 30px; margin-bottom: 28px; }
+
+.services-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--line-strong);
+}
+
+.service-row { padding: 26px 28px 26px 0; border-bottom: 1px solid var(--line); }
+.service-row:nth-child(odd) { border-right: 1px solid var(--line); padding-right: 28px; }
+.service-row:nth-child(even) { padding-left: 28px; }
+.service-row h3 { font-size: 22px; margin-bottom: 8px; font-weight: 600; }
+.service-row p { color: var(--steel-dark); font-size: 15.5px; }
+
+/* ===== Projects (list + viewer) ===== */
+.projects { margin-top: 84px; }
+.projects .section-head { margin-bottom: 32px; }
+
+.projects-status {
+  color: var(--steel-dark);
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.projects-status.is-error { color: #A2402C; }
+
+.projects-split {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 40px;
+  align-items: start;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+}
+
+.projects-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.project-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.project-row:hover { border-color: var(--steel); }
+
+.project-row.is-active {
+  border-color: var(--ink);
+  background: var(--concrete);
+}
+
+.project-row-thumb {
+  aspect-ratio: 3 / 2;
+  background: var(--concrete);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-row-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-row-thumb-empty {
+  color: var(--steel-dark);
+  font-size: 13px;
+}
+
+.project-row h3 {
+  font-size: 21px;
+  font-weight: 600;
+}
+
+.project-row p {
+  font-size: 14.5px;
+  color: var(--steel-dark);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.project-row-skeleton { background: var(--concrete); }
+.project-row-skeleton .project-row-thumb { background: var(--line); }
+
+.empty-projects {
+  grid-column: 1 / -1;
+  padding: 30px 0;
+  color: var(--steel-dark);
+  font-size: 15px;
+}
+
+/* ---- Viewer ---- */
+.project-viewer {
+  display: none;
+  position: sticky;
+  top: 92px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+}
+
+.project-viewer.is-visible { display: block; }
+
+.viewer-media {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  min-height: 420px;
+  background: var(--concrete);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.viewer-media img,
+.viewer-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+
+.viewer-placeholder {
+  color: var(--steel-dark);
+  font-size: 14.5px;
+  text-align: center;
+  padding: 0 30px;
+}
+
+.viewer-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(28, 31, 34, 0.72);
+  color: var(--paper);
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.15s ease;
+}
+
+.viewer-close:hover { background: var(--ink); }
+
+.viewer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.viewer-nav-btn {
+  background: none;
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 2px;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.viewer-nav-btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+.viewer-nav-btn:disabled { opacity: 0.35; cursor: default; }
+
+.viewer-counter {
+  font-size: 13px;
+  color: var(--steel-dark);
+  font-weight: 600;
+}
+
+.viewer-info { padding: 18px 20px 22px; }
+.viewer-info h3 { font-size: 21px; margin-bottom: 8px; }
+.viewer-info p { font-size: 14.5px; color: var(--steel-dark); }
+
+/* ===== Contact ===== */
+.contact { margin-top: 84px; }
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+}
+
+.contact-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.contact-form input,
+.contact-form textarea {
+  font-family: 'Barlow', sans-serif;
+  font-size: 15px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+  resize: vertical;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--steel);
+}
+
+.contact-form .btn { align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--ink); background: none; color: var(--ink); }
+.contact-form .btn:hover { background: var(--ink); color: var(--paper); }
+
+.form-note { font-size: 14px; color: var(--steel); font-weight: 600; }
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+}
+
+.info-block h3 { font-size: 15px; font-weight: 600; color: var(--steel); margin-bottom: 6px; }
+.info-block p { font-size: 15px; color: var(--ink); }
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  margin-top: 84px;
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 860px) {
+  .header-inner { padding: 16px 20px; }
+  main { padding: 0 20px; }
+  .hero-cover { aspect-ratio: 4 / 5; min-height: 460px; }
+  .hero-copy { padding: 0 20px 36px; }
+  .hero h1 { font-size: 36px; max-width: 11ch; }
+  .spec-strip { grid-template-columns: repeat(2, 1fr); }
+  .spec-item:nth-child(3) { border-left: none; }
+  .services-grid { grid-template-columns: 1fr; }
+  .service-row:nth-child(odd) { border-right: none; padding-right: 0; }
+  .service-row:nth-child(even) { padding-left: 0; }
+  .projects-split { grid-template-columns: 1fr; }
+  .project-viewer { position: static; }
+  .viewer-media { min-height: 300px; }
+  .contact-layout { grid-template-columns: 1fr; gap: 36px; }
+}
+
+@media (max-width: 560px) {
+  .projects-list { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
 
+<header class="site-header">
+  <div class="header-inner">
+    <a href="#top" class="wordmark">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path d="M4 26 L4 14 L16 6 L28 14 L28 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          <line x1="4" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="2.4"/>
+          <line x1="12" y1="26" x2="12" y2="17" stroke="currentColor" stroke-width="2"/>
+          <line x1="20" y1="26" x2="20" y2="17" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Inshaa
+    </a>
+  </div>
+</header>
+
+<main id="top">
+
+  <div class="hero-wrap">
+    <div class="hero">
+      <div class="hero-cover">
+        <img src="/static/hero.jpg" alt="Inshaa building site under construction">
+        <div class="hero-cover-scrim" aria-hidden="true"></div>
+        <div class="hero-cover-inner">
+          <div class="hero-copy">
+            <p class="hero-kicker">Since 2008 — Cairo &amp; the Delta region</p>
+            <h1>We build things that outlast the contract.</h1>
+            <p class="hero-lede">Inshaa plans, builds and hands over residential and commercial projects — from the first survey stake to the final walkthrough.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#projects-section">See our work</a>
+              <a class="btn btn-ghost" href="#contact-section">Start a project</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="spec-strip">
+    <div class="spec-item">
+      <span class="spec-value">17</span>
+      <span class="spec-label">years in operation</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-value">120+</span>
+      <span class="spec-label">projects delivered</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-value">40</span>
+      <span class="spec-label">tradespeople on staff</span>
+    </div>
+    <div class="spec-item">
+      <span class="spec-value">0</span>
+      <span class="spec-label">missed handover dates in 2025</span>
+    </div>
+  </div>
+
+  <div class="services">
+    <h2>What we take on</h2>
+    <div class="services-grid">
+      <div class="service-row">
+        <h3>Residential builds</h3>
+        <p>New houses and villas built from an architect's drawing to a signed-off, livable home — structure, finishes and utilities under one contract.</p>
+      </div>
+      <div class="service-row">
+        <h3>Commercial fit-out</h3>
+        <p>Offices, retail units and warehouses fitted and finished on a schedule that respects your opening date.</p>
+      </div>
+      <div class="service-row">
+        <h3>Renovation &amp; structural repair</h3>
+        <p>Load-bearing changes, extensions, and restoration work on existing buildings, handled with proper permits and engineering sign-off.</p>
+      </div>
+      <div class="service-row">
+        <h3>Site management</h3>
+        <p>We can run your site as general contractor — coordinating subcontractors, inspections and materials so you don't have to.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="projects" id="projects-section">
+    <div class="section-head">
+      <h2>Previous projects</h2>
+      <p>Pulled live from our project log. Click one to see its photos and videos.</p>
+    </div>
+
+    <div id="projects-status" class="projects-status"></div>
+
+    <div class="projects-split">
+      <div class="projects-list" id="projects-list"></div>
+
+      <aside class="project-viewer" id="project-viewer">
+        <div class="viewer-media" id="viewer-media">
+          <button type="button" class="viewer-close" id="viewer-close" aria-label="Close">&times;</button>
+        </div>
+        <div class="viewer-nav">
+          <button type="button" class="viewer-nav-btn" id="viewer-prev" disabled>← Previous</button>
+          <span class="viewer-counter" id="viewer-counter"></span>
+          <button type="button" class="viewer-nav-btn" id="viewer-next" disabled>Next →</button>
+        </div>
+        <div class="viewer-info">
+          <h3 id="viewer-title"></h3>
+          <p id="viewer-desc"></p>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="contact" id="contact-section">
+    <div class="section-head">
+      <h1>Contact us</h1>
+      <p>Tell us about the site and what you need built. We reply within one working day.</p>
+    </div>
+
+    <div class="contact-layout">
+      <form class="contact-form" id="contact-form">
+        <label>
+          Name
+          <input type="text" name="name" required placeholder="Your full name">
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" required placeholder="you@example.com">
+        </label>
+        <label>
+          Phone
+          <input type="tel" name="phone" placeholder="+20 ...">
+        </label>
+        <label>
+          Tell us about the project
+          <textarea name="message" rows="5" required placeholder="Location, rough size, timeline..."></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Send message</button>
+        <p class="form-note" id="form-note" hidden></p>
+      </form>
+
+      <div class="contact-info">
+        <div class="info-block">
+          <h3>Location</h3>
+          <p>الميريلاند - روكسي - مصر الجديدة<br>Cairo, Egypt</p>
+        </div>
+        <div class="info-block">
+          <h3>Phone</h3>
+          <p>01068835403</p>
+        </div>
+        <div class="info-block">
+          <h3>Email</h3>
+          <p>info@inshaa.example</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<script>
+
+const API_BASE = '';
+const PROJECTS_ENDPOINT = `${API_BASE}/home/projects`;
+
+// ===== Projects: list (left) + viewer (right) =====
+const statusEl = document.getElementById('projects-status');
+const listEl = document.getElementById('projects-list');
+const viewerEl = document.getElementById('project-viewer');
+const viewerMediaEl = document.getElementById('viewer-media');
+const viewerCloseBtn = document.getElementById('viewer-close');
+const viewerPrevBtn = document.getElementById('viewer-prev');
+const viewerNextBtn = document.getElementById('viewer-next');
+const viewerCounterEl = document.getElementById('viewer-counter');
+const viewerTitleEl = document.getElementById('viewer-title');
+const viewerDescEl = document.getElementById('viewer-desc');
+
+let projectsCache = [];
+let activeProjectIndex = null;
+let activeMediaIndex = 0;
+
+// The endpoint only returns media_urls as plain strings, with no
+// per-item type, so image/video is guessed from the URL — a video
+// file extension, or a "/video/" segment as used by Cloudinary-style
+// delivery URLs. If the backend starts returning each media item's
+// resource type directly, read that instead of guessing.
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i;
+function looksLikeVideo(url) {
+  return VIDEO_EXT.test(url) || url.includes('/video/upload/') || url.includes('/video/');
+}
+
+loadProjects();
+
+async function loadProjects() {
+  renderSkeletons(4);
+  statusEl.textContent = 'Loading projects…';
+  statusEl.classList.remove('is-error');
+
+  try {
+    const res = await fetch(PROJECTS_ENDPOINT);
+    if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+    const projects = await res.json();
+    projectsCache = Array.isArray(projects) ? projects : [];
+    renderProjectsList();
+  } catch (err) {
+    listEl.innerHTML = '';
+    statusEl.classList.add('is-error');
+    statusEl.textContent = `Couldn't load projects (${err.message}). Check that the API is running and reachable at ${PROJECTS_ENDPOINT}.`;
+  }
+}
+
+function renderSkeletons(count) {
+  listEl.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement('div');
+    row.className = 'project-row project-row-skeleton';
+    row.innerHTML = `<div class="project-row-thumb"></div><h3>&nbsp;</h3><p>&nbsp;</p>`;
+    listEl.appendChild(row);
+  }
+}
+
+function renderProjectsList() {
+  listEl.innerHTML = '';
+
+  if (projectsCache.length === 0) {
+    statusEl.textContent = 'No projects to show yet.';
+    const empty = document.createElement('p');
+    empty.className = 'empty-projects';
+    empty.textContent = 'No projects to show yet.';
+    listEl.appendChild(empty);
+    return;
+  }
+
+  statusEl.textContent = `${projectsCache.length} project${projectsCache.length === 1 ? '' : 's'}. Click one to view its media.`;
+
+  projectsCache.forEach((project, index) => {
+    listEl.appendChild(buildProjectRow(project, index));
+  });
+}
+
+function buildProjectRow(project, index) {
+  const row = document.createElement('button');
+  row.type = 'button';
+  row.className = 'project-row';
+  row.setAttribute('aria-pressed', 'false');
+
+  const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
+
+  const thumb = document.createElement('div');
+  thumb.className = 'project-row-thumb';
+  if (urls.length > 0 && !looksLikeVideo(urls[0])) {
+    const img = document.createElement('img');
+    img.src = urls[0];
+    img.alt = '';
+    img.loading = 'lazy';
+    thumb.appendChild(img);
+  } else if (urls.length > 0) {
+    // first item is a video — show a plain label instead of an
+    // autoplaying/silent video thumbnail
+    const label = document.createElement('span');
+    label.className = 'project-row-thumb-empty';
+    label.textContent = 'Video';
+    thumb.appendChild(label);
+  } else {
+    const label = document.createElement('span');
+    label.className = 'project-row-thumb-empty';
+    label.textContent = 'No media';
+    thumb.appendChild(label);
+  }
+
+  const title = document.createElement('h3');
+  title.textContent = project.title || 'Untitled project';
+
+  const desc = document.createElement('p');
+  desc.textContent = project.discription || project.description || '';
+
+  row.appendChild(thumb);
+  row.appendChild(title);
+  row.appendChild(desc);
+
+  row.addEventListener('click', () => selectProject(index));
+
+  return row;
+}
+
+function selectProject(index) {
+  activeProjectIndex = index;
+  activeMediaIndex = 0;
+
+  document.querySelectorAll('.project-row').forEach((row, i) => {
+    const isActive = i === index;
+    row.classList.toggle('is-active', isActive);
+    row.setAttribute('aria-pressed', String(isActive));
+  });
+
+  viewerEl.classList.add('is-visible');
+
+  renderViewer();
+  viewerEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeViewer() {
+  activeProjectIndex = null;
+  activeMediaIndex = 0;
+
+  document.querySelectorAll('.project-row').forEach((row) => {
+    row.classList.remove('is-active');
+    row.setAttribute('aria-pressed', 'false');
+  });
+
+  viewerEl.classList.remove('is-visible');
+}
+
+function renderViewer() {
+  const project = projectsCache[activeProjectIndex];
+  if (!project) return;
+
+  const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
+
+  viewerTitleEl.textContent = project.title || 'Untitled project';
+  viewerDescEl.textContent = project.discription || project.description || '';
+
+  // Clear everything except the close button, which lives inside
+  // viewer-media so it can sit on top of the image/video.
+  Array.from(viewerMediaEl.children).forEach((child) => {
+    if (child !== viewerCloseBtn) child.remove();
+  });
+
+  if (urls.length === 0) {
+    const placeholder = document.createElement('p');
+    placeholder.className = 'viewer-placeholder';
+    placeholder.textContent = 'No photos or videos for this project yet.';
+    viewerMediaEl.appendChild(placeholder);
+    viewerCounterEl.textContent = '';
+    viewerPrevBtn.disabled = true;
+    viewerNextBtn.disabled = true;
+    return;
+  }
+
+  const url = urls[activeMediaIndex];
+  const mediaEl = looksLikeVideo(url) ? buildVideoEl(url) : buildImgEl(url);
+  viewerMediaEl.appendChild(mediaEl);
+
+  viewerCounterEl.textContent = `${activeMediaIndex + 1} / ${urls.length}`;
+  viewerPrevBtn.disabled = activeMediaIndex === 0;
+  viewerNextBtn.disabled = activeMediaIndex === urls.length - 1;
+}
+
+viewerCloseBtn.addEventListener('click', closeViewer);
+
+function buildImgEl(url) {
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = '';
+  return img;
+}
+
+function buildVideoEl(url) {
+  const video = document.createElement('video');
+  video.src = url;
+  video.controls = true;
+  video.playsInline = true;
+  return video;
+}
+
+viewerPrevBtn.addEventListener('click', () => {
+  if (activeProjectIndex === null || activeMediaIndex === 0) return;
+  activeMediaIndex -= 1;
+  renderViewer();
+});
+
+viewerNextBtn.addEventListener('click', () => {
+  if (activeProjectIndex === null) return;
+  const project = projectsCache[activeProjectIndex];
+  const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
+  if (activeMediaIndex >= urls.length - 1) return;
+  activeMediaIndex += 1;
+  renderViewer();
+});
+
+// ===== Contact form =====
+const contactForm = document.getElementById('contact-form');
+const formNote = document.getElementById('form-note');
+
+contactForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  formNote.hidden = false;
+  formNote.textContent = "Thanks — this form isn't wired up to the backend yet, but your message would be sent from here.";
+  contactForm.reset();
+});
+</script>
 </body>
 </html>

@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage users — Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (matches the main site theme) ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+  --error: #A2402C;
+  --active-dot: #3E6B4E;
+
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: var(--font-body); cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ===== Header ===== */
+.site-header { border-bottom: 1px solid var(--line-strong); }
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark-mark { color: var(--steel); display: flex; }
+
+.header-links { display: flex; align-items: center; gap: 22px; }
+
+.header-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.header-links a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ===== Layout ===== */
+main {
+  flex: 1;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.page-head { margin-bottom: 36px; max-width: 640px; }
+
+.page-kicker {
+  font-size: 14px;
+  color: var(--steel);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.page-head h1 { font-size: 38px; margin-bottom: 10px; }
+.page-head p { color: var(--steel-dark); font-size: 16px; }
+
+/* ===== Add user ===== */
+.add-user {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+  margin-bottom: 56px;
+}
+
+.add-user h2 { font-size: 22px; margin-bottom: 18px; }
+
+.add-user-form {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px 14px;
+  align-items: end;
+}
+
+.add-user-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  grid-column: span 2;
+}
+
+.add-user-form input,
+.add-user-form select {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.add-user-form input:focus,
+.add-user-form select:focus {
+  outline: none;
+  border-color: var(--steel);
+}
+
+.add-user-form .form-actions {
+  grid-column: span 6;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  transition: background 0.15s ease, opacity 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+
+.btn-outline {
+  background: none;
+  color: var(--ink);
+}
+
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+
+.btn-danger-outline {
+  background: none;
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.btn-danger-outline:hover { background: var(--error); color: var(--white); }
+
+.btn-small { padding: 8px 16px; font-size: 13.5px; }
+
+.form-message {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+}
+
+.form-message.is-error { color: var(--error); }
+.form-message.is-success { color: var(--steel-dark); }
+.form-message[hidden] { display: none; }
+
+/* ===== Users table ===== */
+.users-section { border-top: 1px solid var(--line-strong); padding-top: 28px; }
+
+.users-section h2 { font-size: 22px; margin-bottom: 18px; }
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.users-table tbody td {
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  vertical-align: middle;
+}
+
+.users-table tbody tr:last-child td { border-bottom: none; }
+
+.users-table tbody tr.is-removing { opacity: 0.4; }
+
+.user-name { font-weight: 500; }
+
+.user-role {
+  color: var(--steel-dark);
+  text-transform: capitalize;
+}
+
+.status-cell { display: flex; align-items: center; gap: 8px; }
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  flex-shrink: 0;
+}
+
+.status-dot.is-active { background: var(--active-dot); }
+
+.status-text { font-size: 14px; color: var(--steel-dark); }
+
+.row-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.users-table {
+  table-layout: fixed;
+}
+
+.users-table th:last-child,
+.users-table td:last-child {
+  width: 56px;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.permissions-menu {
+  width: 56px;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.permissions-menu-button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--steel-dark);
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  margin-left: auto;
+}
+
+.permissions-menu-button:hover {
+  border-color: var(--steel);
+  color: var(--ink);
+}
+
+.empty-users {
+  padding: 40px 0;
+  color: var(--steel-dark);
+  font-size: 15px;
+  text-align: center;
+}
+
+.permission-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 31, 34, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.permission-modal-backdrop[hidden] {
+  display: none;
+}
+
+.permission-modal-card {
+  width: min(540px, 100%);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 18px 52px rgba(28, 31, 34, 0.12);
+  padding: 22px 20px 18px;
+}
+
+.permission-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.permission-modal-head h3 {
+  font-family: var(--font-head);
+  font-size: 28px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.permission-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+}
+
+.permission-add-form {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.permission-add-form label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.permission-add-form select {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.permission-add-form button {
+  min-width: 120px;
+}
+
+.permission-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.permission-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  background: var(--white);
+  border-radius: 4px;
+}
+
+.permission-name {
+  font-size: 15px;
+  color: var(--ink);
+  text-transform: capitalize;
+}
+
+.permission-item .btn-danger-outline {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.permission-empty {
+  color: var(--steel-dark);
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+@media (max-width: 760px) {
+  .permission-add-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .permission-add-form button {
+    width: 100%;
+  }
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 760px) {
+  .add-user-form { grid-template-columns: 1fr 1fr; }
+  .add-user-form label { grid-column: span 1; }
+  .add-user-form .form-actions { grid-column: span 2; }
+  .users-table thead { display: none; }
+  .users-table, .users-table tbody, .users-table tr, .users-table td {
+    display: block;
+    width: 100%;
+  }
+  .users-table tbody tr {
+    border-bottom: 1px solid var(--line-strong);
+    padding: 14px 0;
+  }
+  .users-table tbody td {
+    border-bottom: none;
+    padding: 4px 0;
+  }
+  .row-actions { justify-content: flex-start; margin-top: 8px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="wordmark">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path d="M4 26 L4 14 L16 6 L28 14 L28 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          <line x1="4" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="2.4"/>
+          <line x1="12" y1="26" x2="12" y2="17" stroke="currentColor" stroke-width="2"/>
+          <line x1="20" y1="26" x2="20" y2="17" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Inshaa
+    </a>
+    <div class="header-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="page-head">
+    <p class="page-kicker">Manage users</p>
+    <h1>Accounts</h1>
+    <p>Add new accounts, and activate, deactivate or remove existing ones.</p>
+  </div>
+
+  <section class="add-user">
+    <h2>Add a user</h2>
+    <form class="add-user-form" id="add-user-form" novalidate>
+      <label>
+        First name
+        <input type="text" name="first_name" id="first_name" required>
+      </label>
+      <label>
+        Last name
+        <input type="text" name="last_name" id="last_name" required>
+      </label>
+      <label>
+        Username
+        <input type="text" name="username" id="username" autocomplete="off" required>
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" id="password" autocomplete="new-password" required>
+      </label>
+      <label>
+        Role
+        <select name="role" id="role" required>
+          <option value="" disabled selected>Select a role</option>
+          <option value="super_admin">Super Admin</option>
+          <option value="eng_admin">Engineer Admin</option>
+          <option value="acc_admin">Accountant Admin</option>
+          <option value="engineer">Engineer</option>
+          <option value="accountant">Accountant</option>
+        </select>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn" id="add-user-btn">Add user</button>
+        <p class="form-message" id="add-user-message" role="alert" hidden></p>
+      </div>
+    </form>
+  </section>
+
+  <section class="users-section">
+    <h2>All users</h2>
+
+    {% if users %}
+    <table class="users-table" id="users-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th></th>
+          <th class="permissions-menu"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr data-user-id="{{ u.id }}" data-active="{{ 'true' if u.is_active else 'false' }}">
+          <td class="user-name">{{ u.name }}</td>
+          <td class="user-role">{{ u.role }}</td>
+          <td>
+            <span class="status-cell">
+              <span class="status-dot {{ 'is-active' if u.is_active else '' }}"></span>
+              <span class="status-text">{{ 'Active' if u.is_active else 'Inactive' }}</span>
+            </span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button type="button" class="btn btn-outline btn-small" data-action="toggle">
+                {{ 'Deactivate' if u.is_active else 'Activate' }}
+              </button>
+              <button type="button" class="btn btn-danger-outline btn-small" data-action="delete">Delete</button>
+            </div>
+          </td>
+          <td class="permissions-menu">
+            <button type="button" class="permissions-menu-button" data-action="permissions" aria-label="Manage permissions for {{ u.name }}" title="Manage permissions">⋮</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-users">No other users yet.</p>
+    {% endif %}
+  </section>
+</main>
+
+<div class="permission-modal-backdrop" id="permissions-modal" hidden>
+  <div class="permission-modal-card" role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
+    <div class="permission-modal-head">
+      <h3 id="permissions-modal-title">Permissions</h3>
+      <button type="button" class="permission-close" id="permission-close" aria-label="Close permissions dialog">×</button>
+    </div>
+
+    <form class="permission-add-form" id="permission-add-form">
+      <label>
+        Add permission
+        <select id="permission-type" name="permission_type" required>
+          <option value="" disabled selected>Choose a permission</option>
+          <option value="manage users">Manage Users</option>
+          <option value="manage page">Manage Page</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-small">Add</button>
+    </form>
+
+    <ul class="permission-list" id="permission-list"></ul>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<script>
+
+const API_BASE = '';
+const USERS_BASE = `${API_BASE}/users`;
+const PERMISSION_OPTIONS = ['manage users', 'manage page'];
+
+// ===== Add user =====
+const addForm = document.getElementById('add-user-form');
+const addBtn = document.getElementById('add-user-btn');
+const addMessage = document.getElementById('add-user-message');
+
+function showAddMessage(text, type) {
+  addMessage.textContent = text;
+  addMessage.className = `form-message is-${type}`;
+  addMessage.hidden = false;
+}
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    first_name: document.getElementById('first_name').value.trim(),
+    last_name: document.getElementById('last_name').value.trim(),
+    username: document.getElementById('username').value.trim(),
+    password: document.getElementById('password').value,
+    role: document.getElementById('role').value,
+  };
+
+  if (!payload.first_name || !payload.last_name || !payload.username || !payload.password || !payload.role) {
+    showAddMessage('Fill in every field before adding a user.', 'error');
+    return;
+  }
+
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding…';
+  addMessage.hidden = true;
+
+  try {
+    const res = await fetch(`${USERS_BASE}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (res.status === 403) {
+      showAddMessage("You don't have permission to add users.", 'error');
+      return;
+    }
+    if (!res.ok) {
+      showAddMessage(`Couldn't add the user (status ${res.status}).`, 'error');
+      return;
+    }
+
+    // The endpoint only returns {success: true}, with no new user id,
+    // so we reload to pick up the freshly rendered list from the server.
+    window.location.reload();
+  } catch (err) {
+    showAddMessage(`Couldn't reach the server (${err.message}).`, 'error');
+  } finally {
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add user';
+  }
+});
+
+// ===== Row actions: activate / deactivate / delete =====
+const table = document.getElementById('users-table');
+const permissionsModal = document.getElementById('permissions-modal');
+const permissionList = document.getElementById('permission-list');
+const permissionType = document.getElementById('permission-type');
+const permissionAddForm = document.getElementById('permission-add-form');
+const permissionClose = document.getElementById('permission-close');
+
+function closePermissionsModal() {
+  permissionsModal.hidden = true;
+  permissionsModal.dataset.userId = '';
+  permissionList.innerHTML = '';
+  permissionType.innerHTML = '<option value="" disabled selected>Choose a permission</option>';
+}
+
+function renderPermissionOptions(existingPermissions = []) {
+  const existing = new Set(existingPermissions.map((item) => item.type));
+  const available = PERMISSION_OPTIONS.filter((type) => !existing.has(type));
+
+  permissionType.innerHTML = '<option value="" disabled selected>Choose a permission</option>' +
+    available.map((type) => `<option value="${type}">${type}</option>`).join('');
+
+  if (available.length === 0) {
+    permissionType.innerHTML = '<option value="" disabled selected>No additional permissions</option>';
+  }
+}
+
+async function loadUserPermissions(userId) {
+  const res = await fetch(`${USERS_BASE}/permissions/${userId}`, {
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Couldn't load permissions (status ${res.status}).`);
+  }
+
+  const permissions = await res.json();
+  const items = permissions || [];
+
+  permissionList.innerHTML = items.length
+    ? items.map((perm) => `
+        <li class="permission-item" data-perm-id="${perm.id}">
+          <span class="permission-name">${perm.type}</span>
+          <button type="button" class="btn btn-danger-outline btn-small" data-perm-delete="${perm.id}">Delete</button>
+        </li>
+      `).join('')
+    : '<li class="permission-empty">No permissions assigned yet.</li>';
+
+  renderPermissionOptions(items);
+  return items;
+}
+
+async function openPermissionsModal(userId) {
+  permissionsModal.dataset.userId = userId;
+  permissionsModal.hidden = false;
+  permissionType.disabled = true;
+  permissionList.innerHTML = '<li class="permission-empty">Loading permissions…</li>';
+
+  try {
+    await loadUserPermissions(userId);
+    permissionType.disabled = false;
+  } catch (err) {
+    permissionList.innerHTML = `<li class="permission-empty">${err.message}</li>`;
+    permissionType.disabled = true;
+  }
+}
+
+if (permissionsModal) {
+  permissionClose.addEventListener('click', closePermissionsModal);
+  permissionsModal.addEventListener('click', (e) => {
+    if (e.target === permissionsModal) {
+      closePermissionsModal();
+    }
+  });
+
+  permissionAddForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = permissionsModal.dataset.userId;
+    const type = permissionType.value;
+
+    if (!userId || !type) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${USERS_BASE}/add_permission/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ type }),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        window.alert(`Couldn't add this permission (${res.status}). ${msg || ''}`.trim());
+        return;
+      }
+
+      await loadUserPermissions(userId);
+      permissionType.value = '';
+    } catch (err) {
+      window.alert(`Couldn't reach the server (${err.message}).`);
+    }
+  });
+
+  permissionList.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-perm-delete]');
+    if (!btn) return;
+
+    const permId = btn.dataset.permDelete;
+    const userId = permissionsModal.dataset.userId;
+
+    if (!permId || !userId) {
+      return;
+    }
+
+    const item = btn.closest('.permission-item');
+    const name = item ? item.querySelector('.permission-name')?.textContent.trim() : 'this permission';
+
+    if (!window.confirm(`Delete ${name}?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/users/del_permission/${permId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        window.alert(`Couldn't delete this permission (status ${res.status}).`);
+        return;
+      }
+
+      await loadUserPermissions(userId);
+    } catch (err) {
+      window.alert(`Couldn't reach the server (${err.message}).`);
+    }
+  });
+}
+
+if (table) {
+  table.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+
+    const row = btn.closest('tr');
+    const userId = row.dataset.userId;
+    const action = btn.dataset.action;
+
+    if (action === 'delete') {
+      handleDelete(row, userId, btn);
+    } else if (action === 'toggle') {
+      handleToggle(row, userId, btn);
+    } else if (action === 'permissions') {
+      openPermissionsModal(userId);
+    }
+  });
+}
+
+async function handleDelete(row, userId, btn) {
+  const name = row.querySelector('.user-name').textContent.trim();
+  if (!window.confirm(`Delete ${name}? This can't be undone.`)) return;
+
+  btn.disabled = true;
+  row.classList.add('is-removing');
+
+  try {
+    const res = await fetch(`${USERS_BASE}/delete/${userId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      row.classList.remove('is-removing');
+      btn.disabled = false;
+      window.alert(`Couldn't delete this user (status ${res.status}).`);
+      return;
+    }
+
+    row.remove();
+    if (table.querySelectorAll('tbody tr').length === 0) {
+      table.outerHTML = '<p class="empty-users">No other users yet.</p>';
+    }
+  } catch (err) {
+    row.classList.remove('is-removing');
+    btn.disabled = false;
+    window.alert(`Couldn't reach the server (${err.message}).`);
+  }
+}
+
+async function handleToggle(row, userId, btn) {
+  const isActive = row.dataset.active === 'true';
+  const endpoint = isActive ? 'deactivate' : 'activate';
+
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${USERS_BASE}/${endpoint}/${userId}`, {
+      method: 'PATCH',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      window.alert(`Couldn't update this user (status ${res.status}).`);
+      return;
+    }
+
+    const nowActive = !isActive;
+    row.dataset.active = String(nowActive);
+
+    const dot = row.querySelector('.status-dot');
+    const text = row.querySelector('.status-text');
+    dot.classList.toggle('is-active', nowActive);
+    text.textContent = nowActive ? 'Active' : 'Inactive';
+    btn.textContent = nowActive ? 'Deactivate' : 'Activate';
+  } catch (err) {
+    window.alert(`Couldn't reach the server (${err.message}).`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

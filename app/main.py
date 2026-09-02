@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from app.database import engine, Base, get_db
 from app.models.users_model import User
+from app.models.permissions_model import Permission
 from app.core.security import hash_password
 from app.core.auth import validate_user
 from app.config import BASE_DIR
-from app.routes import login
+from app.routes import login, home, dashboard, users, page
 from datetime import datetime, timezone
 
 load_dotenv()
@@ -34,21 +35,28 @@ app.add_middleware(
 )
 
 app.include_router(login.router)
+app.include_router(home.router)
+app.include_router(dashboard.router)
+app.include_router(page.router)
+app.include_router(users.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
 
-    admin = db.query(User).filter(User.role == "admin").first()
+    admin = db.query(User).filter(User.role == "super_admin").first()
     if not admin:
         new_admin = User(
             first_name="Admin",
             last_name="Admin",
             username="admin",
             password=hash_password("123"),
-            role="admin",
+            role="super_admin",
             is_active=True
         )
         db.add(new_admin)
+        db.flush()
+        db.add(Permission(user_id=new_admin.id, type="manage users"))
+        db.add(Permission(user_id=new_admin.id, type="manage page"))
         db.commit()
 
     return templates.TemplateResponse("home.html", {"request": request})

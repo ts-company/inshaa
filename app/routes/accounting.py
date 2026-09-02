@@ -8,18 +8,18 @@ from app.models.home_projects_medias_model import ProjectMedia
 from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db
-from app.utils import generate_url, upload_file
+from app.utils import generate_url, upload_file, delete_file
 from app.config import BASE_DIR
 from typing import List
 
-router = APIRouter(prefix="/home")
+router = APIRouter(prefix="/accounting")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
-@router.get("/projects")
+@router.get("/")
 def get_projects(request: Request, db: Session = Depends(get_db)):
 
-    projects = db.query(Project).order_by(Project.id.desc()).all()
+    projects = db.query(Project).all()
     projects_ids = [row.id for row in projects]
 
     medias = db.query(ProjectMedia).filter(ProjectMedia.project_id.in_(projects_ids)).all()
@@ -27,12 +27,13 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
     for m in medias:
         medias_by_project.setdefault(m.project_id, []).append(m)
 
-    return [
+    current_projects = [
         {
             "id": p.id,
             "title": p.title,
-            "description": p.description,
+            "discription": p.description,
             "media_urls": [generate_url(m.public_id, m.resource_type) for m in medias_by_project.get(p.id, [])],
         }
         for p in projects
     ]
+    return templates.TemplateResponse("accounting_dashboard.html", {"request": request, "projects": current_projects})

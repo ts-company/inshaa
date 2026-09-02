@@ -12,7 +12,7 @@ import os
 
 SYS_PREFIX = os.getenv("SYS_PREFIX")
 
-router = APIRouter(f"/{SYS_PREFIX}")
+router = APIRouter(prefix=f"/{SYS_PREFIX}")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 

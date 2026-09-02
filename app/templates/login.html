@@ -1,393 +1,349 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FireBeat - Login</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (matches the main site theme) ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+  --error: #A2402C;
 
-    body {
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f8fbfd, #eef6fc 45%, #dceefa 100%);
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-      overflow: hidden;
-      color: #19324a;
-    }
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
 
-    .login-container {
-      display: flex;
-      width: 100%;
-      height: 100vh;
-    }
+* { box-sizing: border-box; }
 
-    .login-left {
-      flex: 2;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 60px 80px;
-      gap: 40px;
-    }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
 
-    .login-left-content {
-      text-align: center;
-      max-width: 600px;
-    }
+h1 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
 
-    .login-left-content h1 {
-      font-size: 4rem;
-      font-weight: 900;
-      letter-spacing: -2px;
-      margin-bottom: 24px;
-      line-height: 1;
-    }
+p { margin: 0; }
 
-    .login-left-content h1 span {
-      color: #2479b8;
-    }
+button { font-family: var(--font-body); cursor: pointer; }
 
-    .login-left-content p {
-      color: #4d687f;
-      font-size: 1.2rem;
-      line-height: 1.8;
-    }
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
 
-    .login-visual {
-      min-height: 340px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    @keyframes spin {
-      from {
-        transform: rotate(0);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
 
-    .login-right {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 60px 40px;
-      background: rgba(255, 255, 255, 0.72);
-      border-left: 1px solid rgba(44, 117, 169, 0.18);
-    }
+/* ===== Header ===== */
+.site-header {
+  border-bottom: 1px solid var(--line-strong);
+}
 
-    .login-wrapper {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+}
 
-    .form-title {
-      text-align: left;
-      margin-bottom: 12px;
-    }
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: var(--ink);
+  text-decoration: none;
+}
 
-    .form-title h2 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
+.wordmark-mark { color: var(--steel); display: flex; }
 
-    .form-title p {
-      color: #5c7488;
-      font-size: 0.9rem;
-    }
+/* ===== Layout ===== */
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+.login-card {
+  width: 100%;
+  max-width: 420px;
+}
 
-    label {
-      color: #29455d;
-      font-size: 0.88rem;
-      font-weight: 500;
-    }
+.login-kicker {
+  font-size: 14px;
+  color: var(--steel);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
 
-    input {
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(44, 117, 169, 0.22);
-      background: rgba(255, 255, 255, 0.86);
-      color: #19324a;
-      font-size: 0.95rem;
-      outline: none;
-      transition: all 0.25s ease;
-    }
+.login-card h1 {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
 
-    input::placeholder {
-      color: #8095a7;
-    }
+.login-lede {
+  color: var(--steel-dark);
+  font-size: 15.5px;
+  margin-bottom: 28px;
+}
 
-    input:focus {
-      border-color: rgba(36, 121, 184, 0.72);
-      background: #fff;
-      box-shadow: 0 0 12px rgba(36, 121, 184, 0.14);
-    }
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 26px;
+}
 
-    .button-row {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
 
-    .btn {
-      flex: 1;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 0.92rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      transition: all 0.25s ease;
-      border: none;
-    }
+.login-form input {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 13px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
 
-    .btn-login {
-      background: linear-gradient(135deg, #2f8dcc, #1d619d);
-      color: #fff;
-    }
+.login-form input:focus {
+  outline: none;
+  border-color: var(--steel);
+}
 
-    .btn-login:hover {
-      transform: translateY(-2px);
-    }
+.password-field { position: relative; }
 
-    .btn-signup {
-      background: rgba(255, 255, 255, 0.72);
-      color: #24516f;
-      border: 1px solid rgba(44, 117, 169, 0.35);
-    }
+.password-field input { width: 100%; padding-right: 46px; }
 
-    .btn-signup:hover {
-      background: #e2f1fb;
-    }
+.password-toggle {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 40px;
+  background: none;
+  border: none;
+  color: var(--steel-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
 
-    .message {
-      margin-top: 12px;
-      min-height: 18px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: #c0394b;
-    }
+.password-toggle:hover { color: var(--ink); }
 
-    .footer-text {
-      margin-top: 16px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #6b8295;
-      line-height: 1.4;
-    }
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 26px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
 
-    @media (max-width: 1024px) {
-      .login-left {
-        flex: 1.5;
-        padding: 40px;
-      }
+.btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: default; transform: none; }
 
-      .login-left-content h1 {
-        font-size: 3rem;
-      }
+.form-message {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 11px 13px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
 
-      .login-left-content p {
-        font-size: 1rem;
-      }
+.form-message[hidden] { display: none; }
 
-      .disc {
-        width: 220px;
-        height: 220px;
-      }
-    }
+.form-message.is-error {
+  color: var(--error);
+  background: rgba(162, 64, 44, 0.08);
+  border-color: rgba(162, 64, 44, 0.3);
+}
 
-    @media (max-width: 768px) {
-      .login-container {
-        flex-direction: column;
-        height: auto;
-      }
+.form-message.is-success {
+  color: var(--steel-dark);
+  background: rgba(62, 84, 104, 0.08);
+  border-color: rgba(62, 84, 104, 0.3);
+}
 
-      .login-left {
-        flex: auto;
-        padding: 40px 20px;
-        min-height: 50vh;
-      }
+.login-foot {
+  margin-top: 22px;
+  font-size: 13.5px;
+  color: var(--steel-dark);
+}
 
-      .login-right {
-        flex: auto;
-        padding: 40px 20px;
-        border-left: none;
-        border-top: 1px solid rgba(44, 117, 169, 0.18);
-      }
-
-      .login-left-content h1 {
-        font-size: 2.2rem;
-      }
-
-      .login-left-content p {
-        font-size: 0.95rem;
-      }
-
-      .disc {
-        width: 180px;
-        height: 180px;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .login-left {
-        padding: 30px 16px;
-      }
-
-      .login-right {
-        padding: 30px 16px;
-      }
-
-      .login-left-content h1 {
-        font-size: 1.8rem;
-      }
-
-      .login-left-content p {
-        font-size: 0.9rem;
-      }
-
-      .disc {
-        width: 140px;
-        height: 140px;
-      }
-
-      input {
-        padding: 11px 12px;
-        font-size: 0.9rem;
-      }
-
-      .btn {
-        padding: 11px 12px;
-        font-size: 0.88rem;
-      }
-    }
-  </style>
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+</style>
 </head>
 <body>
 
-  <div class="login-container">
-    <div class="login-left">
-      <div class="login-left-content">
-        <h1>Pick up right where you left off.</h1>
-        <p>Sign in to reach your courses, private lectures, and every lesson you've saved for later.</p>
-      </div>
-    </div>
-
-    <!-- Right Side - Login Form -->
-    <div class="login-right">
-      <div class="login-wrapper">
-        <div class="form-title">
-          <h2>Welcome Back</h2>
-          <p>Login to your account</p>
-        </div>
-
-        <form id="loginForm">
-          <div class="form-group">
-            <label for="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder="Enter your username"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <div class="button-row">
-            <button type="submit" class="btn btn-login">Login</button>
-            <a href="/signup" class="btn btn-signup">Create Account</a>
-          </div>
-
-          <div class="message" id="message"></div>
-        </form>
-      </div>
-    </div>
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="wordmark">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path d="M4 26 L4 14 L16 6 L28 14 L28 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          <line x1="4" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="2.4"/>
+          <line x1="12" y1="26" x2="12" y2="17" stroke="currentColor" stroke-width="2"/>
+          <line x1="20" y1="26" x2="20" y2="17" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Inshaa
+    </a>
   </div>
+</header>
 
-  <script>
-    const loginForm = document.getElementById("loginForm");
-    const message = document.getElementById("message");
+<main class="login-main">
+  <div class="login-card">
+    <p class="login-kicker">Staff access</p>
+    <h1>Sign in</h1>
+    <p class="login-lede">Use your username and password to reach the project dashboard.</p>
 
-    loginForm.addEventListener("submit", function (e) {
-      e.preventDefault();
+    <form class="login-form" id="login-form" novalidate>
+      <label>
+        Username
+        <input type="text" name="username" id="username" autocomplete="username" required>
+      </label>
 
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
+      <label>
+        Password
+        <div class="password-field">
+          <input type="password" name="password" id="password" autocomplete="current-password" required>
+          <button type="button" class="password-toggle" id="password-toggle" aria-label="Show password">Show</button>
+        </div>
+      </label>
 
-      if (!username || !password) {
-        message.style.color = "#c0394b";
-        message.textContent = "Please enter both username and password.";
+      <p class="form-message" id="form-message" role="alert" hidden></p>
+
+      <button type="submit" class="btn" id="submit-btn">Sign in</button>
+    </form>
+
+    <p class="login-foot">Trouble signing in? Contact your site administrator.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<script>
+
+const form = document.getElementById('login-form');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const passwordToggle = document.getElementById('password-toggle');
+const submitBtn = document.getElementById('submit-btn');
+const messageEl = document.getElementById('form-message');
+
+passwordToggle.addEventListener('click', () => {
+  const isHidden = passwordInput.type === 'password';
+  passwordInput.type = isHidden ? 'text' : 'password';
+  passwordToggle.textContent = isHidden ? 'Hide' : 'Show';
+  passwordToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+});
+
+function showMessage(text, type) {
+  messageEl.textContent = text;
+  messageEl.className = `form-message is-${type}`;
+  messageEl.hidden = false;
+}
+
+function hideMessage() {
+  messageEl.hidden = true;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  hideMessage();
+
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!username || !password) {
+    showMessage('Enter your username and password.', 'error');
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Signing in…';
+
+  try {
+    const res = await fetch('/system/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!res.ok){
+      if (res.status === 404) {
+      showMessage('Incorrect username or password.', 'error');
+      return;
+      }else {
+        showMessage(`Something went wrong (status ${res.status}). Try again.`, 'error');
         return;
       }
+    }
 
-      message.style.color = "#16805b";
-      message.textContent = "Logging in...";
-      
-      fetch('/login_data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: "include"
-      })
-      .then(async response => {
-        if (response.ok) {
-          data = await response.json();
-          if (data.role === "student") {
-            window.location.href = "/";
-          }else if (data.role === "teacher") {
-            window.location.href = "/teacher/";
-          }else if (data.role === "admin") {
-            window.location.href = "/admin/";
-          }else if (data.role === "mod") {
-            window.location.href = "/mod/";
-          }
-          }else {
-          if (response.status === 404) {
-            message.style.color = "#c0394b";
-            message.textContent = "Invalid username or password.";
-          } else {
-            message.style.color = "#c0394b";
-            message.textContent = "An error occurred. Please try again.";
-          }
-        }
-      })
-      .catch(error => {
-        message.style.color = "#c0394b";
-        message.textContent = "Network error. Please try again.";
-        console.error('Error:', error);
-      });
-    });
-  </script>
+    showMessage('Signing in');
+    setTimeout(() => {
+      window.location.href = '/dashboard/';
+    }, 500);
+  } catch (err) {
+    showMessage(`Couldn't reach the server (${err.message}). Check your connection and try again.`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign in';
+  }
+});
+</script>
 </body>
 </html>

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage page — Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (matches the main site theme) ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+  --error: #A2402C;
+
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: var(--font-body); cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ===== Header ===== */
+.site-header { border-bottom: 1px solid var(--line-strong); }
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark-mark { color: var(--steel); display: flex; }
+
+.header-links { display: flex; align-items: center; gap: 22px; }
+
+.header-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.header-links a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ===== Layout ===== */
+main {
+  flex: 1;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.page-head { margin-bottom: 36px; max-width: 640px; }
+
+.page-kicker {
+  font-size: 14px;
+  color: var(--steel);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.page-head h1 { font-size: 38px; margin-bottom: 10px; }
+.page-head p { color: var(--steel-dark); font-size: 16px; }
+
+/* ===== Add project ===== */
+.add-project {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+  margin-bottom: 64px;
+}
+
+.add-project h2 { font-size: 22px; margin-bottom: 18px; }
+
+.add-project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+}
+
+.add-project-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.add-project-form input[type="text"],
+.add-project-form textarea {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+  resize: vertical;
+}
+
+.add-project-form input:focus,
+.add-project-form textarea:focus {
+  outline: none;
+  border-color: var(--steel);
+}
+
+.file-drop {
+  border: 1.5px dashed var(--line-strong);
+  padding: 22px;
+  text-align: center;
+  background: var(--concrete);
+  cursor: pointer;
+}
+
+.file-drop:hover { border-color: var(--steel); }
+
+.file-drop input[type="file"] { display: none; }
+
+.file-drop-label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.file-drop-hint {
+  font-size: 13px;
+  color: var(--steel-dark);
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  font-size: 14px;
+}
+
+.file-row-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-row select {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.file-row-remove {
+  background: none;
+  border: none;
+  color: var(--error);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 4px 6px;
+}
+
+.file-row-remove:hover { text-decoration: underline; }
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  transition: background 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
+}
+
+.btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+
+.btn-danger-outline {
+  background: none;
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.btn-danger-outline:hover { background: var(--error); color: var(--white); }
+
+.btn-small { padding: 8px 16px; font-size: 13.5px; }
+
+.form-message {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-message.is-error { color: var(--error); }
+.form-message.is-success { color: var(--steel-dark); }
+.form-message[hidden] { display: none; }
+
+/* ===== Projects grid ===== */
+.projects-section { border-top: 1px solid var(--line-strong); padding-top: 28px; }
+
+.projects-section h2 { font-size: 22px; margin-bottom: 18px; }
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+}
+
+.project-card {
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+.project-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--concrete);
+  overflow: hidden;
+}
+
+.project-media img,
+.project-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+
+.project-media-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--steel-dark);
+  font-size: 14px;
+}
+
+.project-media-nav {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.project-media-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(0,0,0,0.2);
+  padding: 0;
+}
+
+.project-media-dot.is-active { background: var(--yellow); }
+
+.project-body {
+  padding: 18px 20px 20px;
+  border-top: 1px solid var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-body h3 { font-size: 21px; font-weight: 600; }
+.project-body p { font-size: 14.5px; color: var(--steel-dark); }
+
+.project-card.is-removing { opacity: 0.4; }
+
+.empty-projects {
+  padding: 40px 0;
+  color: var(--steel-dark);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="wordmark">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="28" height="28">
+          <path d="M4 26 L4 14 L16 6 L28 14 L28 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          <line x1="4" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="2.4"/>
+          <line x1="12" y1="26" x2="12" y2="17" stroke="currentColor" stroke-width="2"/>
+          <line x1="20" y1="26" x2="20" y2="17" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </span>
+      Inshaa
+    </a>
+    <div class="header-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="page-head">
+    <p class="page-kicker">Manage page</p>
+    <h1>Projects</h1>
+    <p>Add finished projects with photos and videos, or remove ones that no longer belong on the site.</p>
+  </div>
+
+  <section class="add-project">
+    <h2>Add a project</h2>
+    <form class="add-project-form" id="add-project-form" novalidate>
+      <label>
+        Title
+        <input type="text" name="title" id="title" required>
+      </label>
+      <label>
+        Description
+        <textarea name="description" id="description" rows="4" required></textarea>
+      </label>
+
+      <label>
+        Photos &amp; videos
+        <div class="file-drop" id="file-drop">
+          <input type="file" id="file-input" multiple accept="image/*,video/*">
+          <p class="file-drop-label">Click to choose files</p>
+          <p class="file-drop-hint">Images and videos — type is guessed automatically, override it if needed</p>
+        </div>
+      </label>
+
+      <div class="file-list" id="file-list"></div>
+
+      <div>
+        <button type="submit" class="btn" id="add-project-btn">Add project</button>
+        <p class="form-message" id="add-project-message" role="alert" hidden></p>
+      </div>
+    </form>
+  </section>
+
+  <section class="projects-section">
+    <h2>Existing projects</h2>
+
+    {% if projects %}
+    <div class="projects-grid" id="projects-grid">
+      {% for project in projects %}
+      <article class="project-card" data-project-id="{{ project.id }}">
+        <div class="project-media" data-media-urls="{{ project.media_urls | tojson | forceescape }}">
+          <div class="project-media-empty">No media</div>
+        </div>
+        <div class="project-body">
+          <h3>{{ project.title }}</h3>
+          <p>{{ project.description }}</p>
+          <button type="button" class="btn btn-danger-outline btn-small" data-action="delete-project">Delete project</button>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-projects" id="empty-projects">No projects yet.</p>
+    {% endif %}
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<script>
+// If your backend runs on a different origin/port than this page,
+// set API_BASE to it. Leave as '' if served from the same origin.
+const API_BASE = '';
+const PAGE_BASE = `${API_BASE}/page`;
+
+/* ==========================================================
+   Existing projects: render media (image/video) per card.
+   The endpoint only returns media_urls (plain strings), with
+   no per-item type, so the image/video choice below is a
+   guess from the URL — a video file extension, or a "/video/"
+   segment as used by Cloudinary-style delivery URLs. If your
+   storage doesn't produce URLs like that, the safest fix is
+   having the backend also return each media item's resource
+   type and reading that here instead of guessing.
+   ========================================================== */
+const VIDEO_EXT = /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i;
+
+function looksLikeVideo(url) {
+  return VIDEO_EXT.test(url) || url.includes('/video/upload/') || url.includes('/video/');
+}
+
+function buildMediaEl(url) {
+  if (looksLikeVideo(url)) {
+    const video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.playsInline = true;
+    return video;
+  }
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = '';
+  img.loading = 'lazy';
+  return img;
+}
+
+document.querySelectorAll('.project-media[data-media-urls]').forEach((mediaEl) => {
+  let urls = [];
+  try {
+    urls = JSON.parse(mediaEl.dataset.mediaUrls) || [];
+  } catch (e) {
+    urls = [];
+  }
+  urls = urls.filter(Boolean);
+  if (urls.length === 0) return; // keep the "No media" placeholder
+
+  mediaEl.innerHTML = '';
+  let current = buildMediaEl(urls[0]);
+  mediaEl.appendChild(current);
+
+  if (urls.length > 1) {
+    const nav = document.createElement('div');
+    nav.className = 'project-media-nav';
+    urls.forEach((url, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'project-media-dot' + (i === 0 ? ' is-active' : '');
+      dot.setAttribute('aria-label', `Show media ${i + 1} of ${urls.length}`);
+      dot.addEventListener('click', () => {
+        current.remove();
+        current = buildMediaEl(url);
+        mediaEl.insertBefore(current, nav);
+        nav.querySelectorAll('.project-media-dot').forEach((d, di) => {
+          d.classList.toggle('is-active', di === i);
+        });
+      });
+      nav.appendChild(dot);
+    });
+    mediaEl.appendChild(nav);
+  }
+});
+
+/* ==========================================================
+   Add project — builds a "files" list and a matching "types"
+   list (each "image" or "video") and sends both as repeated
+   form fields in one multipart request, matching:
+   files: List[UploadFile] = File(default=[])
+   types: List[str] = Form(default=[])
+   ========================================================== */
+const fileDrop = document.getElementById('file-drop');
+const fileInput = document.getElementById('file-input');
+const fileListEl = document.getElementById('file-list');
+let pendingFiles = []; // [{ file, type }]
+
+fileDrop.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+  Array.from(fileInput.files).forEach((file) => {
+    const guessedType = file.type.startsWith('video/') ? 'video' : 'image';
+    pendingFiles.push({ file, type: guessedType });
+  });
+  fileInput.value = ''; // allow re-selecting the same file later
+  renderFileList();
+});
+
+function renderFileList() {
+  fileListEl.innerHTML = '';
+  pendingFiles.forEach((entry, index) => {
+    const row = document.createElement('div');
+    row.className = 'file-row';
+
+    const name = document.createElement('span');
+    name.className = 'file-row-name';
+    name.textContent = entry.file.name;
+
+    const select = document.createElement('select');
+    ['image', 'video'].forEach((t) => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t === 'image' ? 'Image' : 'Video';
+      if (t === entry.type) opt.selected = true;
+      select.appendChild(opt);
+    });
+    select.addEventListener('change', () => {
+      pendingFiles[index].type = select.value;
+    });
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'file-row-remove';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', () => {
+      pendingFiles.splice(index, 1);
+      renderFileList();
+    });
+
+    row.appendChild(name);
+    row.appendChild(select);
+    row.appendChild(remove);
+    fileListEl.appendChild(row);
+  });
+}
+
+const addForm = document.getElementById('add-project-form');
+const addBtn = document.getElementById('add-project-btn');
+const addMessage = document.getElementById('add-project-message');
+
+function showAddMessage(text, type) {
+  addMessage.textContent = text;
+  addMessage.className = `form-message is-${type}`;
+  addMessage.hidden = false;
+}
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const title = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+
+  if (!title || !description) {
+    showAddMessage('Add a title and description.', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  pendingFiles.forEach(({ file, type }) => {
+    formData.append('files', file);
+    formData.append('types', type);
+  });
+
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding…';
+  addMessage.hidden = true;
+
+  try {
+    const res = await fetch(`${PAGE_BASE}/add_project`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData, // browser sets the multipart Content-Type header itself
+    });
+
+    if (res.status === 403) {
+      showAddMessage("You don't have permission to add projects.", 'error');
+      return;
+    }
+    if (res.status === 400) {
+      showAddMessage('Each file needs a matching, valid type (image or video).', 'error');
+      return;
+    }
+    if (res.status === 502) {
+      showAddMessage('Media upload failed. Try again.', 'error');
+      return;
+    }
+    if (!res.ok) {
+      showAddMessage(`Couldn't add the project (status ${res.status}).`, 'error');
+      return;
+    }
+
+    // The endpoint only returns {success: true}, with no rendered
+    // media URLs, so reload to pick up the freshly rendered list.
+    window.location.reload();
+  } catch (err) {
+    showAddMessage(`Couldn't reach the server (${err.message}).`, 'error');
+  } finally {
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add project';
+  }
+});
+
+/* ==========================================================
+   Delete project
+   ========================================================== */
+const projectsGrid = document.getElementById('projects-grid');
+
+if (projectsGrid) {
+  projectsGrid.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action="delete-project"]');
+    if (!btn) return;
+
+    const card = btn.closest('.project-card');
+    const projectId = card.dataset.projectId;
+    const title = card.querySelector('h3').textContent.trim();
+
+    if (!window.confirm(`Delete "${title}"? This removes its photos and videos too.`)) return;
+
+    btn.disabled = true;
+    card.classList.add('is-removing');
+
+    try {
+      const res = await fetch(`${PAGE_BASE}/del_project/${projectId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        card.classList.remove('is-removing');
+        btn.disabled = false;
+        window.alert(`Couldn't delete this project (status ${res.status}).`);
+        return;
+      }
+
+      card.remove();
+      if (projectsGrid.querySelectorAll('.project-card').length === 0) {
+        projectsGrid.outerHTML = '<p class="empty-projects" id="empty-projects">No projects yet.</p>';
+      }
+    } catch (err) {
+      card.classList.remove('is-removing');
+      btn.disabled = false;
+      window.alert(`Couldn't reach the server (${err.message}).`);
+    }
+  });
+}
+</script>
+</body>
+</html>
