@@ -89,8 +89,6 @@ button { font-family: 'Barlow', sans-serif; cursor: pointer; }
   border: none;
 }
 
-.wordmark-mark { color: var(--steel); display: flex; }
-
 /* ===== Layout helpers ===== */
 main {
   max-width: 1180px;
@@ -99,29 +97,23 @@ main {
 }
 
 .section-head { margin-bottom: 40px; max-width: 640px; }
-.section-head h1 { font-size: 42px; margin-bottom: 10px; }
 .section-head p { color: var(--steel-dark); font-size: 17px; }
 
-/* ===== Hero (full-bleed cover image) ===== */
-.hero-wrap { margin-top: -1px; }
-
-.hero {
-  position: relative;
-  left: 50%;
-  width: 100vw;
-  transform: translateX(-50%);
-}
+/* ===== Hero (cover image, contained to page width) ===== */
+.hero-wrap { padding-top: 40px; }
 
 .hero-cover {
   position: relative;
   width: 100%;
-  aspect-ratio: 21 / 9;
-  min-height: 420px;
+  aspect-ratio: 16 / 9;
+  min-height: 360px;
   overflow: hidden;
   background: var(--concrete);
+  border-radius: 4px;
 }
 
-.hero-cover img {
+.hero-cover img,
+.hero-cover video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -142,16 +134,14 @@ main {
 }
 
 .hero-copy {
-  max-width: 1180px;
   width: 100%;
-  margin: 0 auto;
-  padding: 0 32px 48px;
+  padding: 0 40px 40px;
   box-sizing: border-box;
   color: var(--paper);
 }
 
 .hero-kicker { font-size: 15px; color: var(--yellow); font-weight: 600; margin-bottom: 14px; letter-spacing: 0.2px; }
-.hero h1 { font-size: 52px; max-width: 13ch; margin-bottom: 18px; color: var(--paper); }
+.hero-copy h1 { font-size: 46px; max-width: 13ch; margin-bottom: 18px; color: var(--paper); }
 .hero-lede { font-size: 18px; color: var(--concrete); max-width: 46ch; margin-bottom: 28px; }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
@@ -177,9 +167,27 @@ main {
 
 .btn:active { transform: translateY(1px); }
 
+/* ===== Company summary ===== */
+.company-summary {
+  margin-top: 56px;
+  max-width: 820px;
+  padding-bottom: 4px;
+}
+
+.company-summary h2 {
+  font-size: 34px;
+  margin-bottom: 16px;
+}
+
+.company-summary p {
+  color: var(--steel-dark);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
 /* ===== Spec strip ===== */
 .spec-strip {
-  margin-top: 0;
+  margin-top: 40px;
   border-top: 1px solid var(--line-strong);
   border-bottom: 1px solid var(--line-strong);
   display: grid;
@@ -214,257 +222,300 @@ main {
 .service-row h3 { font-size: 22px; margin-bottom: 8px; font-weight: 600; }
 .service-row p { color: var(--steel-dark); font-size: 15.5px; }
 
-/* ===== Projects (list + viewer) ===== */
+/* ===== Projects: minimal grid + lightbox ===== */
 .projects { margin-top: 84px; }
 .projects .section-head { margin-bottom: 32px; }
 
 .projects-status {
   color: var(--steel-dark);
   font-size: 15px;
-  margin-bottom: 16px;
+  margin-bottom: 28px;
 }
 
 .projects-status.is-error { color: #A2402C; }
 
-.projects-split {
+.projects-grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 40px;
-  align-items: start;
-  border-top: 1px solid var(--line-strong);
-  padding-top: 28px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 36px 28px;
 }
 
-.projects-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.project-row {
+.project-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
+  gap: 14px;
+  padding: 0;
+  border: none;
+  background: none;
   text-align: left;
-  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.project-row:hover { border-color: var(--steel); }
-
-.project-row.is-active {
-  border-color: var(--ink);
-  background: var(--concrete);
-}
-
-.project-row-thumb {
-  aspect-ratio: 3 / 2;
+.project-card-thumb {
+  aspect-ratio: 4 / 3;
   background: var(--concrete);
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 3px;
 }
 
-.project-row-thumb img {
+.project-card-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.35s ease;
 }
 
-.project-row-thumb-empty {
+.project-card:hover .project-card-thumb img { transform: scale(1.045); }
+
+.project-card-thumb-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--steel-dark);
   font-size: 13px;
 }
 
-.project-row h3 {
-  font-size: 21px;
+.project-card-body h3 {
+  font-size: 20px;
   font-weight: 600;
+  margin-bottom: 6px;
+  transition: color 0.15s ease;
 }
 
-.project-row p {
+.project-card:hover .project-card-body h3 { color: var(--steel); }
+
+.project-card-body p {
   font-size: 14.5px;
   color: var(--steel-dark);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-.project-row-skeleton { background: var(--concrete); }
-.project-row-skeleton .project-row-thumb { background: var(--line); }
+.project-card-skeleton .project-card-thumb { background: var(--line); }
+.project-card-skeleton h3, .project-card-skeleton p { background: var(--line); border-radius: 2px; color: transparent; }
 
 .empty-projects {
-  grid-column: 1 / -1;
   padding: 30px 0;
   color: var(--steel-dark);
   font-size: 15px;
+  grid-column: 1 / -1;
 }
 
-/* ---- Viewer ---- */
-.project-viewer {
+.projects-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.projects-more-wrap .btn:hover { background: var(--ink); color: var(--paper); }
+
+/* ---- Lightbox ---- */
+.lightbox {
   display: none;
-  position: sticky;
-  top: 92px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(20, 22, 24, 0.94);
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
 }
 
-.project-viewer.is-visible { display: block; }
+.lightbox.is-visible { display: flex; }
 
-.viewer-media {
+.lightbox-frame {
+  width: 100%;
+  max-width: 980px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lightbox-media {
   position: relative;
-  aspect-ratio: 16 / 11;
-  min-height: 420px;
-  background: var(--concrete);
+  width: 100%;
+  max-height: 68vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
   overflow: hidden;
 }
 
-.viewer-media img,
-.viewer-media video {
+.lightbox-media img,
+.lightbox-media video {
+  max-width: 100%;
+  max-height: 68vh;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.lightbox-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  border: none;
+  background: none;
+  color: var(--paper);
+  font-size: 30px;
+  font-weight: 400;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-arrow:hover:not(:disabled) { opacity: 1; }
+.lightbox-arrow:disabled { opacity: 0.2; cursor: default; }
+.lightbox-arrow-prev { left: 0; justify-content: flex-start; padding-left: 8px; }
+.lightbox-arrow-next { right: 0; justify-content: flex-end; padding-right: 8px; }
+
+.lightbox-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  border: none;
+  background: none;
+  color: var(--paper);
+  font-size: 28px;
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.lightbox-close:hover { opacity: 1; }
+
+.lightbox-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--concrete);
+}
+
+.lightbox-info h3 { font-size: 21px; color: var(--paper); }
+.lightbox-info p { font-size: 14px; color: var(--concrete); opacity: 0.85; margin-top: 4px; }
+.lightbox-counter { font-size: 13px; color: var(--concrete); opacity: 0.7; white-space: nowrap; }
+
+/* ===== Team ===== */
+.team { margin-top: 84px; }
+
+.team-photo {
+  width: 100%;
+  aspect-ratio: 21 / 8;
+  min-height: 260px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--concrete);
+}
+
+.team-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  background: #000;
 }
 
-.viewer-placeholder {
+.team-summary {
+  margin-top: 28px;
+  max-width: 760px;
+  font-size: 16.5px;
   color: var(--steel-dark);
-  font-size: 14.5px;
-  text-align: center;
-  padding: 0 30px;
 }
 
-.viewer-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(28, 31, 34, 0.72);
-  color: var(--paper);
-  font-size: 17px;
-  line-height: 1;
+/* ===== Marquees (partners / countries) ===== */
+.marquee-section { margin-top: 84px; }
+.marquee-section .section-head { margin-bottom: 28px; }
+
+.marquee {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+
+.marquee-track {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 2;
-  transition: background 0.15s ease;
+  width: max-content;
+  will-change: transform;
+  animation-play-state: paused;
 }
 
-.viewer-close:hover { background: var(--ink); }
+.marquee-track.is-ready { animation-play-state: running; }
 
-.viewer-nav {
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--marquee-distance, -50%)); }
+}
+
+.marquee-track { animation: marquee-scroll linear infinite; }
+
+.partners-track { gap: 56px; animation-duration: 26s; padding: 8px 0; }
+.countries-track { gap: 44px; animation-duration: 32s; padding: 8px 0; }
+
+.partner-logo {
+  flex-shrink: 0;
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.72;
+  transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.marquee:hover .partner-logo { opacity: 1; filter: grayscale(0.15); }
+
+.country-chip {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
+  gap: 10px;
+  white-space: nowrap;
 }
 
-.viewer-nav-btn {
-  background: none;
-  border: 1.5px solid var(--ink);
-  color: var(--ink);
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 9px 16px;
-  border-radius: 2px;
-  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
-}
-
-.viewer-nav-btn:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
-.viewer-nav-btn:disabled { opacity: 0.35; cursor: default; }
-
-.viewer-counter {
-  font-size: 13px;
-  color: var(--steel-dark);
-  font-weight: 600;
-}
-
-.viewer-info { padding: 18px 20px 22px; }
-.viewer-info h3 { font-size: 21px; margin-bottom: 8px; }
-.viewer-info p { font-size: 14.5px; color: var(--steel-dark); }
-
-/* ===== Contact ===== */
-.contact { margin-top: 84px; }
-
-.contact-layout {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 56px;
-  align-items: start;
-}
-
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  border-top: 1px solid var(--line-strong);
-  padding-top: 28px;
-}
-
-.contact-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--steel-dark);
-}
-
-.contact-form input,
-.contact-form textarea {
-  font-family: 'Barlow', sans-serif;
-  font-size: 15px;
-  padding: 11px 12px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
-  color: var(--ink);
-  border-radius: 2px;
-  resize: vertical;
-}
-
-.contact-form input:focus,
-.contact-form textarea:focus {
-  outline: none;
-  border-color: var(--steel);
-}
-
-.contact-form .btn { align-self: flex-start; margin-top: 6px; border: 1.5px solid var(--ink); background: none; color: var(--ink); }
-.contact-form .btn:hover { background: var(--ink); color: var(--paper); }
-
-.form-note { font-size: 14px; color: var(--steel); font-weight: 600; }
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-  border-top: 1px solid var(--line-strong);
-  padding-top: 28px;
-}
-
-.info-block h3 { font-size: 15px; font-weight: 600; color: var(--steel); margin-bottom: 6px; }
-.info-block p { font-size: 15px; color: var(--ink); }
+.country-flag { font-size: 26px; line-height: 1; }
+.country-name { font-size: 15px; font-weight: 600; color: var(--steel-dark); }
 
 /* ===== Footer ===== */
 .site-footer {
-  border-top: 1px solid var(--line-strong);
   margin-top: 84px;
-  padding: 22px 32px;
+  background: var(--ink);
+  color: var(--concrete);
+}
+
+.footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 52px 32px 40px;
+  display: flex;
+  justify-content: space-between;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.footer-brand { max-width: 300px; }
+.footer-wordmark { color: var(--paper); font-size: 22px; }
+.footer-tag { margin-top: 10px; font-size: 14px; color: var(--line-strong); }
+
+.footer-contact { display: flex; gap: 48px; flex-wrap: wrap; }
+.footer-contact .info-block h3 { font-size: 15px; font-weight: 600; color: var(--yellow); margin-bottom: 6px; }
+.footer-contact .info-block p { font-size: 15px; color: var(--concrete); }
+
+.footer-bottom {
+  border-top: 1px solid rgba(246, 243, 236, 0.12);
+  padding: 18px 32px;
   text-align: center;
-  color: var(--steel-dark);
+  color: var(--line-strong);
   font-size: 13.5px;
 }
 
@@ -472,22 +523,24 @@ main {
 @media (max-width: 860px) {
   .header-inner { padding: 16px 20px; }
   main { padding: 0 20px; }
-  .hero-cover { aspect-ratio: 4 / 5; min-height: 460px; }
-  .hero-copy { padding: 0 20px 36px; }
-  .hero h1 { font-size: 36px; max-width: 11ch; }
+  .hero-cover { aspect-ratio: 3 / 4; min-height: 420px; border-radius: 0; }
+  .hero-copy { padding: 0 20px 32px; }
+  .hero-copy h1 { font-size: 34px; max-width: 11ch; }
   .spec-strip { grid-template-columns: repeat(2, 1fr); }
   .spec-item:nth-child(3) { border-left: none; }
   .services-grid { grid-template-columns: 1fr; }
   .service-row:nth-child(odd) { border-right: none; padding-right: 0; }
   .service-row:nth-child(even) { padding-left: 0; }
-  .projects-split { grid-template-columns: 1fr; }
-  .project-viewer { position: static; }
-  .viewer-media { min-height: 300px; }
-  .contact-layout { grid-template-columns: 1fr; gap: 36px; }
+  .projects-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 28px 20px; }
+  .lightbox { padding: 32px 16px; }
+  .lightbox-arrow { width: 44px; font-size: 24px; }
+  .team-photo { aspect-ratio: 4 / 5; min-height: 320px; }
+  .footer-inner { padding: 44px 20px 32px; gap: 36px; }
+  .footer-contact { gap: 32px; }
 }
 
-@media (max-width: 560px) {
-  .projects-list { grid-template-columns: 1fr; }
+@media (max-width: 480px) {
+  .lightbox-info { flex-direction: column; gap: 4px; }
 }
 </style>
 </head>
@@ -496,14 +549,6 @@ main {
 <header class="site-header">
   <div class="header-inner">
     <a href="#top" class="wordmark">
-      <span class="wordmark-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" width="28" height="28">
-          <path d="M4 26 L4 14 L16 6 L28 14 L28 26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-          <line x1="4" y1="26" x2="28" y2="26" stroke="currentColor" stroke-width="2.4"/>
-          <line x1="12" y1="26" x2="12" y2="17" stroke="currentColor" stroke-width="2"/>
-          <line x1="20" y1="26" x2="20" y2="17" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      </span>
       Inshaa
     </a>
   </div>
@@ -512,46 +557,41 @@ main {
 <main id="top">
 
   <div class="hero-wrap">
-    <div class="hero">
-      <div class="hero-cover">
-        <img src="/static/hero.jpg" alt="Inshaa building site under construction">
-        <div class="hero-cover-scrim" aria-hidden="true"></div>
-        <div class="hero-cover-inner">
-          <div class="hero-copy">
-            <p class="hero-kicker">Since 2008 — Cairo &amp; the Delta region</p>
-            <h1>We build things that outlast the contract.</h1>
-            <p class="hero-lede">Inshaa plans, builds and hands over residential and commercial projects — from the first survey stake to the final walkthrough.</p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="#projects-section">See our work</a>
-              <a class="btn btn-ghost" href="#contact-section">Start a project</a>
-            </div>
+    <div class="hero-cover">
+      <video id="hero-video" poster="/static/hero.jpg" preload="none" muted loop playsinline aria-label="Inshaa building site under construction"></video>
+      <div class="hero-cover-scrim" aria-hidden="true"></div>
+      <div class="hero-cover-inner">
+        <div class="hero-copy">
+          <p class="hero-kicker">Since 2008 — Cairo &amp; the Delta region</p>
+          <h1>We build things that outlast the contract.</h1>
+          <p class="hero-lede">Inshaa plans, builds and hands over residential and commercial projects — from the first survey stake to the final walkthrough.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#projects-section">See our work</a>
+            <a class="btn btn-ghost" href="#contact">Start a project</a>
           </div>
         </div>
       </div>
     </div>
   </div>
 
+  <section class="company-summary" aria-labelledby="company-summary-title">
+    <h2 id="company-summary-title">Insha' Minka</h2>
+    <p>Inshaa is a construction company built around dependable delivery. We bring together engineers, site supervisors and skilled tradespeople to turn plans into well-made residential and commercial spaces. From early coordination and structural work to finishes, utilities and handover, our team stays close to the work and accountable for the result.</p>
+  </section>
+
   <div class="spec-strip">
     <div class="spec-item">
-      <span class="spec-value">17</span>
-      <span class="spec-label">years in operation</span>
-    </div>
-    <div class="spec-item">
-      <span class="spec-value">120+</span>
-      <span class="spec-label">projects delivered</span>
+      <span class="spec-value">20+</span>
+      <span class="spec-label">projects completed</span>
     </div>
     <div class="spec-item">
       <span class="spec-value">40</span>
       <span class="spec-label">tradespeople on staff</span>
     </div>
-    <div class="spec-item">
-      <span class="spec-value">0</span>
-      <span class="spec-label">missed handover dates in 2025</span>
-    </div>
   </div>
 
   <div class="services">
-    <h2>What we take on</h2>
+    <h2>What we do</h2>
     <div class="services-grid">
       <div class="service-row">
         <h3>Residential builds</h3>
@@ -575,102 +615,267 @@ main {
   <div class="projects" id="projects-section">
     <div class="section-head">
       <h2>Previous projects</h2>
-      <p>Pulled live from our project log. Click one to see its photos and videos.</p>
+      <p>Click one to open its photos and videos.</p>
     </div>
 
     <div id="projects-status" class="projects-status"></div>
 
-    <div class="projects-split">
-      <div class="projects-list" id="projects-list"></div>
+    <div class="projects-grid" id="projects-grid"></div>
 
-      <aside class="project-viewer" id="project-viewer">
-        <div class="viewer-media" id="viewer-media">
-          <button type="button" class="viewer-close" id="viewer-close" aria-label="Close">&times;</button>
-        </div>
-        <div class="viewer-nav">
-          <button type="button" class="viewer-nav-btn" id="viewer-prev" disabled>← Previous</button>
-          <span class="viewer-counter" id="viewer-counter"></span>
-          <button type="button" class="viewer-nav-btn" id="viewer-next" disabled>Next →</button>
-        </div>
-        <div class="viewer-info">
-          <h3 id="viewer-title"></h3>
-          <p id="viewer-desc"></p>
-        </div>
-      </aside>
+    <div class="projects-more-wrap" id="projects-more-wrap" hidden>
+      <button type="button" class="btn btn-ghost" id="projects-more-btn">View more</button>
     </div>
   </div>
 
-  <div class="contact" id="contact-section">
+  <div class="team" id="team-section">
     <div class="section-head">
-      <h1>Contact us</h1>
-      <p>Tell us about the site and what you need built. We reply within one working day.</p>
+      <h2>The team</h2>
+      <p>The people who plan, supervise and finish every Inshaa project.</p>
     </div>
 
-    <div class="contact-layout">
-      <form class="contact-form" id="contact-form">
-        <label>
-          Name
-          <input type="text" name="name" required placeholder="Your full name">
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" required placeholder="you@example.com">
-        </label>
-        <label>
-          Phone
-          <input type="tel" name="phone" placeholder="+20 ...">
-        </label>
-        <label>
-          Tell us about the project
-          <textarea name="message" rows="5" required placeholder="Location, rough size, timeline..."></textarea>
-        </label>
-        <button type="submit" class="btn btn-primary">Send message</button>
-        <p class="form-note" id="form-note" hidden></p>
-      </form>
+    <div class="team-photo">
+      <img src="/static/team.jpg" alt="The Inshaa team on site">
+    </div>
 
-      <div class="contact-info">
-        <div class="info-block">
-          <h3>Location</h3>
-          <p>الميريلاند - روكسي - مصر الجديدة<br>Cairo, Egypt</p>
-        </div>
-        <div class="info-block">
-          <h3>Phone</h3>
-          <p>01068835403</p>
-        </div>
-        <div class="info-block">
-          <h3>Email</h3>
-          <p>info@inshaa.example</p>
-        </div>
-      </div>
+    <p class="team-summary">Inshaa is run by a core team of engineers, site supervisors and finishing specialists who've worked together for over a decade. Every project is assigned a dedicated project manager who stays on site from groundbreaking to handover, backed by an in-house crew of more than 40 tradespeople — so the people who quote the job are the same people accountable for delivering it.</p>
+  </div>
+
+  <div class="marquee-section" id="partners-section">
+    <div class="section-head">
+      <h2>Companies we've partnered with</h2>
+    </div>
+
+    <div class="marquee">
+      <div class="marquee-track partners-track" id="partners-track"></div>
+    </div>
+  </div>
+
+  <div class="marquee-section" id="countries-section">
+    <div class="section-head">
+      <h2>Countries we've worked in</h2>
+    </div>
+
+    <div class="marquee">
+      <div class="marquee-track countries-track" id="countries-track"></div>
     </div>
   </div>
 
 </main>
 
-<footer class="site-footer">
-  <p>© 2026 Inshaa</p>
+<footer class="site-footer" id="contact">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="#top" class="wordmark footer-wordmark">Inshaa</a>
+      <p class="footer-tag">We build things that outlast the contract.</p>
+    </div>
+
+    <div class="footer-contact">
+      <div class="info-block">
+        <h3>Location</h3>
+        <p>الميريلاند - روكسي - مصر الجديدة<br>Cairo, Egypt</p>
+      </div>
+      <div class="info-block">
+        <h3>Phone</h3>
+        <p>01068835403</p>
+      </div>
+      <div class="info-block">
+        <h3>Email</h3>
+        <p>info@inshaa.example</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 Inshaa</p>
+  </div>
 </footer>
+
+<!-- Lightbox overlay, shared by all project cards -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-frame">
+    <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close">&times;</button>
+    <div class="lightbox-media" id="lightbox-media">
+      <button type="button" class="lightbox-arrow lightbox-arrow-prev" id="lightbox-prev" aria-label="Previous">&#8249;</button>
+      <button type="button" class="lightbox-arrow lightbox-arrow-next" id="lightbox-next" aria-label="Next">&#8250;</button>
+    </div>
+    <div class="lightbox-info">
+      <div>
+        <h3 id="lightbox-title"></h3>
+        <p id="lightbox-desc"></p>
+      </div>
+      <span class="lightbox-counter" id="lightbox-counter"></span>
+    </div>
+  </div>
+</div>
 
 <script>
 
 const API_BASE = '';
 const PROJECTS_ENDPOINT = `${API_BASE}/home/projects`;
+const PROJECTS_INITIAL_COUNT = 6;
 
-// ===== Projects: list (left) + viewer (right) =====
+// ===== Hero video: lazy-loaded so the poster paints instantly =====
+// preload="none" on the <video> stops the browser fetching it up front;
+// we only assign a src (and start the fetch) once the rest of the page
+// has loaded, and skip it entirely on slow/data-saver connections.
+(function loadHeroVideo() {
+  const heroVideo = document.getElementById('hero-video');
+  if (!heroVideo) return;
+
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const isSlowOrSaveData = connection && (connection.saveData || /2g/.test(connection.effectiveType || ''));
+  if (isSlowOrSaveData) return; // stay on the poster image
+
+  const startLoad = () => {
+    heroVideo.src = '/static/hero.mp4';
+    heroVideo.play().catch(() => {
+      /* autoplay can be blocked by the browser; poster stays visible */
+    });
+  };
+
+  if (document.readyState === 'complete') {
+    startLoad();
+  } else {
+    window.addEventListener('load', startLoad, { once: true });
+  }
+})();
+
+const PARTNER_LOGOS = [
+  { name: 'Partner name', src: '/static/partners/partner-1.png' },
+  { name: 'Partner name', src: '/static/partners/partner-2.png' },
+  { name: 'Partner name', src: '/static/partners/partner-3.png' },
+  { name: 'Partner name', src: '/static/partners/partner-4.png' },
+  { name: 'Partner name', src: '/static/partners/partner-5.png' },
+  { name: 'Partner name', src: '/static/partners/partner-6.png' },
+];
+
+const COUNTRIES = [
+  { name: 'Egypt', flag: '' },
+  { name: 'Saudi Arabia', flag: '' },
+  { name: 'United Arab Emirates', flag: '' },
+  { name: 'Qatar', flag: '' },
+  { name: 'Kuwait', flag: '' },
+  { name: 'Jordan', flag: '' },
+];
+
+/* ==========================================================
+   Seamless infinite marquee
+   ----------------------------------------------------------
+   Naive approach: duplicate the list once and animate
+   translateX(0) -> translateX(-50%). That only lines up
+   perfectly if the duplicated track's total width splits
+   into two EXACT halves — but with a flex `gap`, N items has
+   N-1 gaps, so 2N items has 2N-1 gaps, and -50% doesn't land
+   exactly on the start of the second copy. The mismatch is
+   small, but it accumulates every loop and shows up as a
+   jump/restart.
+
+   Fix: render enough copies to comfortably cover the visible
+   width twice over, then MEASURE the real pixel distance from
+   the first item to the first item of the second copy (its
+   offsetLeft), and animate to exactly that distance instead
+   of a percentage guess. Recomputed after images load and on
+   resize, since those are the two things that can change an
+   item's width after the first paint.
+   ========================================================== */
+function setupMarquee(trackId, items, renderItem) {
+  const track = document.getElementById(trackId);
+  if (!track || items.length === 0) return;
+
+  const container = track.parentElement;
+
+  // Render enough copies so the track is comfortably wider than
+  // 2x the visible container, so there's always a full second
+  // copy queued up regardless of how few items there are.
+  function buildCopies() {
+    const containerWidth = container.offsetWidth || window.innerWidth;
+    const singleHTML = items.map(renderItem).join('');
+
+    // Rough width guess from a temporary single copy so we know
+    // how many copies are needed; refined for real after layout.
+    track.innerHTML = singleHTML;
+    const roughSingleWidth = track.scrollWidth || 1;
+    const copiesNeeded = Math.max(2, Math.ceil((containerWidth * 2) / roughSingleWidth) + 1);
+
+    track.innerHTML = singleHTML.repeat(copiesNeeded);
+    return copiesNeeded;
+  }
+
+  function measureAndArm() {
+    const children = track.children;
+    if (children.length < items.length + 1) return;
+
+    // The distance for one seamless loop is exactly the position
+    // of the first item of the second copy — not half the total
+    // track width.
+    const distance = children[items.length].offsetLeft - children[0].offsetLeft;
+    if (distance <= 0) return;
+
+    track.style.setProperty('--marquee-distance', `-${distance}px`);
+    track.classList.add('is-ready');
+  }
+
+  buildCopies();
+
+  const images = track.querySelectorAll('img');
+  if (images.length > 0) {
+    let remaining = images.length;
+    const onOneLoaded = () => {
+      remaining -= 1;
+      if (remaining <= 0) measureAndArm();
+    };
+    images.forEach((img) => {
+      if (img.complete) {
+        onOneLoaded();
+      } else {
+        img.addEventListener('load', onOneLoaded, { once: true });
+        img.addEventListener('error', onOneLoaded, { once: true });
+      }
+    });
+  } else {
+    measureAndArm();
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      track.classList.remove('is-ready');
+      buildCopies();
+      // Images (if any) are already loaded/cached at this point,
+      // so a synchronous measure after layout is enough.
+      requestAnimationFrame(measureAndArm);
+    }, 200);
+  });
+}
+
+setupMarquee('partners-track', PARTNER_LOGOS, (p) => (
+  `<img class="partner-logo" src="${p.src}" alt="${p.name}" loading="eager">`
+));
+
+setupMarquee('countries-track', COUNTRIES, (c) => (
+  `<span class="country-chip"><span class="country-flag" aria-hidden="true">${c.flag}</span><span class="country-name">${c.name}</span></span>`
+));
+
+// ===== Projects grid + lightbox =====
 const statusEl = document.getElementById('projects-status');
-const listEl = document.getElementById('projects-list');
-const viewerEl = document.getElementById('project-viewer');
-const viewerMediaEl = document.getElementById('viewer-media');
-const viewerCloseBtn = document.getElementById('viewer-close');
-const viewerPrevBtn = document.getElementById('viewer-prev');
-const viewerNextBtn = document.getElementById('viewer-next');
-const viewerCounterEl = document.getElementById('viewer-counter');
-const viewerTitleEl = document.getElementById('viewer-title');
-const viewerDescEl = document.getElementById('viewer-desc');
+const gridEl = document.getElementById('projects-grid');
+const moreWrapEl = document.getElementById('projects-more-wrap');
+const moreBtn = document.getElementById('projects-more-btn');
+
+const lightboxEl = document.getElementById('lightbox');
+const lightboxMediaEl = document.getElementById('lightbox-media');
+const lightboxCloseBtn = document.getElementById('lightbox-close');
+const lightboxPrevBtn = document.getElementById('lightbox-prev');
+const lightboxNextBtn = document.getElementById('lightbox-next');
+const lightboxTitleEl = document.getElementById('lightbox-title');
+const lightboxDescEl = document.getElementById('lightbox-desc');
+const lightboxCounterEl = document.getElementById('lightbox-counter');
 
 let projectsCache = [];
 let activeProjectIndex = null;
 let activeMediaIndex = 0;
+let projectsExpanded = false;
 
 // The endpoint only returns media_urls as plain strings, with no
 // per-item type, so image/video is guessed from the URL — a video
@@ -685,7 +890,7 @@ function looksLikeVideo(url) {
 loadProjects();
 
 async function loadProjects() {
-  renderSkeletons(4);
+  renderSkeletons(6);
   statusEl.textContent = 'Loading projects…';
   statusEl.classList.remove('is-error');
 
@@ -694,53 +899,66 @@ async function loadProjects() {
     if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
     const projects = await res.json();
     projectsCache = Array.isArray(projects) ? projects : [];
-    renderProjectsList();
+    projectsExpanded = false;
+    renderProjectsGrid();
   } catch (err) {
-    listEl.innerHTML = '';
+    gridEl.innerHTML = '';
+    moreWrapEl.hidden = true;
     statusEl.classList.add('is-error');
     statusEl.textContent = `Couldn't load projects (${err.message}). Check that the API is running and reachable at ${PROJECTS_ENDPOINT}.`;
   }
 }
 
 function renderSkeletons(count) {
-  listEl.innerHTML = '';
+  gridEl.innerHTML = '';
   for (let i = 0; i < count; i++) {
-    const row = document.createElement('div');
-    row.className = 'project-row project-row-skeleton';
-    row.innerHTML = `<div class="project-row-thumb"></div><h3>&nbsp;</h3><p>&nbsp;</p>`;
-    listEl.appendChild(row);
+    const card = document.createElement('div');
+    card.className = 'project-card project-card-skeleton';
+    card.innerHTML = `<div class="project-card-thumb"></div><div class="project-card-body"><h3>Loading</h3><p>Loading</p></div>`;
+    gridEl.appendChild(card);
   }
 }
 
-function renderProjectsList() {
-  listEl.innerHTML = '';
+function renderProjectsGrid() {
+  gridEl.innerHTML = '';
+  statusEl.textContent = '';
 
   if (projectsCache.length === 0) {
     statusEl.textContent = 'No projects to show yet.';
     const empty = document.createElement('p');
     empty.className = 'empty-projects';
     empty.textContent = 'No projects to show yet.';
-    listEl.appendChild(empty);
+    gridEl.appendChild(empty);
+    moreWrapEl.hidden = true;
     return;
   }
 
-  statusEl.textContent = `${projectsCache.length} project${projectsCache.length === 1 ? '' : 's'}. Click one to view its media.`;
+  const visibleCount = projectsExpanded ? projectsCache.length : Math.min(PROJECTS_INITIAL_COUNT, projectsCache.length);
 
-  projectsCache.forEach((project, index) => {
-    listEl.appendChild(buildProjectRow(project, index));
+  projectsCache.slice(0, visibleCount).forEach((project, index) => {
+    gridEl.appendChild(buildProjectCard(project, index));
   });
+
+  const hasMore = projectsCache.length > PROJECTS_INITIAL_COUNT;
+  moreWrapEl.hidden = !hasMore;
+  moreBtn.textContent = projectsExpanded ? 'View less' : 'View more';
+  moreBtn.setAttribute('aria-expanded', String(projectsExpanded));
 }
 
-function buildProjectRow(project, index) {
-  const row = document.createElement('button');
-  row.type = 'button';
-  row.className = 'project-row';
-  row.setAttribute('aria-pressed', 'false');
+moreBtn.addEventListener('click', () => {
+  projectsExpanded = !projectsExpanded;
+  renderProjectsGrid();
+});
+
+function buildProjectCard(project, index) {
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'project-card';
 
   const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
 
   const thumb = document.createElement('div');
-  thumb.className = 'project-row-thumb';
+  thumb.className = 'project-card-thumb';
   if (urls.length > 0 && !looksLikeVideo(urls[0])) {
     const img = document.createElement('img');
     img.src = urls[0];
@@ -751,15 +969,18 @@ function buildProjectRow(project, index) {
     // first item is a video — show a plain label instead of an
     // autoplaying/silent video thumbnail
     const label = document.createElement('span');
-    label.className = 'project-row-thumb-empty';
+    label.className = 'project-card-thumb-empty';
     label.textContent = 'Video';
     thumb.appendChild(label);
   } else {
     const label = document.createElement('span');
-    label.className = 'project-row-thumb-empty';
+    label.className = 'project-card-thumb-empty';
     label.textContent = 'No media';
     thumb.appendChild(label);
   }
+
+  const body = document.createElement('div');
+  body.className = 'project-card-body';
 
   const title = document.createElement('h3');
   title.textContent = project.title || 'Untitled project';
@@ -767,79 +988,66 @@ function buildProjectRow(project, index) {
   const desc = document.createElement('p');
   desc.textContent = project.discription || project.description || '';
 
-  row.appendChild(thumb);
-  row.appendChild(title);
-  row.appendChild(desc);
+  body.appendChild(title);
+  body.appendChild(desc);
 
-  row.addEventListener('click', () => selectProject(index));
+  card.appendChild(thumb);
+  card.appendChild(body);
 
-  return row;
+  card.addEventListener('click', () => openLightbox(index));
+
+  return card;
 }
 
-function selectProject(index) {
+function openLightbox(index) {
   activeProjectIndex = index;
   activeMediaIndex = 0;
-
-  document.querySelectorAll('.project-row').forEach((row, i) => {
-    const isActive = i === index;
-    row.classList.toggle('is-active', isActive);
-    row.setAttribute('aria-pressed', String(isActive));
-  });
-
-  viewerEl.classList.add('is-visible');
-
-  renderViewer();
-  viewerEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  lightboxEl.classList.add('is-visible');
+  document.body.style.overflow = 'hidden';
+  renderLightbox();
 }
 
-function closeViewer() {
+function closeLightbox() {
   activeProjectIndex = null;
   activeMediaIndex = 0;
-
-  document.querySelectorAll('.project-row').forEach((row) => {
-    row.classList.remove('is-active');
-    row.setAttribute('aria-pressed', 'false');
-  });
-
-  viewerEl.classList.remove('is-visible');
+  lightboxEl.classList.remove('is-visible');
+  document.body.style.overflow = '';
 }
 
-function renderViewer() {
+function renderLightbox() {
   const project = projectsCache[activeProjectIndex];
   if (!project) return;
 
   const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
 
-  viewerTitleEl.textContent = project.title || 'Untitled project';
-  viewerDescEl.textContent = project.discription || project.description || '';
+  lightboxTitleEl.textContent = project.title || 'Untitled project';
+  lightboxDescEl.textContent = project.discription || project.description || '';
 
-  // Clear everything except the close button, which lives inside
-  // viewer-media so it can sit on top of the image/video.
-  Array.from(viewerMediaEl.children).forEach((child) => {
-    if (child !== viewerCloseBtn) child.remove();
+  // Clear everything except the nav arrows, which live inside
+  // lightbox-media so they can sit on top of the image/video.
+  Array.from(lightboxMediaEl.children).forEach((child) => {
+    if (child !== lightboxPrevBtn && child !== lightboxNextBtn) child.remove();
   });
 
   if (urls.length === 0) {
     const placeholder = document.createElement('p');
-    placeholder.className = 'viewer-placeholder';
+    placeholder.style.color = 'var(--concrete)';
     placeholder.textContent = 'No photos or videos for this project yet.';
-    viewerMediaEl.appendChild(placeholder);
-    viewerCounterEl.textContent = '';
-    viewerPrevBtn.disabled = true;
-    viewerNextBtn.disabled = true;
+    lightboxMediaEl.appendChild(placeholder);
+    lightboxCounterEl.textContent = '';
+    lightboxPrevBtn.disabled = true;
+    lightboxNextBtn.disabled = true;
     return;
   }
 
   const url = urls[activeMediaIndex];
   const mediaEl = looksLikeVideo(url) ? buildVideoEl(url) : buildImgEl(url);
-  viewerMediaEl.appendChild(mediaEl);
+  lightboxMediaEl.appendChild(mediaEl);
 
-  viewerCounterEl.textContent = `${activeMediaIndex + 1} / ${urls.length}`;
-  viewerPrevBtn.disabled = activeMediaIndex === 0;
-  viewerNextBtn.disabled = activeMediaIndex === urls.length - 1;
+  lightboxCounterEl.textContent = urls.length > 1 ? `${activeMediaIndex + 1} / ${urls.length}` : '';
+  lightboxPrevBtn.disabled = activeMediaIndex === 0;
+  lightboxNextBtn.disabled = activeMediaIndex === urls.length - 1;
 }
-
-viewerCloseBtn.addEventListener('click', closeViewer);
 
 function buildImgEl(url) {
   const img = document.createElement('img');
@@ -856,31 +1064,32 @@ function buildVideoEl(url) {
   return video;
 }
 
-viewerPrevBtn.addEventListener('click', () => {
-  if (activeProjectIndex === null || activeMediaIndex === 0) return;
-  activeMediaIndex -= 1;
-  renderViewer();
+lightboxCloseBtn.addEventListener('click', closeLightbox);
+
+// Click on the dark backdrop (not the frame itself) closes the lightbox.
+lightboxEl.addEventListener('click', (e) => {
+  if (e.target === lightboxEl) closeLightbox();
 });
 
-viewerNextBtn.addEventListener('click', () => {
+document.addEventListener('keydown', (e) => {
+  if (!lightboxEl.classList.contains('is-visible')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') stepMedia(-1);
+  if (e.key === 'ArrowRight') stepMedia(1);
+});
+
+lightboxPrevBtn.addEventListener('click', () => stepMedia(-1));
+lightboxNextBtn.addEventListener('click', () => stepMedia(1));
+
+function stepMedia(direction) {
   if (activeProjectIndex === null) return;
   const project = projectsCache[activeProjectIndex];
   const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
-  if (activeMediaIndex >= urls.length - 1) return;
-  activeMediaIndex += 1;
-  renderViewer();
-});
-
-// ===== Contact form =====
-const contactForm = document.getElementById('contact-form');
-const formNote = document.getElementById('form-note');
-
-contactForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  formNote.hidden = false;
-  formNote.textContent = "Thanks — this form isn't wired up to the backend yet, but your message would be sent from here.";
-  contactForm.reset();
-});
+  const next = activeMediaIndex + direction;
+  if (next < 0 || next > urls.length - 1) return;
+  activeMediaIndex = next;
+  renderLightbox();
+}
 </script>
 </body>
 </html>

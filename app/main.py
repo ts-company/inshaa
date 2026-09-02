@@ -11,7 +11,7 @@ from app.models.permissions_model import Permission
 from app.core.security import hash_password
 from app.core.auth import validate_user
 from app.config import BASE_DIR
-from app.routes import login, home, dashboard, users, page
+from app.routes import login, home, dashboard, users, page, reviewings, extracts
 from datetime import datetime, timezone
 
 load_dotenv()
@@ -39,6 +39,8 @@ app.include_router(home.router)
 app.include_router(dashboard.router)
 app.include_router(page.router)
 app.include_router(users.router)
+app.include_router(extracts.router)
+app.include_router(reviewings.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):

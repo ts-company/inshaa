@@ -12,18 +12,28 @@ from app.utils import generate_url, upload_file, delete_file
 from app.config import BASE_DIR
 from typing import List
 
-router = APIRouter(prefix="/engineering")
+router = APIRouter(prefix="/extracts")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @router.get("/")
 def get_projects(request: Request, db: Session = Depends(get_db)):
 
-    token = request.cookies.get("access_token")
-    user_id, user_role = validate_user(token)
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    if user.role not in ("super_admin", "eng_admin", "engineer"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-    return templates.TemplateResponse("engineering_dashboard.html", {"request": request, "permissions": current_projects})
+    projects = db.query(Project).all()
+    projects_ids = [row.id for row in projects]
+
+    medias = db.query(ProjectMedia).filter(ProjectMedia.project_id.in_(projects_ids)).all()
+    medias_by_project = {}
+    for m in medias:
+        medias_by_project.setdefault(m.project_id, []).append(m)
+
+    current_projects = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "discription": p.description,
+            "media_urls": [generate_url(m.public_id, m.resource_type) for m in medias_by_project.get(p.id, [])],
+        }
+        for p in projects
+    ]
+    return templates.TemplateResponse("extracts.html", {"request": request})
