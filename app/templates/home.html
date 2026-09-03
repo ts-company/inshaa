@@ -233,6 +233,7 @@ main {
 }
 
 .projects-status.is-error { color: #A2402C; }
+.projects-status:empty { margin-bottom: 0; }
 
 .projects-grid {
   display: grid;
@@ -432,6 +433,113 @@ main {
   color: var(--steel-dark);
 }
 
+/* ===== Sectors / track record ===== */
+.sectors { margin-top: 84px; }
+.sectors .section-head { margin-bottom: 32px; }
+
+.sectors-status {
+  color: var(--steel-dark);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+.sectors-status.is-error { color: #A2402C; }
+.sectors-status:empty { margin-bottom: 0; }
+
+.sector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--line-strong);
+}
+
+.sector-card {
+  padding: 26px 28px 26px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sector-card:nth-child(odd) { border-right: 1px solid var(--line); padding-right: 28px; }
+.sector-card:nth-child(even) { padding-left: 28px; }
+
+.sector-card h3 {
+  font-size: 21px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.sector-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sector-card li {
+  font-size: 14.5px;
+  color: var(--steel-dark);
+  padding-left: 14px;
+  position: relative;
+}
+
+.sector-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 1.5px;
+  background: var(--yellow);
+}
+
+.sector-card-skeleton h3 {
+  background: var(--line);
+  border-radius: 2px;
+  color: transparent;
+  height: 21px;
+  width: 55%;
+}
+
+.sector-card-skeleton li {
+  background: var(--line);
+  border-radius: 2px;
+  color: transparent;
+  height: 14px;
+  width: 75%;
+}
+
+.sector-card-skeleton li::before { display: none; }
+
+.sectors-note {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line-strong);
+  max-width: 640px;
+}
+
+.sectors-note p {
+  font-size: 16px;
+  font-style: italic;
+  color: var(--steel-dark);
+  line-height: 1.6;
+}
+
+.sectors-signoff {
+  margin-top: 14px;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sectors-signoff span {
+  display: block;
+  font-weight: 400;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+
 /* ===== Marquees (partners / countries) ===== */
 .marquee-section { margin-top: 84px; }
 .marquee-section .section-head { margin-bottom: 28px; }
@@ -531,6 +639,9 @@ main {
   .services-grid { grid-template-columns: 1fr; }
   .service-row:nth-child(odd) { border-right: none; padding-right: 0; }
   .service-row:nth-child(even) { padding-left: 0; }
+  .sector-grid { grid-template-columns: 1fr; }
+  .sector-card:nth-child(odd) { border-right: none; padding-right: 0; }
+  .sector-card:nth-child(even) { padding-left: 0; }
   .projects-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 28px 20px; }
   .lightbox { padding: 32px 16px; }
   .lightbox-arrow { width: 44px; font-size: 24px; }
@@ -640,6 +751,22 @@ main {
     <p class="team-summary">Inshaa is run by a core team of engineers, site supervisors and finishing specialists who've worked together for over a decade. Every project is assigned a dedicated project manager who stays on site from groundbreaking to handover, backed by an in-house crew of more than 40 tradespeople — so the people who quote the job are the same people accountable for delivering it.</p>
   </div>
 
+  <div class="sectors" id="sectors-section">
+    <div class="section-head">
+      <h2>Track record across sectors</h2>
+      <p>A sample of past work — electromechanical, structural and finishing contracts delivered across these industries.</p>
+    </div>
+
+    <div id="sectors-status" class="sectors-status"></div>
+
+    <div class="sector-grid" id="sector-grid"></div>
+
+    <div class="sectors-note">
+      <p>"We would be honored to work with you on your current and future projects."</p>
+      <p class="sectors-signoff">Eng. Abdel Rahman El-Guindy<span>Chairman of the Board</span></p>
+    </div>
+  </div>
+
   <div class="marquee-section" id="partners-section">
     <div class="section-head">
       <h2>Companies we've partnered with</h2>
@@ -712,6 +839,7 @@ main {
 
 const API_BASE = '';
 const PROJECTS_ENDPOINT = `${API_BASE}/home/projects`;
+const CV_ENDPOINT = `${API_BASE}/home/cv`;
 const PROJECTS_INITIAL_COUNT = 6;
 
 // ===== Hero video: lazy-loaded so the poster paints instantly =====
@@ -857,6 +985,73 @@ setupMarquee('countries-track', COUNTRIES, (c) => (
   `<span class="country-chip"><span class="country-flag" aria-hidden="true">${c.flag}</span><span class="country-name">${c.name}</span></span>`
 ));
 
+// ===== Track record / sectors (from /cv) =====
+const sectorsStatusEl = document.getElementById('sectors-status');
+const sectorGridEl = document.getElementById('sector-grid');
+
+loadSectors();
+
+async function loadSectors() {
+  renderSectorSkeletons(6);
+  sectorsStatusEl.textContent = 'Loading track record…';
+  sectorsStatusEl.classList.remove('is-error');
+
+  try {
+    const res = await fetch(CV_ENDPOINT);
+    if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+    const categories = await res.json();
+    renderSectorsGrid(Array.isArray(categories) ? categories : []);
+  } catch (err) {
+    sectorGridEl.innerHTML = '';
+    sectorsStatusEl.classList.add('is-error');
+    sectorsStatusEl.textContent = `Couldn't load track record (${err.message}). Check that the API is running and reachable at ${CV_ENDPOINT}.`;
+  }
+}
+
+function renderSectorSkeletons(count) {
+  sectorGridEl.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const card = document.createElement('div');
+    card.className = 'sector-card sector-card-skeleton';
+    card.innerHTML = `<h3>Loading</h3><ul><li>Loading</li><li>Loading</li><li>Loading</li></ul>`;
+    sectorGridEl.appendChild(card);
+  }
+}
+
+function renderSectorsGrid(categories) {
+  sectorGridEl.innerHTML = '';
+
+  if (categories.length === 0) {
+    sectorsStatusEl.textContent = 'No track record to show yet.';
+    return;
+  }
+
+  sectorsStatusEl.textContent = '';
+  categories.forEach((category) => {
+    sectorGridEl.appendChild(buildSectorCard(category));
+  });
+}
+
+function buildSectorCard(category) {
+  const card = document.createElement('div');
+  card.className = 'sector-card';
+
+  const title = document.createElement('h3');
+  title.textContent = category.title || 'Untitled';
+
+  const list = document.createElement('ul');
+  const subCategories = Array.isArray(category.sub_categories) ? category.sub_categories : [];
+  subCategories.forEach((text) => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    list.appendChild(li);
+  });
+
+  card.appendChild(title);
+  card.appendChild(list);
+  return card;
+}
+
 // ===== Projects grid + lightbox =====
 const statusEl = document.getElementById('projects-status');
 const gridEl = document.getElementById('projects-grid');
@@ -986,7 +1181,7 @@ function buildProjectCard(project, index) {
   title.textContent = project.title || 'Untitled project';
 
   const desc = document.createElement('p');
-  desc.textContent = project.discription || project.description || '';
+  desc.textContent = project.description || '';
 
   body.appendChild(title);
   body.appendChild(desc);
@@ -1021,7 +1216,7 @@ function renderLightbox() {
   const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
 
   lightboxTitleEl.textContent = project.title || 'Untitled project';
-  lightboxDescEl.textContent = project.discription || project.description || '';
+  lightboxDescEl.textContent = project.description || '';
 
   // Clear everything except the nav arrows, which live inside
   // lightbox-media so they can sit on top of the image/video.

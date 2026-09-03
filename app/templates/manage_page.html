@@ -248,6 +248,13 @@ main {
 .btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
 .btn:disabled { opacity: 0.55; cursor: default; }
 
+.btn-outline {
+  background: none;
+  color: var(--ink);
+}
+
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+
 .btn-danger-outline {
   background: none;
   color: var(--error);
@@ -350,6 +357,145 @@ main {
   text-align: center;
 }
 
+/* ===== CV categories ===== */
+.cv-categories {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+  margin-top: 64px;
+}
+
+.cv-categories h2 { font-size: 22px; margin-bottom: 18px; }
+
+.cv-categories-intro {
+  font-size: 14.5px;
+  color: var(--steel-dark);
+  margin-bottom: 20px;
+  max-width: 640px;
+}
+
+.add-category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 720px;
+  margin-bottom: 56px;
+}
+
+.add-category-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.add-category-form input[type="text"] {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.add-category-form input:focus { outline: none; border-color: var(--steel); }
+
+.subcat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.subcat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subcat-row input[type="text"] {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.subcat-row input:focus { outline: none; border-color: var(--steel); }
+
+.subcat-row-remove {
+  background: none;
+  border: none;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
+.subcat-row-remove:hover { text-decoration: underline; }
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.category-card {
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.category-card.is-removing { opacity: 0.4; }
+
+.category-card h3 { font-size: 20px; font-weight: 600; }
+
+.category-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-card li {
+  font-size: 14px;
+  color: var(--steel-dark);
+  padding-left: 14px;
+  position: relative;
+}
+
+.category-card li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 6px;
+  height: 1.5px;
+  background: var(--yellow);
+}
+
+.category-card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.category-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 /* ===== Footer ===== */
 .site-footer {
   border-top: 1px solid var(--line-strong);
@@ -432,6 +578,33 @@ main {
     {% else %}
     <p class="empty-projects" id="empty-projects">No projects yet.</p>
     {% endif %}
+  </section>
+
+  <section class="cv-categories" id="cv-categories-section">
+    <h2>Add a CV category</h2>
+    <p class="cv-categories-intro">These show up as sections in the "Track record" part of the public site — a title (e.g. "Oil &amp; gas") with a list of sub-categories underneath (e.g. named projects or clients).</p>
+
+    <form class="add-category-form" id="add-category-form" novalidate>
+      <label>
+        Category title
+        <input type="text" name="cat_title" id="cat-title" required>
+      </label>
+
+      <label>
+        Sub-categories
+        <div class="subcat-list" id="add-subcat-list"></div>
+      </label>
+      <button type="button" class="btn btn-outline btn-small" id="add-subcat-btn" style="align-self: flex-start;">+ Add sub-category</button>
+
+      <div>
+        <button type="submit" class="btn" id="add-category-btn">Add category</button>
+        <p class="form-message" id="add-category-message" role="alert" hidden></p>
+      </div>
+    </form>
+
+    <h2>Existing categories</h2>
+    <div id="cv-categories-status" class="cv-categories-intro"></div>
+    <div class="categories-grid" id="categories-grid"></div>
   </section>
 </main>
 
@@ -683,6 +856,344 @@ if (projectsGrid) {
       window.alert(`Couldn't reach the server (${err.message}).`);
     }
   });
+}
+
+const CATEGORIES_BASE = PAGE_BASE; // same "/page" router as projects
+const categoriesStatusEl = document.getElementById('cv-categories-status');
+const categoriesGrid = document.getElementById('categories-grid');
+let categoriesCache = [];
+
+function buildSubcatRow(list, value) {
+  const row = document.createElement('div');
+  row.className = 'subcat-row';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'e.g. Schlumberger headquarters, Maadi';
+  if (value) input.value = value;
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'subcat-row-remove';
+  remove.textContent = 'Remove';
+  remove.addEventListener('click', () => {
+    row.remove();
+  });
+
+  row.appendChild(input);
+  row.appendChild(remove);
+  list.appendChild(row);
+  return row;
+}
+
+function collectSubcatTexts(list) {
+  return Array.from(list.querySelectorAll('input[type="text"]'))
+    .map((input) => input.value.trim())
+    .filter(Boolean);
+}
+
+loadCategories();
+
+async function loadCategories() {
+  categoriesGrid.innerHTML = '';
+  categoriesStatusEl.textContent = 'Loading categories…';
+  categoriesStatusEl.classList.remove('is-error');
+
+  try {
+    const res = await fetch(`${CATEGORIES_BASE}/categories`);
+    if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+    const categories = await res.json();
+    categoriesCache = Array.isArray(categories) ? categories : [];
+    renderCategoriesGrid();
+  } catch (err) {
+    categoriesStatusEl.classList.add('form-message', 'is-error');
+    categoriesStatusEl.textContent = `Couldn't load categories (${err.message}).`;
+  }
+}
+
+function renderCategoriesGrid() {
+  categoriesGrid.innerHTML = '';
+
+  if (categoriesCache.length === 0) {
+    categoriesStatusEl.textContent = 'No categories yet.';
+    return;
+  }
+
+  categoriesStatusEl.textContent = '';
+  categoriesCache.forEach((cat) => {
+    categoriesGrid.appendChild(buildCategoryCard(cat));
+  });
+}
+
+function buildCategoryCard(cat) {
+  const card = document.createElement('article');
+  card.className = 'category-card';
+  card.dataset.categoryId = cat.id;
+
+  const view = document.createElement('div');
+  view.className = 'category-view';
+
+  const heading = document.createElement('h3');
+  heading.textContent = cat.title;
+
+  const list = document.createElement('ul');
+  (cat.sub_categories || []).forEach((text) => {
+    const li = document.createElement('li');
+    li.textContent = text;
+    list.appendChild(li);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'category-card-actions';
+
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.className = 'btn btn-outline btn-small';
+  editBtn.textContent = 'Edit sub-categories';
+  editBtn.addEventListener('click', () => enterEditMode(card, cat));
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'btn btn-danger-outline btn-small';
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.addEventListener('click', () => handleDeleteCategory(card, cat));
+
+  actions.appendChild(editBtn);
+  actions.appendChild(deleteBtn);
+
+  view.appendChild(heading);
+  view.appendChild(list);
+  view.appendChild(actions);
+  card.appendChild(view);
+
+  return card;
+}
+
+// ---- Add category ----
+const addSubcatList = document.getElementById('add-subcat-list');
+const addSubcatBtn = document.getElementById('add-subcat-btn');
+const addCategoryForm = document.getElementById('add-category-form');
+const addCategoryBtn = document.getElementById('add-category-btn');
+const addCategoryMessage = document.getElementById('add-category-message');
+
+buildSubcatRow(addSubcatList); // start with one empty row
+
+addSubcatBtn.addEventListener('click', () => buildSubcatRow(addSubcatList));
+
+function showAddCategoryMessage(text, type) {
+  addCategoryMessage.textContent = text;
+  addCategoryMessage.className = `form-message is-${type}`;
+  addCategoryMessage.hidden = false;
+}
+
+addCategoryForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const title = document.getElementById('cat-title').value.trim();
+  const subCategoryTexts = collectSubcatTexts(addSubcatList);
+
+  if (!title) {
+    showAddCategoryMessage('Add a category title.', 'error');
+    return;
+  }
+  if (subCategoryTexts.length === 0) {
+    showAddCategoryMessage('Add at least one sub-category.', 'error');
+    return;
+  }
+
+  addCategoryBtn.disabled = true;
+  addCategoryBtn.textContent = 'Adding…';
+  addCategoryMessage.hidden = true;
+
+  try {
+    const res = await fetch(`${CATEGORIES_BASE}/add_category`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        title,
+        sub_categories: subCategoryTexts.map((text) => ({ text })),
+      }),
+    });
+
+    if (res.status === 403) {
+      showAddCategoryMessage("You don't have permission to add categories.", 'error');
+      return;
+    }
+    if (res.status === 400) {
+      showAddCategoryMessage('Add at least one sub-category.', 'error');
+      return;
+    }
+    if (!res.ok) {
+      showAddCategoryMessage(`Couldn't add the category (status ${res.status}).`, 'error');
+      return;
+    }
+
+    // Reset the form and pull the fresh list from the server —
+    // the endpoint only returns {success: true}, no category id.
+    addCategoryForm.reset();
+    addSubcatList.innerHTML = '';
+    buildSubcatRow(addSubcatList);
+    loadCategories();
+  } catch (err) {
+    showAddCategoryMessage(`Couldn't reach the server (${err.message}).`, 'error');
+  } finally {
+    addCategoryBtn.disabled = false;
+    addCategoryBtn.textContent = 'Add category';
+  }
+});
+
+// ---- Edit sub-categories ----
+function enterEditMode(card, cat) {
+  const view = card.querySelector('.category-view');
+  view.hidden = true;
+
+  const editWrap = document.createElement('div');
+  editWrap.className = 'category-edit';
+
+  const heading = document.createElement('h3');
+  heading.textContent = cat.title;
+
+  const list = document.createElement('div');
+  list.className = 'subcat-list';
+  const existing = cat.sub_categories || [];
+  if (existing.length > 0) {
+    existing.forEach((text) => buildSubcatRow(list, text));
+  } else {
+    buildSubcatRow(list);
+  }
+
+  const addRowBtn = document.createElement('button');
+  addRowBtn.type = 'button';
+  addRowBtn.className = 'btn btn-outline btn-small';
+  addRowBtn.textContent = '+ Add sub-category';
+  addRowBtn.style.alignSelf = 'flex-start';
+  addRowBtn.addEventListener('click', () => buildSubcatRow(list));
+
+  const message = document.createElement('p');
+  message.className = 'form-message';
+  message.hidden = true;
+
+  const actions = document.createElement('div');
+  actions.className = 'category-edit-actions';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = 'btn btn-small';
+  saveBtn.textContent = 'Save';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'btn btn-outline btn-small';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => {
+    editWrap.remove();
+    view.hidden = false;
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const subCategoryTexts = collectSubcatTexts(list);
+
+    if (subCategoryTexts.length === 0) {
+      message.textContent = 'Add at least one sub-category.';
+      message.className = 'form-message is-error';
+      message.hidden = false;
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    message.hidden = true;
+
+    try {
+      const res = await fetch(`${CATEGORIES_BASE}/edit_category/${cat.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          sub_categories: subCategoryTexts.map((text) => ({ text })),
+        }),
+      });
+
+      if (res.status === 403) {
+        message.textContent = "You don't have permission to edit categories.";
+        message.className = 'form-message is-error';
+        message.hidden = false;
+        return;
+      }
+      if (res.status === 400) {
+        message.textContent = 'Add at least one sub-category.';
+        message.className = 'form-message is-error';
+        message.hidden = false;
+        return;
+      }
+      if (res.status === 404) {
+        message.textContent = 'This category no longer exists.';
+        message.className = 'form-message is-error';
+        message.hidden = false;
+        return;
+      }
+      if (!res.ok) {
+        message.textContent = `Couldn't save changes (status ${res.status}).`;
+        message.className = 'form-message is-error';
+        message.hidden = false;
+        return;
+      }
+
+      loadCategories();
+    } catch (err) {
+      message.textContent = `Couldn't reach the server (${err.message}).`;
+      message.className = 'form-message is-error';
+      message.hidden = false;
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+    }
+  });
+
+  actions.appendChild(saveBtn);
+  actions.appendChild(cancelBtn);
+
+  editWrap.appendChild(heading);
+  editWrap.appendChild(list);
+  editWrap.appendChild(addRowBtn);
+  editWrap.appendChild(message);
+  editWrap.appendChild(actions);
+
+  card.appendChild(editWrap);
+}
+
+// ---- Delete category ----
+async function handleDeleteCategory(card, cat) {
+  if (!window.confirm(`Delete "${cat.title}"? This removes all of its sub-categories too.`)) return;
+
+  const deleteBtn = card.querySelector('[data-action], .btn-danger-outline');
+  if (deleteBtn) deleteBtn.disabled = true;
+  card.classList.add('is-removing');
+
+  try {
+    const res = await fetch(`${CATEGORIES_BASE}/del_category/${cat.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      card.classList.remove('is-removing');
+      if (deleteBtn) deleteBtn.disabled = false;
+      window.alert(`Couldn't delete this category (status ${res.status}).`);
+      return;
+    }
+
+    categoriesCache = categoriesCache.filter((c) => c.id !== cat.id);
+    card.remove();
+    if (categoriesCache.length === 0) {
+      categoriesStatusEl.textContent = 'No categories yet.';
+    }
+  } catch (err) {
+    card.classList.remove('is-removing');
+    if (deleteBtn) deleteBtn.disabled = false;
+    window.alert(`Couldn't reach the server (${err.message}).`);
+  }
 }
 </script>
 </body>
