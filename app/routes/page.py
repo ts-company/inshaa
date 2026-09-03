@@ -22,6 +22,17 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 @router.get("/")
 def get_page(request: Request, db: Session = Depends(get_db)):
 
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "manage page").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
     projects = db.query(Project).all()
     projects_ids = [row.id for row in projects]
 
@@ -43,7 +54,7 @@ def get_page(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/add_project")
 def add_project(request: Request, title: str = Form(...),
-                description: str = Form(...),
+                description: str = Form(None),
                 files: List[UploadFile] = File(default=[]),
                 types: List[str] = Form(default=[]),
                 db: Session = Depends(get_db)):

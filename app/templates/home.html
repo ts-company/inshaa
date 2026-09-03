@@ -540,6 +540,32 @@ main {
   margin-top: 2px;
 }
 
+.sectors-rtl { direction: rtl; text-align: right; }
+
+.sectors-rtl .sector-card:nth-child(odd) {
+  border-right: none;
+  border-left: 1px solid var(--line);
+  padding-right: 0;
+  padding-left: 28px;
+}
+
+.sectors-rtl .sector-card:nth-child(even) {
+  padding-left: 0;
+  padding-right: 28px;
+}
+
+.sectors-rtl .sector-card li {
+  padding-left: 0;
+  padding-right: 14px;
+}
+
+.sectors-rtl .sector-card li::before {
+  left: auto;
+  right: 0;
+}
+
+.sectors-rtl .sectors-note { text-align: right; }
+
 /* ===== Marquees (partners / countries) ===== */
 .marquee-section { margin-top: 84px; }
 .marquee-section .section-head { margin-bottom: 28px; }
@@ -642,6 +668,7 @@ main {
   .sector-grid { grid-template-columns: 1fr; }
   .sector-card:nth-child(odd) { border-right: none; padding-right: 0; }
   .sector-card:nth-child(even) { padding-left: 0; }
+  .sectors-rtl .sector-card:nth-child(odd) { border-left: none; padding-left: 0; }
   .projects-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 28px 20px; }
   .lightbox { padding: 32px 16px; }
   .lightbox-arrow { width: 44px; font-size: 24px; }
@@ -759,11 +786,13 @@ main {
 
     <div id="sectors-status" class="sectors-status"></div>
 
-    <div class="sector-grid" id="sector-grid"></div>
+    <div class="sectors-rtl" dir="rtl">
+      <div class="sector-grid" id="sector-grid"></div>
 
-    <div class="sectors-note">
-      <p>"We would be honored to work with you on your current and future projects."</p>
-      <p class="sectors-signoff">Eng. Abdel Rahman El-Guindy<span>Chairman of the Board</span></p>
+      <div class="sectors-note">
+        <p>و عليه فاٍنة ليشرفنا التعاون مع سيادتكم في مشاريعكم الحالية و المستقبلية و تفضلو بقبول وافر التقدير و الاحترام.</p>
+        <p class="sectors-signoff">م. عبد الرحمن الجريدلي<span>رئيس مجلس الإدارة</span></p>
+      </div>
     </div>
   </div>
 

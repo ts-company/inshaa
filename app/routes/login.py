@@ -26,6 +26,8 @@ async def login(userlogin: UserLogin,
     user = db.query(User).filter(User.username == userlogin.username).first()
     if not user or not verify_password(userlogin.password, user.password):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     token = create_access_token({
         "sub": str(user.id),
         "role": user.role
