@@ -29,4 +29,4 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
     permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
     perm_types = [row.type for row in permissions]
 
-    return templates.TemplateResponse("dashboard.html", {"request": request, "permissions": perm_types})
+    return templates.TemplateResponse("dashboard.html", {"request": request, "permissions": perm_types, "user": f"{user.first_name} {user.last_name}"})

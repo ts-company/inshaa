@@ -7,7 +7,7 @@ from app.models.users_model import User
 from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db
-from app.schemas.user import UserCreate
+from app.schemas.user import UserCreate, EditUser
 from app.schemas.permissions import AddPerm
 from app.config import BASE_DIR, preset_permissions
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @router.get("/")
-def get_projects(request: Request, db: Session = Depends(get_db)):
+def get_page(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -42,7 +42,7 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("users.html", {"request": request, "users": users})
 
 @router.post("/add")
-def get_projects(request: Request, payload: UserCreate, db: Session = Depends(get_db)):
+def add_user(request: Request, payload: UserCreate, db: Session = Depends(get_db)):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -81,7 +81,7 @@ def get_projects(request: Request, payload: UserCreate, db: Session = Depends(ge
 
 
 @router.delete("/delete/{id}")
-def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
+def del_user(request: Request, id: int, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -106,7 +106,7 @@ def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.patch("/activate/{id}")
-def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
+def activate(request: Request, id: int, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -131,7 +131,7 @@ def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.patch("/deactivate/{id}")
-def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
+def deactivate(request: Request, id: int, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -156,7 +156,7 @@ def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.get("/permissions/{id}")
-def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
+def perms(request: Request, id: int, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -176,7 +176,7 @@ def get_projects(request: Request, id: int, db: Session = Depends(get_db)):
     ]
 
 @router.post("/add_permission/{id}")
-def get_projects(request: Request, id: int, payload: AddPerm, db: Session = Depends(get_db)):
+def add_perm(request: Request, id: int, payload: AddPerm, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -203,7 +203,7 @@ def get_projects(request: Request, id: int, payload: AddPerm, db: Session = Depe
     return {"success": True}
 
 @router.delete("/del_permission/{perm_id}")
-def get_projects(request: Request, perm_id: int, db: Session = Depends(get_db)):
+def del_prem(request: Request, perm_id: int, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -217,6 +217,31 @@ def get_projects(request: Request, perm_id: int, db: Session = Depends(get_db)):
         permission = db.query(Permission).filter(Permission.id == perm_id).first()
         db.delete(permission)
         db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
+@router.patch("/edit_cred")
+def get_projects(request: Request, payload: EditUser, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if not payload.username and not payload.password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    if payload.username:
+        user.username = payload.username
+    if payload.password:
+        user.password = hash_password(payload.password)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

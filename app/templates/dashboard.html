@@ -91,6 +91,29 @@ button { font-family: var(--font-body); cursor: pointer; }
 
 .wordmark-mark { color: var(--steel); display: flex; }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.user-greeting {
+  font-size: 14px;
+  color: var(--steel-dark);
+}
+
+.settings-btn {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  background: none;
+  border: 1px solid var(--line-strong);
+  padding: 7px 14px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.settings-btn:hover { border-color: var(--ink); color: var(--ink); }
+
 .logout-link {
   font-size: 14px;
   font-weight: 600;
@@ -193,6 +216,102 @@ main {
   color: var(--steel-dark);
   font-size: 13.5px;
 }
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 22, 24, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.modal-overlay[hidden] { display: none; }
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  padding: 28px;
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.modal-head h2 { font-size: 22px; }
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--steel-dark);
+}
+
+.modal-close:hover { color: var(--ink); }
+
+.modal-form { display: flex; flex-direction: column; gap: 16px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field span { font-size: 13.5px; font-weight: 600; color: var(--steel-dark); }
+
+.field input {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.field input:focus { border-color: var(--steel); }
+
+.modal-msg { font-size: 13.5px; min-height: 18px; }
+.modal-msg.is-error { color: #A2402C; }
+.modal-msg.is-success { color: #2A6B3F; }
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+
+.btn-secondary {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: 1px solid var(--line-strong);
+  background: none;
+  color: var(--steel-dark);
+}
+
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+.modal-actions .btn-primary {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.modal-actions .btn-primary:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.modal-actions .btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .header-inner { padding: 16px 20px; flex-wrap: wrap; gap: 14px; }
+  .header-actions { gap: 14px; }
+  .user-greeting { display: none; }
+  main { padding: 40px 20px 72px; }
+  .dash-head h1 { font-size: 32px; }
+}
 </style>
 </head>
 <body>
@@ -202,7 +321,11 @@ main {
     <a href="/" class="wordmark">
       Inshaa
     </a>
-    <a href="/system/logout" class="logout-link">Sign out</a>
+    <div class="header-actions">
+      <span class="user-greeting">{{ user }}</span>
+      <button type="button" class="settings-btn" id="settings-btn" aria-haspopup="dialog">Account</button>
+      <a href="/system/logout" class="logout-link">Sign out</a>
+    </div>
   </div>
 </header>
 
@@ -290,6 +413,120 @@ main {
 <footer class="site-footer">
   <p>© 2026 Inshaa</p>
 </footer>
+
+<!-- Account settings modal -->
+<div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="settings-title">Account settings</h2>
+      <button type="button" class="modal-close" id="settings-close" aria-label="Close">&times;</button>
+    </div>
+
+    <form id="settings-form" class="modal-form">
+      <label class="field">
+        <span>Username</span>
+        <input type="text" name="username" id="settings-username" placeholder="Leave blank to keep current">
+      </label>
+
+      <label class="field">
+        <span>New password</span>
+        <input type="password" name="password" id="settings-password" placeholder="Leave blank to keep current" autocomplete="new-password">
+      </label>
+
+      <p class="modal-msg" id="settings-msg" role="status"></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="settings-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="settings-submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const settingsClose = document.getElementById('settings-close');
+const settingsCancel = document.getElementById('settings-cancel');
+const settingsForm = document.getElementById('settings-form');
+const settingsMsg = document.getElementById('settings-msg');
+const settingsSubmit = document.getElementById('settings-submit');
+
+if (settingsBtn) {
+  settingsBtn.addEventListener('click', openModal);
+  settingsClose.addEventListener('click', closeModal);
+  settingsCancel.addEventListener('click', closeModal);
+
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !settingsModal.hidden) closeModal();
+  });
+
+  settingsForm.addEventListener('submit', handleSubmit);
+}
+
+function openModal() {
+  settingsMsg.textContent = '';
+  settingsMsg.className = 'modal-msg';
+  settingsForm.reset();
+  settingsModal.hidden = false;
+}
+
+function closeModal() {
+  settingsModal.hidden = true;
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  const username = document.getElementById('settings-username').value.trim();
+  const password = document.getElementById('settings-password').value;
+
+  if (!username && !password) {
+    showMsg('Enter a new username or password.', 'is-error');
+    return;
+  }
+
+  const payload = {};
+  if (username) payload.username = username;
+  if (password) payload.password = password;
+
+  settingsSubmit.disabled = true;
+  showMsg('Saving…', '');
+
+  try {
+    const res = await fetch('/users/edit_cred', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      if (res.status === 400) {
+        throw new Error('Both username and password cannot be empty.');
+      }
+      else if (res.status === 409) {
+        throw new Error('Username already exists. Choose a different one.');
+      }
+    }
+
+    showMsg('Saved. Reloading…', 'is-success');
+    setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    showMsg(err.message, 'is-error');
+    settingsSubmit.disabled = false;
+  }
+}
+
+function showMsg(text, cls) {
+  settingsMsg.textContent = text;
+  settingsMsg.className = `modal-msg ${cls}`;
+}
+</script>
 
 </body>
 </html>
