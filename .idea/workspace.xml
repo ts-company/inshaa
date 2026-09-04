@@ -4,7 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75ee7ed6-1d9a-49d7-988e-30c539d78000" name="Changes" comment="" />
+    <list default="true" id="75ee7ed6-1d9a-49d7-988e-30c539d78000" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/extracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/extracts.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/login.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/page.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/page.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/reviewings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/reviewings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/manage_page.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/manage_page.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/users.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

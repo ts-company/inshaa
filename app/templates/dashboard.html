@@ -338,7 +338,7 @@ main {
   <div class="action-grid">
 
     {% if "manage page" in permissions %}
-    <a class="action-card" href="/page/">
+    <a class="action-card" href="/system/page/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
           <rect x="4" y="3.5" width="16" height="17" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -353,7 +353,7 @@ main {
     {% endif %}
 
     {% if "manage users" in permissions %}
-    <a class="action-card" href="/users/">
+    <a class="action-card" href="/system/users/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
           <circle cx="9.5" cy="8.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -368,7 +368,7 @@ main {
     {% endif %}
 
     {% if "manage accounts" in permissions %}
-    <a class="action-card" href="/accounting/">
+    <a class="action-card" href="/system/accounting/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
           <circle cx="9.5" cy="8.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -384,7 +384,7 @@ main {
     {% endif %}
 
     {% if "manage reviewings" in permissions %}
-    <a class="action-card" href="/engineering/">
+    <a class="action-card" href="/system/engineering/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
           <circle cx="9.5" cy="8.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
@@ -496,7 +496,7 @@ async function handleSubmit(e) {
   showMsg('Saving…', '');
 
   try {
-    const res = await fetch('/users/edit_cred', {
+    const res = await fetch('/system/users/edit_cred', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',

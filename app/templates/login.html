@@ -325,7 +325,7 @@ form.addEventListener('submit', async (e) => {
 
     showMessage('Signing in');
     setTimeout(() => {
-      window.location.href = '/dashboard/';
+      window.location.href = '/system/dashboard/';
     }, 500);
   } catch (err) {
     showMessage(`Couldn't reach the server (${err.message}). Check your connection and try again.`, 'error');

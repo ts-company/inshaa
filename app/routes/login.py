@@ -8,11 +8,8 @@ from app.core.auth import create_access_token
 from app.database import get_db
 from app.schemas.user import UserLogin
 from app.config import BASE_DIR
-import os
 
-SYS_PREFIX = os.getenv("SYS_PREFIX")
-
-router = APIRouter(prefix=f"/{SYS_PREFIX}")
+router = APIRouter(prefix="/system")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 

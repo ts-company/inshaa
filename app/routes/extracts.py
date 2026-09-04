@@ -12,7 +12,7 @@ from app.utils import generate_url, upload_file, delete_file
 from app.config import BASE_DIR
 from typing import List
 
-router = APIRouter(prefix="/extracts")
+router = APIRouter(prefix="/system/extracts")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 

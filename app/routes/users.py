@@ -11,7 +11,7 @@ from app.schemas.user import UserCreate, EditUser
 from app.schemas.permissions import AddPerm
 from app.config import BASE_DIR, preset_permissions
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/system/users")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 

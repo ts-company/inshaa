@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -9,10 +9,8 @@ from app.database import engine, Base, get_db
 from app.models.users_model import User
 from app.models.permissions_model import Permission
 from app.core.security import hash_password
-from app.core.auth import validate_user
 from app.config import BASE_DIR
 from app.routes import login, home, dashboard, users, page, reviewings, extracts
-from datetime import datetime, timezone
 
 load_dotenv()
 

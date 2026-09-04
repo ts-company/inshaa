@@ -15,7 +15,7 @@ from app.schemas.cv import AddCategory, EditCategory
 from app.config import BASE_DIR
 from typing import List
 
-router = APIRouter(prefix="/page")
+router = APIRouter(prefix="/system/page")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 

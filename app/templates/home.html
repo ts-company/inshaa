@@ -701,10 +701,9 @@ main {
       <div class="hero-cover-inner">
         <div class="hero-copy">
           <h1>We build things that outlast the contract.</h1>
-          <p class="hero-lede">Insha'Minka plans, builds and hands over residential and commercial projects — from the first survey stake to the final walkthrough.</p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#projects-section">See our work</a>
-            <a class="btn btn-ghost" href="#sectors-section">Our previous work</a>
+            <a class="btn btn-ghost" href="#contact">Contact info</a>
           </div>
         </div>
       </div>
@@ -712,8 +711,8 @@ main {
   </div>
 
   <section class="company-summary" aria-labelledby="company-summary-title">
-    <h2 id="company-summary-title">Insha'Minka</h2>
-    <p>Insha'Minka is a construction company built around dependable delivery. We bring together engineers, site supervisors and skilled tradespeople to turn plans into well-made residential and commercial spaces. From early coordination and structural work to finishes, utilities and handover, our team stays close to the work and accountable for the result.</p>
+    <h2 id="company-summary-title">Inshaa</h2>
+    <p>Inshaa is a construction company built around dependable delivery. We bring together engineers, site supervisors and skilled tradespeople to turn plans into well-made residential and commercial spaces. From early coordination and structural work to finishes, utilities and handover, our team stays close to the work and accountable for the result.</p>
   </section>
 
   <div class="spec-strip">
@@ -916,35 +915,12 @@ const COUNTRIES = [
   { name: 'Jordan', flag: '' },
 ];
 
-/* ==========================================================
-   Seamless infinite marquee
-   ----------------------------------------------------------
-   Naive approach: duplicate the list once and animate
-   translateX(0) -> translateX(-50%). That only lines up
-   perfectly if the duplicated track's total width splits
-   into two EXACT halves — but with a flex `gap`, N items has
-   N-1 gaps, so 2N items has 2N-1 gaps, and -50% doesn't land
-   exactly on the start of the second copy. The mismatch is
-   small, but it accumulates every loop and shows up as a
-   jump/restart.
-
-   Fix: render enough copies to comfortably cover the visible
-   width twice over, then MEASURE the real pixel distance from
-   the first item to the first item of the second copy (its
-   offsetLeft), and animate to exactly that distance instead
-   of a percentage guess. Recomputed after images load and on
-   resize, since those are the two things that can change an
-   item's width after the first paint.
-   ========================================================== */
 function setupMarquee(trackId, items, renderItem) {
   const track = document.getElementById(trackId);
   if (!track || items.length === 0) return;
 
   const container = track.parentElement;
 
-  // Render enough copies so the track is comfortably wider than
-  // 2x the visible container, so there's always a full second
-  // copy queued up regardless of how few items there are.
   function buildCopies() {
     const containerWidth = container.offsetWidth || window.innerWidth;
     const singleHTML = items.map(renderItem).join('');
