@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Inshaa</title>
+<title>inshaa minka building &amp; constrauction</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -13,11 +13,12 @@
   --ink: #1C1F22;
   --concrete: #E7E2D8;
   --paper: #F6F3EC;
+  --surface: #FFFFFF;
   --steel: #3E5468;
   --steel-dark: #2A3A47;
-  --yellow: #F0B429;
-  --line: #D8D2C4;
-  --line-strong: #B9B2A1;
+  --yellow: #D99A18;
+  --line: #E1E7EA;
+  --line-strong: #C7D1D6;
   --white: #FFFFFF;
 }
 
@@ -61,8 +62,9 @@ button { font-family: 'Barlow', sans-serif; cursor: pointer; }
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--paper);
-  border-bottom: 1px solid var(--line-strong);
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(42, 58, 71, 0.05);
 }
 
 .header-inner {
@@ -87,6 +89,7 @@ button { font-family: 'Barlow', sans-serif; cursor: pointer; }
   text-decoration: none;
   background: none;
   border: none;
+  letter-spacing: 0.5px;
 }
 
 /* ===== Layout helpers ===== */
@@ -96,7 +99,8 @@ main {
   padding: 0 32px;
 }
 
-.section-head { margin-bottom: 40px; max-width: 640px; }
+.section-head { margin-bottom: 40px; max-width: 680px; }
+.section-head h2 { font-size: 34px; letter-spacing: 0.1px; }
 .section-head p { color: var(--steel-dark); font-size: 17px; }
 
 /* ===== Hero (cover image, contained to page width) ===== */
@@ -109,7 +113,8 @@ main {
   min-height: 360px;
   overflow: hidden;
   background: var(--concrete);
-  border-radius: 4px;
+  border-radius: 8px;
+  box-shadow: 0 18px 44px rgba(42, 58, 71, 0.14);
 }
 
 .hero-cover img,
@@ -150,16 +155,16 @@ main {
   font-weight: 600;
   font-size: 15px;
   padding: 13px 26px;
-  border-radius: 2px;
+  border-radius: 4px;
   border: 1.5px solid var(--ink);
   background: none;
   color: var(--ink);
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   text-decoration: none;
   display: inline-block;
 }
 
-.btn-primary { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
+.btn-primary { background: var(--yellow); color: var(--ink); border-color: var(--yellow); box-shadow: 0 6px 14px rgba(217, 154, 24, 0.2); }
 .btn-primary:hover { background: var(--paper); border-color: var(--paper); }
 
 .hero-copy .btn-ghost { border-color: var(--paper); color: var(--paper); }
@@ -171,7 +176,8 @@ main {
 .company-summary {
   margin-top: 56px;
   max-width: 820px;
-  padding-bottom: 4px;
+  padding: 0 0 4px 22px;
+  border-left: 4px solid var(--yellow);
 }
 
 .company-summary h2 {
@@ -192,6 +198,9 @@ main {
   border-bottom: 1px solid var(--line-strong);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  background: var(--surface);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .spec-item {
@@ -214,9 +223,11 @@ main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   border-top: 1px solid var(--line-strong);
+  background: var(--surface);
 }
 
-.service-row { padding: 26px 28px 26px 0; border-bottom: 1px solid var(--line); }
+.service-row { padding: 28px 28px 28px 0; border-bottom: 1px solid var(--line); transition: background 0.2s ease; }
+.service-row:hover { background: var(--paper); }
 .service-row:nth-child(odd) { border-right: 1px solid var(--line); padding-right: 28px; }
 .service-row:nth-child(even) { padding-left: 28px; }
 .service-row h3 { font-size: 22px; margin-bottom: 8px; font-weight: 600; }
@@ -238,24 +249,57 @@ main {
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 36px 28px;
+  gap: 40px 28px;
 }
 
 .project-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  width: 100%;
   padding: 0;
   border: none;
   background: none;
   text-align: left;
+  perspective: 1000px;
+}
+
+.project-card-inner {
+  position: relative;
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgba(42, 58, 71, 0.08);
+}
+
+.project-card:hover .project-card-inner,
+.project-card:focus-visible .project-card-inner {
+  transform: rotateX(180deg);
+}
+
+.project-card-face {
+  grid-area: 1 / 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  backface-visibility: hidden;
+}
+
+.project-card-back {
+  justify-content: center;
+  padding: 28px;
+  background: var(--steel-dark);
+  color: var(--paper);
+  transform: rotateX(180deg);
+  border-radius: 8px;
 }
 
 .project-card-thumb {
   aspect-ratio: 4 / 3;
   background: var(--concrete);
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 8px;
+  transform-origin: center center;
+  backface-visibility: hidden;
 }
 
 .project-card-thumb img {
@@ -281,19 +325,32 @@ main {
 .project-card-body h3 {
   font-size: 20px;
   font-weight: 600;
-  margin-bottom: 6px;
+  margin: 16px 4px 6px;
   transition: color 0.15s ease;
 }
 
 .project-card:hover .project-card-body h3 { color: var(--steel); }
 
 .project-card-body p {
+  margin: 0 4px;
   font-size: 14.5px;
   color: var(--steel-dark);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.project-card-back h3 {
+  color: var(--paper);
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.project-card-back p {
+  color: var(--concrete);
+  font-size: 15px;
+  line-height: 1.55;
 }
 
 .project-card-skeleton .project-card-thumb { background: var(--line); }
@@ -320,7 +377,7 @@ main {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(20, 22, 24, 0.94);
+  background: rgba(20, 22, 24, 0.96);
   align-items: center;
   justify-content: center;
   padding: 48px 24px;
@@ -344,7 +401,8 @@ main {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 3px;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
   overflow: hidden;
 }
 
@@ -356,6 +414,14 @@ main {
   height: auto;
   display: block;
   object-fit: contain;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  animation: lightbox-flip-vertical 0.35s ease both;
+}
+
+@keyframes lightbox-flip-vertical {
+  from { transform: perspective(900px) rotateX(-90deg); opacity: 0.35; }
+  to { transform: perspective(900px) rotateX(0); opacity: 1; }
 }
 
 .lightbox-arrow {
@@ -680,15 +746,583 @@ main {
 @media (max-width: 480px) {
   .lightbox-info { flex-direction: column; gap: 4px; }
 }
+
+/* ===== Studio theme ===== */
+:root {
+  --ink: #10212E;
+  --concrete: #E8EFF2;
+  --paper: #FFFFFF;
+  --surface: #F4F7F8;
+  --steel: #4E7188;
+  --steel-dark: #294252;
+  --yellow: #D4A13A;
+  --line: #DCE5E9;
+  --line-strong: #B9C9D0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.site-header {
+  background: var(--ink);
+  border-bottom: 0;
+  box-shadow: 0 8px 24px rgba(16, 33, 46, 0.16);
+}
+
+.header-inner {
+  max-width: 1240px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.wordmark {
+  color: var(--paper);
+  font-size: 25px;
+  letter-spacing: 1px;
+}
+
+.wordmark::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  display: block;
+  background: var(--yellow);
+  transform: rotate(45deg);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.header-nav a {
+  color: #C7D8DF;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.header-nav a:hover { color: var(--paper); }
+
+main {
+  max-width: 1240px;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.hero-wrap { padding-top: 48px; }
+
+.hero-cover {
+  aspect-ratio: 16 / 8.5;
+  min-height: 520px;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(16, 33, 46, 0.18);
+}
+
+.hero-cover-scrim {
+  background: linear-gradient(90deg, rgba(9, 21, 29, 0.82) 0%, rgba(9, 21, 29, 0.52) 42%, rgba(9, 21, 29, 0.08) 82%), linear-gradient(0deg, rgba(9, 21, 29, 0.66) 0%, transparent 55%);
+}
+
+.hero-copy {
+  padding: 0 56px 56px;
+}
+
+.hero-copy::before {
+  display: none;
+}
+
+.hero-kicker {
+  margin-bottom: 16px;
+  color: var(--yellow);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero-copy h1 {
+  max-width: 11ch;
+  font-size: clamp(48px, 6vw, 78px);
+  letter-spacing: -0.5px;
+  margin-bottom: 28px;
+}
+
+.hero-actions { gap: 12px; }
+
+.btn {
+  min-height: 48px;
+  padding: 13px 24px;
+  border-radius: 5px;
+  letter-spacing: 0.2px;
+}
+
+.btn-primary {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  box-shadow: 0 8px 20px rgba(212, 161, 58, 0.3);
+}
+
+.btn-primary:hover { background: #E4B452; border-color: #E4B452; }
+
+.company-summary {
+  max-width: 900px;
+  margin-top: 82px;
+  padding: 0 0 0 28px;
+  border-left-width: 5px;
+}
+
+.company-summary h2 { font-size: 42px; margin-bottom: 20px; }
+.company-summary p { font-size: 20px; line-height: 1.65; }
+
+.spec-strip {
+  margin-top: 58px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--ink);
+  box-shadow: 0 16px 34px rgba(16, 33, 46, 0.14);
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.spec-item { padding: 30px 24px; border-color: rgba(255, 255, 255, 0.14); }
+.spec-value { color: var(--paper); font-size: 44px; }
+.spec-label { color: var(--concrete); opacity: 0.8; }
+
+.services,
+.projects,
+.team,
+.sectors,
+.marquee-section { margin-top: 112px; }
+
+.section-head { margin-bottom: 34px; }
+.section-head h2,
+.services h2 { font-size: 42px; letter-spacing: -0.2px; }
+.section-head h2::after,
+.services h2::after {
+  content: '';
+  display: block;
+  width: 42px;
+  height: 4px;
+  margin-top: 13px;
+  background: var(--yellow);
+}
+.section-head p { margin-top: 16px; color: var(--steel); }
+.section-intro { max-width: 640px; margin: -14px 0 30px; color: var(--steel); font-size: 17px; }
+
+.services-grid {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.service-row { padding: 34px 32px; }
+.service-row:nth-child(odd) { padding-right: 32px; }
+.service-row:nth-child(even) { padding-left: 32px; }
+.service-row h3 { font-size: 25px; margin-bottom: 12px; }
+.service-row p { max-width: 42ch; color: var(--steel); }
+.service-row:hover { background: var(--paper); }
+
+.projects-grid { gap: 46px 32px; }
+.project-card-inner { box-shadow: 0 14px 30px rgba(16, 33, 46, 0.1); }
+.project-card-back { background: var(--ink); padding: 32px; }
+.project-card-back h3 { font-size: 26px; }
+.project-card-back p { color: #C7D8DF; }
+.project-card-thumb { border-radius: 10px; }
+.project-card-body h3 { font-size: 23px; }
+.project-card-body p { color: var(--steel); }
+
+.team-photo {
+  min-height: 320px;
+  border-radius: 14px;
+  box-shadow: 0 20px 44px rgba(16, 33, 46, 0.12);
+}
+
+.team-summary { max-width: 820px; margin-top: 34px; font-size: 18px; line-height: 1.7; }
+
+.sector-grid {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.sector-card { padding-top: 32px; padding-bottom: 32px; }
+.sector-card h3 { font-size: 24px; }
+.sector-card li { color: var(--steel); }
+
+.sectors-note {
+  max-width: 720px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top-color: var(--yellow);
+  border-top-width: 3px;
+}
+
+.marquee {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.partner-logo { height: 52px; }
+.country-name { color: var(--steel); }
+
+.site-footer {
+  margin-top: 120px;
+  background: var(--ink);
+}
+
+.footer-inner { max-width: 1240px; padding-top: 68px; padding-bottom: 52px; }
+.footer-brand { max-width: 360px; }
+.footer-tag { color: #B8CBD3; line-height: 1.6; }
+.footer-contact .info-block h3 { color: var(--yellow); letter-spacing: 0.5px; }
+.footer-contact .info-block p { color: #D7E2E6; }
+
+@media (max-width: 860px) {
+  .header-nav { display: none; }
+  .hero-wrap { padding-top: 24px; }
+  .hero-cover { min-height: 500px; border-radius: 12px; }
+  .hero-copy { padding: 0 28px 34px; }
+  .hero-copy h1 { font-size: 48px; }
+  .section-intro { margin-top: -8px; }
+  .company-summary { margin-top: 58px; }
+  .company-summary h2 { font-size: 36px; }
+  .company-summary p { font-size: 18px; }
+  .services, .projects, .team, .sectors, .marquee-section { margin-top: 82px; }
+  .section-head h2, .services h2 { font-size: 36px; }
+  .service-row { padding: 26px 22px; }
+  .service-row:nth-child(odd) { padding-right: 22px; }
+  .service-row:nth-child(even) { padding-left: 22px; }
+  .footer-inner { padding-top: 52px; }
+}
+
+@media (max-width: 480px) {
+  .hero-cover { min-height: 470px; }
+  .hero-copy { padding: 0 20px 28px; }
+  .hero-copy::before { font-size: 10px; letter-spacing: 1.4px; }
+  .hero-copy h1 { font-size: 41px; }
+  .company-summary { padding-left: 18px; }
+  .company-summary h2 { font-size: 32px; }
+  .spec-item { padding: 24px 16px; }
+  .spec-value { font-size: 36px; }
+  .project-card-back { padding: 24px; }
+}
+
+/* ===== Reference-inspired construction layout ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --surface: #FFFFFF;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #0B4D72;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+}
+
+body { background: var(--paper); }
+
+.site-header {
+  position: relative;
+  background: #0B4D72;
+  border-bottom: 0;
+  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+}
+
+.site-header::after {
+  content: '';
+  display: block;
+  height: 5px;
+  width: 32%;
+  background: #55C2D8;
+}
+
+.header-inner {
+  max-width: 1240px;
+  min-height: 148px;
+  padding: 38px 32px;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.brand-copy small {
+  color: #B8D7E3;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-nav {
+  gap: 8px;
+  margin-left: auto;
+}
+
+.header-nav a {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #D9EDF3;
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.header-nav a:hover {
+  color: var(--paper);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.header-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 50px;
+  margin-left: 14px;
+  padding: 0 20px;
+  background: var(--paper);
+  color: #0B4D72;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.header-cta::after {
+  content: '\2192';
+  margin-left: 10px;
+  color: #1685A6;
+  font-size: 18px;
+}
+
+.header-cta:hover {
+  background: #55C2D8;
+  color: #083954;
+  transform: translateY(-2px);
+}
+
+.header-cta:hover::after { color: var(--paper); }
+
+.wordmark {
+  color: var(--paper);
+  font-size: clamp(24px, 2.4vw, 34px);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.brand-tagline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  color: #B8D7E3;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+}
+
+.brand-tagline::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  background: #55C2D8;
+}
+
+.wordmark::before { background: #55C2D8; }
+.header-nav a { color: #D9EDF3; }
+.header-nav a:hover { color: var(--paper); }
+
+main { max-width: 1180px; }
+
+.hero-wrap {
+  margin-left: -32px;
+  margin-right: -32px;
+  padding-top: 0;
+}
+
+.hero-cover {
+  min-height: 680px;
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.hero-cover-scrim {
+  background: rgba(45, 68, 77, 0.35);
+}
+
+.hero-cover-inner { align-items: center; justify-content: center; }
+
+.hero-copy {
+  width: min(900px, 90%);
+  padding: 40px 0;
+  text-align: center;
+}
+
+.hero-kicker {
+  margin-bottom: 24px;
+  color: var(--paper);
+  font-size: 14px;
+  letter-spacing: 5px;
+}
+
+.hero-copy h1 {
+  max-width: 900px;
+  margin: 0 auto 34px;
+  font-size: clamp(54px, 7.2vw, 104px);
+  line-height: 0.98;
+  letter-spacing: -1px;
+  text-wrap: balance;
+}
+
+.hero-actions { justify-content: center; }
+.hero-copy .btn-primary { background: var(--yellow); border-color: var(--yellow); color: var(--paper); }
+.hero-copy .btn-primary:hover { background: var(--paper); border-color: var(--paper); color: var(--ink); }
+
+.company-summary,
+.spec-strip,
+.services,
+.projects,
+.team,
+.sectors,
+.marquee-section { margin-left: auto; margin-right: auto; }
+
+.company-summary {
+  max-width: 860px;
+  margin-top: 92px;
+  padding: 0;
+  border-left: 0;
+  text-align: center;
+}
+
+.company-summary h2 { font-size: 46px; }
+.company-summary p { color: var(--steel); font-size: 19px; }
+
+.spec-strip {
+  max-width: 980px;
+  margin-top: 70px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--paper);
+  box-shadow: none;
+}
+
+.spec-item { padding: 30px 24px; border-color: var(--line); text-align: center; }
+.spec-value { color: var(--ink); font-size: 52px; }
+.spec-label { color: var(--yellow); font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+
+.services,
+.projects,
+.team,
+.sectors,
+.marquee-section { margin-top: 126px; }
+
+.section-head,
+.services > h2 { text-align: center; margin-left: auto; margin-right: auto; }
+.section-head h2,
+.services h2 { font-size: 50px; }
+.section-head h2::after,
+.services h2::after { width: 58px; height: 3px; margin: 18px auto 0; }
+.section-head p,
+.section-intro { color: var(--steel); }
+
+.services-grid {
+  border: 0;
+  border-top: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: var(--paper);
+}
+
+.service-row { padding: 38px 34px; background: var(--paper); }
+.service-row:nth-child(odd) { padding-right: 34px; }
+.service-row:nth-child(even) { padding-left: 34px; }
+.service-row h3 { font-size: 27px; }
+.service-row p { color: var(--steel); }
+
+.projects-grid { gap: 52px 32px; }
+.project-card-inner { border-radius: 0; box-shadow: none; }
+.project-card-thumb { border-radius: 0; }
+.project-card-back { border-radius: 0; background: var(--ink); }
+.project-card-body h3 { font-size: 25px; }
+.project-card-body p { color: var(--steel); }
+
+.team-photo { border-radius: 0; box-shadow: none; }
+.team-summary { margin-left: auto; margin-right: auto; text-align: center; color: var(--steel); }
+
+.sector-grid { border: 0; border-top: 1px solid var(--line-strong); border-radius: 0; background: var(--paper); }
+.sector-card { padding-top: 36px; padding-bottom: 36px; }
+.sector-card h3 { font-size: 26px; }
+
+.marquee { border-color: var(--line-strong); }
+.site-footer { margin-top: 132px; background: var(--ink); }
+
+@media (max-width: 860px) {
+  .header-inner { min-height: 104px; padding: 24px 20px; }
+  .brand-copy small { display: none; }
+  .header-nav { display: flex; gap: 2px; }
+  .header-nav a { padding: 8px 7px; font-size: 11px; }
+  .header-cta { min-height: 38px; margin-left: 6px; padding: 0 11px; font-size: 11px; }
+  .header-cta::after { display: none; }
+  .hero-wrap { margin-left: -20px; margin-right: -20px; }
+  .hero-cover { min-height: 560px; }
+  .hero-copy { width: 92%; }
+  .hero-copy h1 { font-size: 56px; }
+  .company-summary h2 { font-size: 38px; }
+  .section-head h2, .services h2 { font-size: 40px; }
+  .services, .projects, .team, .sectors, .marquee-section { margin-top: 92px; }
+}
+
+@media (max-width: 480px) {
+  .header-inner { min-height: 88px; padding: 20px; }
+  .header-nav { display: none; }
+  .header-cta { margin-left: auto; }
+  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
+  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
+  .brand-tagline::before { width: 14px; }
+  .header-cta { padding: 0 10px; font-size: 10px; }
+  .site-header::after { width: 42%; }
+  .hero-cover { min-height: 500px; }
+  .hero-copy h1 { font-size: 44px; }
+  .hero-kicker { font-size: 10px; letter-spacing: 3px; }
+  .company-summary h2 { font-size: 33px; }
+  .section-head h2, .services h2 { font-size: 34px; }
+}
 </style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="#top" class="wordmark">
-      Inshaa
-    </a>
+    <div class="brand-lockup">
+      <div>
+        <a href="#top" class="wordmark">Inshaa Minka</a>
+        <span class="brand-tagline">Building &amp; Construction</span>
+      </div>
+    </div>
+    <nav class="header-nav" aria-label="Main navigation">
+      <a href="#projects-section">Projects</a>
+      <a href="#team-section">Our team</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="header-cta" href="#contact">Get in touch</a>
   </div>
 </header>
 
@@ -700,10 +1334,11 @@ main {
       <div class="hero-cover-scrim" aria-hidden="true"></div>
       <div class="hero-cover-inner">
         <div class="hero-copy">
-          <h1>We build things that outlast the contract.</h1>
+          <p class="hero-kicker">Integrated construction partner</p>
+          <h1>Built with discipline. Delivered with confidence.</h1>
           <div class="hero-actions">
-            <a class="btn btn-primary" href="#projects-section">See our work</a>
-            <a class="btn btn-ghost" href="#contact">Contact info</a>
+            <a class="btn btn-primary" href="#projects-section">Explore our work</a>
+            <a class="btn btn-ghost" href="#contact">Start a conversation</a>
           </div>
         </div>
       </div>
@@ -711,47 +1346,48 @@ main {
   </div>
 
   <section class="company-summary" aria-labelledby="company-summary-title">
-    <h2 id="company-summary-title">Inshaa</h2>
-    <p>Inshaa is a construction company built around dependable delivery. We bring together engineers, site supervisors and skilled tradespeople to turn plans into well-made residential and commercial spaces. From early coordination and structural work to finishes, utilities and handover, our team stays close to the work and accountable for the result.</p>
+    <h2 id="company-summary-title">Construction that stays accountable.</h2>
+    <p>Inshaa is an integrated construction partner for residential and commercial projects. We bring engineering, site leadership and skilled trades together under one coordinated team, taking each project from early planning through structure, finishes, services and final handover.</p>
   </section>
 
   <div class="spec-strip">
     <div class="spec-item">
-      <span class="spec-value">30+</span>
-      <span class="spec-label">projects completed</span>
+      <span class="spec-value">0</span>
+      <span class="spec-label">projects delivered</span>
     </div>
     <div class="spec-item">
-      <span class="spec-value">40</span>
-      <span class="spec-label">tradespeople on staff</span>
+      <span class="spec-value">0</span>
+      <span class="spec-label">specialists in our network</span>
     </div>
   </div>
 
   <div class="services">
-    <h2>What we do</h2>
+    <h2>What we deliver</h2>
+    <p class="section-intro">A single accountable team across the decisions, details and deadlines that make a project successful.</p>
     <div class="services-grid">
       <div class="service-row">
-        <h3>Residential builds</h3>
-        <p>New houses and villas built from an architect's drawing to a signed-off, livable home — structure, finishes and utilities under one contract.</p>
+        <h3>Residential construction</h3>
+        <p>End-to-end delivery for homes and villas, from the first setting-out to the final finish, with one team responsible for quality and coordination.</p>
       </div>
       <div class="service-row">
         <h3>Commercial fit-out</h3>
-        <p>Offices, retail units and warehouses fitted and finished on a schedule that respects your opening date.</p>
+        <p>Efficient fit-outs for offices, retail and industrial spaces, planned around operational priorities and the date your business needs to open.</p>
       </div>
       <div class="service-row">
-        <h3>Renovation &amp; structural repair</h3>
-        <p>Load-bearing changes, extensions, and restoration work on existing buildings, handled with proper permits and engineering sign-off.</p>
+        <h3>Renovation &amp; structural works</h3>
+        <p>Carefully managed upgrades, extensions and structural interventions that respect the existing building and meet engineering requirements.</p>
       </div>
       <div class="service-row">
-        <h3>Site management</h3>
-        <p>We can run your site as general contractor — coordinating subcontractors, inspections and materials so you don't have to.</p>
+        <h3>Project &amp; site management</h3>
+        <p>Clear site leadership, dependable subcontractor coordination and disciplined material planning from mobilization through handover.</p>
       </div>
     </div>
   </div>
 
   <div class="projects" id="projects-section">
     <div class="section-head">
-      <h2>Previous projects</h2>
-      <p>Click one to open its photos and videos.</p>
+      <h2>Selected work</h2>
+      <p>Explore a selection of projects delivered by the Inshaa team.</p>
     </div>
 
     <div id="projects-status" class="projects-status"></div>
@@ -765,32 +1401,30 @@ main {
 
   <div class="team" id="team-section">
     <div class="section-head">
-      <h2>The team</h2>
-      <p>The people who plan, supervise and finish every Inshaa project.</p>
+      <h2>The people behind the work</h2>
+      <p>Experienced professionals who keep every decision close to the site and every commitment visible.</p>
     </div>
 
     <div class="team-photo">
       <img src="/static/team.jpg" alt="The Inshaa team on site">
     </div>
 
-    <p class="team-summary">Inshaa is run by a core team of engineers, site supervisors and finishing specialists who've worked together for over a decade. Every project is assigned a dedicated project manager who stays on site from groundbreaking to handover, backed by an in-house crew of more than 40 tradespeople — so the people who quote the job are the same people accountable for delivering it.</p>
+    <p class="team-summary">Our core team brings together engineers, site supervisors and finishing specialists with long-standing experience working side by side. Each project has a dedicated manager from mobilization to handover, supported by a trusted network of trade partners and specialists.</p>
   </div>
 
   <div class="sectors" id="sectors-section">
 
     <div class="sectors-rtl" dir="rtl">
       <div class="section-head">
-        <h2>سابقة اعمالنا</h2>
-        <p>تتشرف شركة انشاء للبناء و التشييد بأن تقدم لسيادتكم بعض نماذج المشاريع لسابفة الاعمال على سبيل المثال
-           و ليس الحصر, حيث ان الشركة لها خبرة طويلة في اعمال المقاولات سواءا من ناحية شبكات الاالكتروميكانيكال
-            بجميع انواعها (الكهرباء, الاتصالات, انذار و مكافحة الحريق, التكييف, الصحي) او من ناحية الانشاء و التشطيبات حيث تقسم اصناف المشاريع التي تم تنفيذها الى ما يلي</p>
+        <h2>سابقة أعمالنا</h2>
+        <p>تقدم شركة إنشاء للبناء والتشييد خبرتها في تنفيذ وإدارة مشروعات المقاولات والأعمال الكهروميكانيكية والإنشاءات والتشطيبات. نعمل مع شركائنا على تحويل المتطلبات إلى نتائج دقيقة، مع الالتزام بالجودة والبرنامج الزمني ومتطلبات التشغيل.</p>
       </div>
 
       <div id="sectors-status" class="sectors-status"></div>
       <div class="sector-grid" id="sector-grid"></div>
 
       <div class="sectors-note">
-        <p>و عليه فاٍنة ليشرفنا التعاون مع سيادتكم في مشاريعكم الحالية و المستقبلية و تفضلو بقبول وافر التقدير و الاحترام.</p>
+        <p>يسعدنا أن نكون شريككم في مشروعاتكم الحالية والمستقبلية، وأن نضع خبراتنا وإمكانات فريقنا في خدمة نتائج تدوم.</p>
         <p class="sectors-signoff">م. عبد الرحمن الجريدلي<span>رئيس مجلس الإدارة</span></p>
       </div>
     </div>
@@ -798,7 +1432,8 @@ main {
 
   <div class="marquee-section" id="partners-section">
     <div class="section-head">
-      <h2>Companies we've partnered with</h2>
+      <h2>Trusted relationships</h2>
+      <p>We work alongside organizations that value precision, communication and dependable delivery.</p>
     </div>
 
     <div class="marquee">
@@ -808,7 +1443,8 @@ main {
 
   <div class="marquee-section" id="countries-section">
     <div class="section-head">
-      <h2>Countries we've worked in</h2>
+      <h2>Our operating reach</h2>
+      <p>Local knowledge and regional experience supporting projects across multiple markets.</p>
     </div>
 
     <div class="marquee">
@@ -821,21 +1457,21 @@ main {
 <footer class="site-footer" id="contact">
   <div class="footer-inner">
     <div class="footer-brand">
-      <a href="#top" class="wordmark footer-wordmark">Inshaa</a>
-      <p class="footer-tag">We build things that outlast the contract.</p>
+      <a href="#top" class="wordmark footer-wordmark">Inshaa Minka</a>
+      <p class="footer-tag">Integrated construction delivery, built on clarity, craftsmanship and accountability.</p>
     </div>
 
     <div class="footer-contact">
       <div class="info-block">
-        <h3>Location</h3>
+        <h3>Visit us</h3>
         <p>الميريلاند - روكسي - مصر الجديدة<br>Cairo, Egypt</p>
       </div>
       <div class="info-block">
-        <h3>Phone</h3>
+        <h3>Call us</h3>
         <p>01068835403</p>
       </div>
       <div class="info-block">
-        <h3>Email</h3>
+        <h3>Email us</h3>
         <p>info@inshaa.example</p>
       </div>
     </div>
@@ -1158,6 +1794,12 @@ function buildProjectCard(project, index) {
 
   const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
 
+  const inner = document.createElement('span');
+  inner.className = 'project-card-inner';
+
+  const front = document.createElement('span');
+  front.className = 'project-card-face project-card-front';
+
   const thumb = document.createElement('div');
   thumb.className = 'project-card-thumb';
   if (urls.length > 0 && !looksLikeVideo(urls[0])) {
@@ -1192,8 +1834,23 @@ function buildProjectCard(project, index) {
   body.appendChild(title);
   body.appendChild(desc);
 
-  card.appendChild(thumb);
-  card.appendChild(body);
+  front.appendChild(thumb);
+  front.appendChild(body);
+
+  const back = document.createElement('span');
+  back.className = 'project-card-face project-card-back';
+
+  const backTitle = document.createElement('h3');
+  backTitle.textContent = project.title || 'Untitled project';
+
+  const backDesc = document.createElement('p');
+  backDesc.textContent = project.description || 'No description available.';
+
+  back.appendChild(backTitle);
+  back.appendChild(backDesc);
+  inner.appendChild(front);
+  inner.appendChild(back);
+  card.appendChild(inner);
 
   card.addEventListener('click', () => openLightbox(index));
 

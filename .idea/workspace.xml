@@ -6,17 +6,23 @@
   <component name="ChangeListManager">
     <list default="true" id="75ee7ed6-1d9a-49d7-988e-30c539d78000" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/cv_categories_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/cv_sub_categories.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/home_projects_medias_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/home_projects_model.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/dashboard.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes/extracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/extracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routes/login.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/home.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/home.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routes/page.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/page.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routes/reviewings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/reviewings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routes/users.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/users.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/reviewings.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/courses.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/exctract.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/exam.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/package.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/private.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/students.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/dashboard.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/login.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/manage_page.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/manage_page.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/templates/users.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/users.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -58,7 +64,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;S:/Projects/fire-beat/app/routes/myworks.py&quot;
+    &quot;last_opened_file_path&quot;: &quot;S:/Projects/fire-beat/app/routes/search.py&quot;
   }
 }</component>
   <component name="RunManager">

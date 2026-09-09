@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.users_model import User
-from app.models.home_projects_model import Project
-from app.models.home_projects_medias_model import ProjectMedia
+from app.models.home.home_projects_model import Project
+from app.models.home.home_projects_medias_model import ProjectMedia
 from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db

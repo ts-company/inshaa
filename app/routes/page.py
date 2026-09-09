@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFi
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from app.models.cv_categories_model import CvCategory
-from app.models.cv_sub_categories import CvSubCategory
+from app.models.home.cv_categories_model import CvCategory
+from app.models.home.cv_sub_categories import CvSubCategory
 from app.models.users_model import User
-from app.models.home_projects_model import Project
-from app.models.home_projects_medias_model import ProjectMedia
+from app.models.home.home_projects_model import Project
+from app.models.home.home_projects_medias_model import ProjectMedia
 from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db

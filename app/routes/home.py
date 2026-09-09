@@ -1,18 +1,13 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from app.models.cv_categories_model import CvCategory
-from app.models.cv_sub_categories import CvSubCategory
-from app.models.users_model import User
-from app.models.home_projects_model import Project
-from app.models.home_projects_medias_model import ProjectMedia
-from app.models.permissions_model import Permission
-from app.core.auth import validate_user
+from app.models.home.cv_categories_model import CvCategory
+from app.models.home.cv_sub_categories import CvSubCategory
+from app.models.home.home_projects_model import Project
+from app.models.home.home_projects_medias_model import ProjectMedia
 from app.database import get_db
-from app.utils import generate_url, upload_file
+from app.utils import generate_url
 from app.config import BASE_DIR
-from typing import List
 
 router = APIRouter(prefix="/home")
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manage users — Inshaa</title>
+<title>inshaa minka building &amp; constrauction</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -474,18 +474,80 @@ main {
   }
   .row-actions { justify-content: flex-start; margin-top: 8px; }
 }
+/* Shared public-site header */
+.site-header {
+  background: #0B4D72;
+  border-bottom: 0;
+  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+}
+
+.site-header::after {
+  content: '';
+  display: block;
+  height: 5px;
+  width: 32%;
+  background: #55C2D8;
+}
+
+.header-inner {
+  max-width: 1240px;
+  min-height: 148px;
+  padding: 38px 32px;
+}
+
+.wordmark {
+  color: #FFFFFF;
+  font-size: clamp(24px, 2.4vw, 34px);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-tagline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  color: #B8D7E3;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.8px;
+  text-transform: uppercase;
+}
+
+.brand-tagline::before { content: ''; width: 22px; height: 2px; background: #55C2D8; }
+
+.wordmark::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  display: block;
+  background: #55C2D8;
+  transform: rotate(45deg);
+}
+
+@media (max-width: 640px) {
+  .header-inner { min-height: 88px; padding: 20px; }
+  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
+  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
+  .brand-tagline::before { width: 14px; }
+}
 </style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="/" class="wordmark">
-      Inshaa
-    </a>
-    <div class="header-links">
-      <a href="/system/dashboard/">Dashboard</a>
-      <a href="/system/logout">Sign out</a>
+    <div class="brand-lockup">
+      <div>
+        <a href="/" class="wordmark">Inshaa Minka</a>
+        <span class="brand-tagline">Building &amp; Construction</span>
+      </div>
     </div>
   </div>
 </header>
@@ -594,6 +656,7 @@ main {
           <option value="" disabled selected>Choose a permission</option>
           <option value="manage users">Manage Users</option>
           <option value="manage page">Manage Page</option>
+          <option value="manage extracts">Manage Extracts</option>
         </select>
       </label>
       <button type="submit" class="btn btn-small">Add</button>
@@ -611,7 +674,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'manage page'];
+const PERMISSION_OPTIONS = ['manage users', 'manage page', 'manage extracts'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');

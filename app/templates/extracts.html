@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Extracts — Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (matches the main site theme) ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+  --error: #A2402C;
+
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0; }
+a { color: inherit; }
+button { font-family: var(--font-body); cursor: pointer; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ===== Header ===== */
+.site-header { border-bottom: 1px solid var(--line-strong); }
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.header-links { display: flex; align-items: center; gap: 22px; }
+
+.header-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.header-links a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ===== Layout ===== */
+main {
+  flex: 1;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.page-head { margin-bottom: 36px; max-width: 640px; }
+
+.page-kicker {
+  font-size: 14px;
+  color: var(--steel);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.page-head h1 { font-size: 38px; margin-bottom: 10px; }
+.page-head p { color: var(--steel-dark); font-size: 16px; }
+
+/* ===== Add extract ===== */
+.add-extract {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 28px;
+  margin-bottom: 64px;
+}
+
+.add-extract h2 { font-size: 22px; margin-bottom: 18px; }
+
+.add-extract-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 760px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.add-extract-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.add-extract-form input[type="text"],
+.add-extract-form input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 11px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.add-extract-form input:focus { outline: none; border-color: var(--steel); }
+
+.field-optional {
+  font-weight: 400;
+  color: var(--steel-dark);
+  opacity: 0.75;
+  text-transform: none;
+}
+
+.subgroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subgroup-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry-row {
+  display: grid;
+  grid-template-columns: 1fr 140px auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.entry-row input[type="text"],
+.entry-row input[type="number"] {
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+  width: 100%;
+}
+
+.entry-row input:focus { outline: none; border-color: var(--steel); }
+
+.entry-row-remove {
+  background: none;
+  border: none;
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 4px;
+  white-space: nowrap;
+}
+
+.entry-row-remove:hover { text-decoration: underline; }
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14.5px;
+  padding: 12px 24px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  transition: background 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
+}
+
+.btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.btn:disabled { opacity: 0.55; cursor: default; }
+
+.btn-outline {
+  background: none;
+  color: var(--ink);
+}
+
+.btn-outline:hover { background: var(--ink); color: var(--paper); }
+
+.btn-small { padding: 8px 16px; font-size: 13.5px; align-self: flex-start; }
+
+.form-message {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-message.is-error { color: var(--error); }
+.form-message.is-success { color: var(--steel-dark); }
+.form-message[hidden] { display: none; }
+
+/* ===== Extracts table ===== */
+.extracts-section { border-top: 1px solid var(--line-strong); padding-top: 28px; }
+
+.extracts-section h2 { font-size: 22px; margin-bottom: 18px; }
+
+.extract-search {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 28px;
+  padding: 18px 0 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.extract-search label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.extract-search input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.extract-search input:focus { outline: none; border-color: var(--steel); }
+
+.extract-search .btn { align-self: end; white-space: nowrap; }
+
+.extracts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.extracts-table thead th {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.extracts-table th.is-numeric,
+.extracts-table td.is-numeric { text-align: right; }
+
+.extracts-table tbody td {
+  padding: 16px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  vertical-align: middle;
+}
+
+.extracts-table tbody tr:last-child td { border-bottom: none; }
+
+.extract-project { font-weight: 500; }
+.extract-project-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.extract-project-link:hover { text-decoration: underline; }
+
+.extract-contractor { color: var(--steel-dark); }
+.extract-total { font-weight: 600; }
+
+.empty-extracts {
+  padding: 40px 0;
+  color: var(--steel-dark);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 760px) {
+  .field-row { grid-template-columns: 1fr; }
+  .entry-row { grid-template-columns: 1fr 100px auto; }
+  .extract-search { grid-template-columns: 1fr 1fr; }
+  .extracts-table thead { display: none; }
+  .extracts-table, .extracts-table tbody, .extracts-table tr, .extracts-table td {
+    display: block;
+    width: 100%;
+  }
+  .extracts-table tbody tr {
+    border-bottom: 1px solid var(--line-strong);
+    padding: 14px 0;
+  }
+  .extracts-table tbody td {
+    border-bottom: none;
+    padding: 4px 0;
+    text-align: left !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="wordmark">Inshaa</a>
+    <div class="header-links">
+      <a href="/system/dashboard/">Dashboard</a>
+      <a href="/system/logout">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="page-head">
+    <p class="page-kicker">Manage extracts</p>
+    <h1>Extracts</h1>
+    <p>Create a new extract with its taxes and deductions, and see all extracts recorded so far.</p>
+  </div>
+
+  <section class="add-extract">
+    <h2>Add an extract</h2>
+    <form class="add-extract-form" id="add-extract-form" novalidate>
+      <div class="field-row">
+        <label>
+          Project name
+          <input type="text" name="project_name" id="project-name" required>
+        </label>
+        <label>
+          Unit number
+          <input type="text" name="unit_number" id="unit-number" required>
+        </label>
+      </div>
+
+      <label>
+        Contractor name <span class="field-optional">(optional)</span>
+        <input type="text" name="contractor_name" id="contractor-name">
+      </label>
+
+      <div class="subgroup">
+        <span class="subgroup-label">Taxes — at least one required</span>
+        <div class="entry-list" id="taxes-list"></div>
+        <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">+ Add tax</button>
+      </div>
+
+      <div class="subgroup">
+        <span class="subgroup-label">Deductions — at least one required</span>
+        <div class="entry-list" id="deductions-list"></div>
+        <button type="button" class="btn btn-outline btn-small" id="add-deduction-btn">+ Add deduction</button>
+      </div>
+
+      <div>
+        <button type="submit" class="btn" id="add-extract-btn">Add extract</button>
+        <p class="form-message" id="add-extract-message" role="alert" hidden></p>
+      </div>
+    </form>
+  </section>
+
+  <section class="extracts-section">
+    <h2>All extracts</h2>
+
+    <form class="extract-search" method="get" action="/system/extracts/">
+      <label>
+        Extract ID
+        <input type="number" name="id" min="1" value="{{ request.query_params.get('id', '') }}">
+      </label>
+      <label>
+        Project name
+        <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
+      </label>
+      <label>
+        Contractor
+        <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
+      </label>
+      <label>
+        Unit number
+        <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
+      </label>
+      <button type="submit" class="btn btn-small">Search</button>
+      <a href="/system/extracts/" class="btn btn-outline btn-small">Clear</a>
+    </form>
+
+    {% if extracts %}
+    <table class="extracts-table">
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Unit number</th>
+          <th>Contractor</th>
+          <th class="is-numeric">Subtotal</th>
+          <th class="is-numeric">Taxes</th>
+          <th class="is-numeric">Deductions</th>
+          <th class="is-numeric">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in extracts %}
+        <tr data-extract-id="{{ e.id }}">
+          <td class="extract-project"><a class="extract-project-link" href="/system/extracts/details/{{ e.id }}">{{ e.project_name }}</a></td>
+          <td>{{ e.unit_number }}</td>
+          <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
+          <td class="is-numeric">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
+          <td class="is-numeric">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
+          <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>
+          <td class="is-numeric extract-total">{{ "{:,.2f}".format(e.total) }} EGP</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-extracts">No extracts yet.</p>
+    {% endif %}
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<script>
+const EXTRACTS_BASE = `/system/extracts`;
+
+const extractSearchForm = document.querySelector('.extract-search');
+extractSearchForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  const params = new URLSearchParams();
+  new FormData(extractSearchForm).forEach((value, key) => {
+    const trimmedValue = String(value).trim();
+    if (trimmedValue) params.set(key, trimmedValue);
+  });
+
+  const query = params.toString();
+  window.location.href = extractSearchForm.action + (query ? `?${query}` : '');
+});
+
+/* ==========================================================
+   Repeatable tax / deduction rows
+   ========================================================== */
+function buildEntryRow(list, amountLabel, amountStep) {
+  const row = document.createElement('div');
+  row.className = 'entry-row';
+
+  const titleInput = document.createElement('input');
+  titleInput.type = 'text';
+  titleInput.placeholder = 'Title';
+
+  const amountInput = document.createElement('input');
+  amountInput.type = 'number';
+  amountInput.step = amountStep;
+  amountInput.min = '0';
+  amountInput.placeholder = amountLabel;
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'entry-row-remove';
+  remove.textContent = 'Remove';
+  remove.addEventListener('click', () => row.remove());
+
+  row.appendChild(titleInput);
+  row.appendChild(amountInput);
+  row.appendChild(remove);
+  list.appendChild(row);
+  return row;
+}
+
+function collectEntries(list, amountKey) {
+  const rows = Array.from(list.querySelectorAll('.entry-row'));
+  const entries = [];
+  rows.forEach((row) => {
+    const [titleInput, amountInput] = row.querySelectorAll('input');
+    const title = titleInput.value.trim();
+    const amountRaw = amountInput.value.trim();
+    if (!title || amountRaw === '') return;
+    entries.push({ title, [amountKey]: Number(amountRaw) });
+  });
+  return entries;
+}
+
+const taxesList = document.getElementById('taxes-list');
+const deductionsList = document.getElementById('deductions-list');
+
+buildEntryRow(taxesList, 'Rate %', '0.01');
+buildEntryRow(deductionsList, 'Amount EGP', '0.01');
+
+document.getElementById('add-tax-btn').addEventListener('click', () => {
+  buildEntryRow(taxesList, 'Rate %', '0.01');
+});
+
+document.getElementById('add-deduction-btn').addEventListener('click', () => {
+  buildEntryRow(deductionsList, 'Amount EGP', '0.01');
+});
+
+/* ==========================================================
+   Add extract
+   ========================================================== */
+const addForm = document.getElementById('add-extract-form');
+const addBtn = document.getElementById('add-extract-btn');
+const addMessage = document.getElementById('add-extract-message');
+
+function showAddMessage(text, type) {
+  addMessage.textContent = text;
+  addMessage.className = `form-message is-${type}`;
+  addMessage.hidden = false;
+}
+
+addForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const projectName = document.getElementById('project-name').value.trim();
+  const unitNumber = document.getElementById('unit-number').value.trim();
+  const contractorName = document.getElementById('contractor-name').value.trim();
+  const taxes = collectEntries(taxesList, 'rate');
+  const deductions = collectEntries(deductionsList, 'amount');
+
+  if (!projectName || !unitNumber) {
+    showAddMessage('Add a project name and unit number.', 'error');
+    return;
+  }
+  if (taxes.length === 0) {
+    showAddMessage('Add at least one tax.', 'error');
+    return;
+  }
+  if (deductions.length === 0) {
+    showAddMessage('Add at least one deduction.', 'error');
+    return;
+  }
+
+  const payload = {
+    project_name: projectName,
+    unit_number: unitNumber,
+    contractor_name: contractorName || null,
+    taxes,
+    deductions,
+  };
+
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding…';
+  addMessage.hidden = true;
+
+  try {
+    const res = await fetch(`${EXTRACTS_BASE}/add_extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (res.status === 403) {
+      showAddMessage("You don't have permission to add extracts.", 'error');
+      return;
+    }
+    if (!res.ok) {
+      showAddMessage(`Couldn't add the extract (status ${res.status}).`, 'error');
+      return;
+    }
+
+    window.location.reload();
+  } catch (err) {
+    showAddMessage(`Couldn't reach the server (${err.message}).`, 'error');
+  } finally {
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add extract';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ extract.project_name }} — Extract — Inshaa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens (matches the main site theme) ===== */
+:root {
+  --ink: #1C1F22;
+  --concrete: #E7E2D8;
+  --paper: #F6F3EC;
+  --steel: #3E5468;
+  --steel-dark: #2A3A47;
+  --yellow: #F0B429;
+  --line: #D8D2C4;
+  --line-strong: #B9B2A1;
+  --white: #FFFFFF;
+  --error: #A2402C;
+
+  --font-head: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-head);
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+p { margin: 0; }
+a { color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--steel);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ===== Header ===== */
+.site-header { border-bottom: 1px solid var(--line-strong); }
+
+.header-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.header-links { display: flex; align-items: center; gap: 22px; }
+
+.header-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.header-links a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ===== Layout ===== */
+main {
+  flex: 1;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+}
+
+.back-link {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-decoration: none;
+  margin-bottom: 24px;
+  border-bottom: 1px solid transparent;
+}
+
+.back-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+.page-head {
+  margin-bottom: 40px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.page-kicker {
+  font-size: 14px;
+  color: var(--steel);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.page-head h1 { font-size: 38px; margin-bottom: 12px; }
+.page-head h1.project-detail-value { margin: 0; }
+
+.project-details {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.project-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.project-detail-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.project-detail-value {
+  font-family: var(--font-head);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+  color: var(--ink);
+}
+
+.meta-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.meta-item { display: flex; flex-direction: column; gap: 3px; }
+.meta-item span:first-child { font-size: 12.5px; font-weight: 600; color: var(--steel-dark); text-transform: uppercase; letter-spacing: 0.04em; }
+.meta-item span:last-child { font-size: 16px; color: var(--ink); }
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--steel-dark);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--ink); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--steel-dark);
+  border-color: var(--line-strong);
+}
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--steel-dark);
+  border-color: var(--line-strong);
+  font-size: 12.5px;
+  padding: 6px 12px;
+}
+.btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+
+.btn-ghost-mini {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--steel-dark);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-ghost-mini:hover { border-color: var(--ink); color: var(--ink); }
+
+.btn-text {
+  background: none;
+  border: none;
+  color: var(--error);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.btn-text:hover { text-decoration: underline; }
+
+.line-delete {
+  background: none;
+  border: none;
+  color: var(--error);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+}
+.line-delete:hover { opacity: 0.7; }
+
+/* ===== Layout: categories + summary ===== */
+.extract-layout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+/* ---- Categories / items ---- */
+.category-block {
+  margin-bottom: 36px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 20px;
+}
+
+.category-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.category-head h2 { font-size: 21px; }
+
+.category-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.items-table thead th {
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  padding: 0 10px 10px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.items-table th.is-numeric,
+.items-table td.is-numeric { text-align: right; }
+
+.items-table th.is-actions,
+.items-table td.is-actions { text-align: right; width: 1%; }
+
+.items-table tbody td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14.5px;
+}
+
+.items-table tbody tr:last-child td { border-bottom: none; }
+
+.item-title { font-weight: 500; }
+.item-total { font-weight: 600; }
+
+.empty-items {
+  padding: 16px 0;
+  color: var(--steel-dark);
+  font-size: 14px;
+}
+
+.empty-categories {
+  padding: 30px 0;
+  color: var(--steel-dark);
+  font-size: 15px;
+}
+
+/* ---- Summary panel ---- */
+.summary-panel {
+  position: sticky;
+  top: 24px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.summary-block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-block-head h3 { margin-bottom: 0; }
+
+.summary-block h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14.5px;
+  padding: 6px 0;
+}
+
+.summary-line span:first-child { color: var(--steel-dark); }
+.summary-line span:last-child { font-weight: 500; }
+
+.summary-line-removable span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary-divider { border: none; border-top: 1px solid var(--line); margin: 4px 0; }
+
+.summary-line.is-subtotal,
+.summary-line.is-grand-total {
+  border-top: 1px solid var(--line-strong);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.summary-line.is-grand-total span {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-head);
+}
+
+.summary-empty {
+  font-size: 13.5px;
+  color: var(--steel-dark);
+  opacity: 0.8;
+}
+
+/* ===== Footer ===== */
+.site-footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 22px 32px;
+  text-align: center;
+  color: var(--steel-dark);
+  font-size: 13.5px;
+}
+
+/* ===== Modals ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 31, 34, 0.55);
+  align-items: flex-start;
+  justify-content: center;
+  padding: 64px 20px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modal-overlay.is-open { display: flex; }
+
+.modal {
+  background: var(--white);
+  width: 100%;
+  max-width: 560px;
+  border: 1px solid var(--line-strong);
+  padding: 28px;
+}
+
+.modal.is-narrow { max-width: 420px; }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.modal-head h2 { font-size: 22px; }
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--steel-dark);
+  cursor: pointer;
+  padding: 4px;
+}
+.modal-close:hover { color: var(--ink); }
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--steel-dark);
+  opacity: 0.75;
+  margin-top: 4px;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 2px;
+  padding: 10px 12px;
+}
+
+.field input:focus,
+.field select:focus { border-color: var(--steel); }
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.field-row .field { margin-bottom: 0; }
+
+.item-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.item-row {
+  border: 1px solid var(--line);
+  padding: 14px;
+  position: relative;
+  background: var(--paper);
+}
+
+.item-row-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.items-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.items-section-head h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.form-error {
+  display: none;
+  background: rgba(162, 64, 44, 0.08);
+  border: 1px solid var(--error);
+  color: var(--error);
+  font-size: 13.5px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+.form-error.is-visible { display: block; }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .extract-layout { grid-template-columns: 1fr; }
+  .summary-panel { position: static; }
+}
+
+@media (max-width: 600px) {
+  .items-table thead { display: none; }
+  .items-table, .items-table tbody, .items-table tr, .items-table td {
+    display: block;
+    width: 100%;
+  }
+  .items-table tbody tr {
+    border-bottom: 1px solid var(--line-strong);
+    padding: 10px 0;
+  }
+  .items-table tbody td {
+    border-bottom: none;
+    padding: 3px 0;
+    text-align: left !important;
+  }
+  .items-table td.is-actions { padding-top: 8px !important; }
+  .field-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body data-extract-id="{{ extract.id }}">
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="wordmark">Inshaa</a>
+    <div class="header-links">
+      <a href="/system/dashboard/">Dashboard</a>
+      <a href="/system/logout">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <a href="/system/extracts/" class="back-link">← Back to extracts</a>
+
+  <div class="page-head">
+    <div>
+
+      <div class="project-details">
+        <div class="project-detail">
+          <span class="project-detail-label">Project name</span>
+          <h1 class="project-detail-value">{{ extract.project_name }}</h1>
+        </div>
+        <div class="project-detail">
+          <span class="project-detail-label">Unit number</span>
+          <span class="project-detail-value">{{ extract.unit_number }}</span>
+        </div>
+        <div class="project-detail">
+          <span class="project-detail-label">Contractor</span>
+          <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" id="btn-open-add-category">+ Add category</button>
+  </div>
+
+  <div class="extract-layout">
+
+    <div class="categories-column">
+      {% if extract.categories %}
+        {% for cat in extract.categories %}
+        <div class="category-block">
+          <div class="category-head">
+            <h2>{{ cat.title }}</h2>
+            <div class="category-head-actions">
+              <button type="button" class="btn btn-ghost btn-open-add-item" data-cat-id="{{ cat.id }}" data-cat-title="{{ cat.title }}">+ Add item</button>
+              <button type="button" class="btn-text btn-delete-category" data-cat-id="{{ cat.id }}" data-cat-title="{{ cat.title }}">Delete category</button>
+            </div>
+          </div>
+
+          {% if cat["items"] %}
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Unit</th>
+                <th class="is-numeric">Amount</th>
+                <th>Currency</th>
+                <th class="is-numeric">Completion</th>
+                <th class="is-numeric">Total</th>
+                <th class="is-actions"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in cat["items"] %}
+              <tr>
+                <td class="item-title">{{ item.title }}</td>
+                <td>{{ item.unit_type }}</td>
+                <td class="is-numeric">{{ "{:,.2f}".format(item.amount) }}</td>
+                <td>{{ item.currency }}</td>
+                <td class="is-numeric">{{ item.completion_perc }}</td>
+                <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
+                <td class="is-actions">
+                  <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}" data-item-title="{{ item.title }}">Delete</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p class="empty-items">No items in this category.</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+      <p class="empty-categories">No categories added to this extract yet.</p>
+      {% endif %}
+    </div>
+
+    <aside class="summary-panel">
+      <div class="summary-block">
+        <div class="summary-line is-subtotal">
+          <span>Subtotal</span>
+          <span>{{ "{:,.2f}".format(extract.sub_total) }} EGP</span>
+        </div>
+      </div>
+
+      <div class="summary-block">
+        <div class="summary-block-head">
+          <h3>Taxes</h3>
+          <button type="button" class="btn-ghost-mini" id="btn-open-add-tax">+ Add</button>
+        </div>
+        {% if extract.taxes %}
+          {% for tax in extract.taxes %}
+          <div class="summary-line summary-line-removable">
+            <span>{{ tax.title }}</span>
+            <span>
+              {{ tax.rate }}
+              <button type="button" class="line-delete" data-tax-id="{{ tax.id }}" data-tax-title="{{ tax.title }}" title="Remove tax">&times;</button>
+            </span>
+          </div>
+          {% endfor %}
+        {% else %}
+        <p class="summary-empty">No taxes recorded.</p>
+        {% endif %}
+        <div class="summary-line is-subtotal">
+          <span>Total taxes</span>
+          <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
+        </div>
+      </div>
+
+      <div class="summary-block">
+        <div class="summary-block-head">
+          <h3>Deductions</h3>
+          <button type="button" class="btn-ghost-mini" id="btn-open-add-deduction">+ Add</button>
+        </div>
+        {% if extract.deductions %}
+          {% for ded in extract.deductions %}
+          <div class="summary-line summary-line-removable">
+            <span>{{ ded.title }}</span>
+            <span>
+              {{ "{:,.2f}".format(ded.amount) }} EGP
+              <button type="button" class="line-delete" data-ded-id="{{ ded.id }}" data-ded-title="{{ ded.title }}" title="Remove deduction">&times;</button>
+            </span>
+          </div>
+          {% endfor %}
+        {% else %}
+        <p class="summary-empty">No deductions recorded.</p>
+        {% endif %}
+      </div>
+
+      <div class="summary-block">
+        <div class="summary-block-head">
+          <h3>Previously paid</h3>
+          <button type="button" class="btn-ghost-mini" id="btn-open-add-payment">+ Add</button>
+        </div>
+        {% if extract.previously_paid %}
+          {% for pp in extract.previously_paid %}
+          <div class="summary-line summary-line-removable">
+            <span>{{ pp.date }}</span>
+            <span>
+              {{ "{:,.2f}".format(pp.amount) }} EGP
+              <button type="button" class="line-delete" data-payment-id="{{ pp.id }}" data-payment-amount="{{ pp.amount }}" title="Remove payment">&times;</button>
+            </span>
+          </div>
+          {% endfor %}
+        {% else %}
+        <p class="summary-empty">No previous payments recorded.</p>
+        {% endif %}
+        <div class="summary-line is-subtotal">
+          <span>Total deductions</span>
+          <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
+        </div>
+      </div>
+
+      <div class="summary-line is-grand-total">
+        <span>Total</span>
+        <span>{{ "{:,.2f}".format(extract.total) }} EGP</span>
+      </div>
+    </aside>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>© 2026 Inshaa</p>
+</footer>
+
+<!-- ===== Add Category modal ===== -->
+<div class="modal-overlay" id="modal-add-category">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Add category</h2>
+      <button type="button" class="modal-close" data-close-modal="modal-add-category">&times;</button>
+    </div>
+
+    <div class="form-error" id="add-category-error"></div>
+
+    <form id="form-add-category">
+      <div class="field">
+        <label for="cat-title">Category title</label>
+        <input type="text" id="cat-title" name="title" required>
+      </div>
+
+      <div class="items-section-head">
+        <h3>Items (optional)</h3>
+        <button type="button" class="btn btn-ghost" id="btn-add-item-row">+ Add item</button>
+      </div>
+
+      <div class="item-rows" id="category-item-rows"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-add-category">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Add Item modal ===== -->
+<div class="modal-overlay" id="modal-add-item">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="add-item-heading">Add item</h2>
+      <button type="button" class="modal-close" data-close-modal="modal-add-item">&times;</button>
+    </div>
+
+    <div class="form-error" id="add-item-error"></div>
+
+    <form id="form-add-item">
+      <div class="field">
+        <label for="item-title">Item title</label>
+        <input type="text" id="item-title" name="title" required>
+      </div>
+      <div class="field">
+        <label for="item-unit-type">Unit type</label>
+        <input type="text" id="item-unit-type" name="unit_type" placeholder="e.g. m2, ton, unit" required>
+      </div>
+      <div class="field">
+        <label for="item-amount">Amount</label>
+        <input type="number" id="item-amount" name="amount" step="0.01" min="0" required>
+      </div>
+      <div class="field">
+        <label for="item-currency">Currency rate</label>
+        <input type="number" id="item-currency" name="currency" step="0.01" min="0" required>
+      </div>
+      <div class="field">
+        <label for="item-completion">Completion (0-1)</label>
+        <input type="number" id="item-completion" name="completion_perc" step="0.0001" min="0" max="1" required>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-add-item">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Add Tax modal ===== -->
+<div class="modal-overlay" id="modal-add-tax">
+  <div class="modal is-narrow">
+    <div class="modal-head">
+      <h2>Add tax</h2>
+      <button type="button" class="modal-close" data-close-modal="modal-add-tax">&times;</button>
+    </div>
+
+    <div class="form-error" id="add-tax-error"></div>
+
+    <form id="form-add-tax">
+      <div class="field">
+        <label for="tax-title">Tax title</label>
+        <input type="text" id="tax-title" name="title" placeholder="e.g. VAT" required>
+      </div>
+      <div class="field">
+        <label for="tax-rate">Rate (0-1)</label>
+        <input type="number" id="tax-rate" name="rate" step="0.0001" min="0" max="1" required>
+        <p class="field-hint">Enter the rate as a decimal (e.g. 0.05 for 5%).</p>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-add-tax">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save tax</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Add Deduction modal ===== -->
+<div class="modal-overlay" id="modal-add-deduction">
+  <div class="modal is-narrow">
+    <div class="modal-head">
+      <h2>Add deduction</h2>
+      <button type="button" class="modal-close" data-close-modal="modal-add-deduction">&times;</button>
+    </div>
+
+    <div class="form-error" id="add-deduction-error"></div>
+
+    <form id="form-add-deduction">
+      <div class="field">
+        <label for="ded-title">Deduction title</label>
+        <input type="text" id="ded-title" name="title" placeholder="e.g. Retention" required>
+      </div>
+      <div class="field">
+        <label for="ded-amount">Amount (EGP)</label>
+        <input type="number" id="ded-amount" name="amount" step="any" min="0" required>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-add-deduction">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save deduction</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Add Previously Paid modal ===== -->
+<div class="modal-overlay" id="modal-add-payment">
+  <div class="modal is-narrow">
+    <div class="modal-head">
+      <h2>Add payment</h2>
+      <button type="button" class="modal-close" data-close-modal="modal-add-payment">&times;</button>
+    </div>
+
+    <div class="form-error" id="add-payment-error"></div>
+
+    <form id="form-add-payment">
+      <div class="field">
+        <label for="payment-amount">Amount (EGP)</label>
+        <input type="number" id="payment-amount" name="amount" step="any" required>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-add-payment">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save payment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Item row template (used by the Add Category form) ===== -->
+<template id="item-row-template">
+  <div class="item-row">
+    <button type="button" class="btn-text item-row-remove" data-remove-row>Remove</button>
+    <div class="field-row">
+      <div class="field">
+        <label>Title</label>
+        <input type="text" data-field="title" required>
+      </div>
+      <div class="field">
+        <label>Unit type</label>
+        <input type="text" data-field="unit_type" required>
+      </div>
+      <div class="field">
+        <label>Amount</label>
+          <input type="number" data-field="amount" step="0.01" min="0" required>
+      </div>
+      <div class="field">
+        <label>Currency rate</label>
+          <input type="number" data-field="currency" step="0.01" min="0" required>
+      </div>
+      <div class="field">
+        <label>Completion (0-1)</label>
+        <input type="number" data-field="completion_perc" step="0.0001" min="0" max="1" required>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+(function () {
+  const extractId = document.body.dataset.extractId;
+  const API_BASE = '/system/extracts';
+
+  // ---------- generic modal open/close ----------
+  function openModal(id) {
+    document.getElementById(id).classList.add('is-open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('is-open');
+  }
+  document.querySelectorAll('[data-close-modal]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      closeModal(btn.getAttribute('data-close-modal'));
+    });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.is-open').forEach(function (overlay) {
+        closeModal(overlay.id);
+      });
+    }
+  });
+
+  function showError(elId, message) {
+    const el = document.getElementById(elId);
+    el.textContent = message;
+    el.classList.add('is-visible');
+  }
+  function clearError(elId) {
+    const el = document.getElementById(elId);
+    el.textContent = '';
+    el.classList.remove('is-visible');
+  }
+
+  // ---------- shared: POST / DELETE helpers ----------
+  function postJSON(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Request failed with status ' + res.status);
+      return res.json();
+    });
+  }
+
+  function deleteResource(url, button) {
+    if (button) button.disabled = true;
+    return fetch(url, {
+      method: 'DELETE',
+      credentials: 'include',
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Request failed with status ' + res.status);
+        return res.json();
+      })
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        if (button) button.disabled = false;
+        alert('Could not delete. ' + err.message);
+      });
+  }
+
+  // ---------- Add Category ----------
+  const rowsContainer = document.getElementById('category-item-rows');
+  const rowTemplate = document.getElementById('item-row-template');
+
+  function addItemRow() {
+    const node = rowTemplate.content.cloneNode(true);
+    rowsContainer.appendChild(node);
+  }
+
+  document.getElementById('btn-open-add-category').addEventListener('click', function () {
+    document.getElementById('form-add-category').reset();
+    rowsContainer.innerHTML = '';
+    clearError('add-category-error');
+    openModal('modal-add-category');
+  });
+
+  document.getElementById('btn-add-item-row').addEventListener('click', addItemRow);
+
+  rowsContainer.addEventListener('click', function (e) {
+    if (e.target.matches('[data-remove-row]')) {
+      e.target.closest('.item-row').remove();
+    }
+  });
+
+  document.getElementById('form-add-category').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError('add-category-error');
+
+    const title = document.getElementById('cat-title').value.trim();
+    if (!title) return;
+
+    const items = [];
+    let invalid = false;
+    rowsContainer.querySelectorAll('.item-row').forEach(function (row) {
+      const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
+      const item = {
+        title: get('title').value.trim(),
+        unit_type: get('unit_type').value.trim(),
+        amount: parseFloat(get('amount').value),
+        currency: parseFloat(get('currency').value),
+        completion_perc: parseFloat(get('completion_perc').value),
+      };
+        if (!item.title || Number.isNaN(item.amount) || Number.isNaN(item.currency) ||
+          Number.isNaN(item.completion_perc) || item.completion_perc < 0 || item.completion_perc > 1) {
+        invalid = true;
+      }
+      items.push(item);
+    });
+
+    if (invalid) {
+      showError('add-category-error', 'Please fill in all fields for every item row, or remove incomplete rows.');
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    postJSON(API_BASE + '/add_category/' + extractId, { title: title, items: items })
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError('add-category-error', 'Could not add category. ' + err.message);
+      });
+  });
+
+  // ---------- Delete Category ----------
+  document.querySelectorAll('.btn-delete-category').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const catTitle = btn.getAttribute('data-cat-title');
+      if (!confirm('Delete category "' + catTitle + '" and all its items? This cannot be undone.')) return;
+      deleteResource(API_BASE + '/del_category/' + btn.getAttribute('data-cat-id'), btn);
+    });
+  });
+
+  // ---------- Add Item (per existing category) ----------
+  let activeCatId = null;
+
+  document.querySelectorAll('.btn-open-add-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeCatId = btn.getAttribute('data-cat-id');
+      const catTitle = btn.getAttribute('data-cat-title');
+      document.getElementById('add-item-heading').textContent = 'Add item — ' + catTitle;
+      document.getElementById('form-add-item').reset();
+      clearError('add-item-error');
+      openModal('modal-add-item');
+    });
+  });
+
+  document.getElementById('form-add-item').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError('add-item-error');
+
+    if (!activeCatId) return;
+
+    const payload = {
+      title: document.getElementById('item-title').value.trim(),
+      unit_type: document.getElementById('item-unit-type').value.trim(),
+      amount: parseFloat(document.getElementById('item-amount').value),
+      currency: parseFloat(document.getElementById('item-currency').value),
+      completion_perc: parseFloat(document.getElementById('item-completion').value),
+    };
+
+    if (!payload.title || Number.isNaN(payload.amount) || Number.isNaN(payload.currency) ||
+        Number.isNaN(payload.completion_perc) || payload.completion_perc < 0 || payload.completion_perc > 1) {
+      showError('add-item-error', 'Please fill in all fields. Completion must be between 0 and 1.');
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    postJSON(API_BASE + '/add_item/' + activeCatId, payload)
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError('add-item-error', 'Could not add item. ' + err.message);
+      });
+  });
+
+  // ---------- Delete Item ----------
+  document.querySelectorAll('.btn-delete-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const itemTitle = btn.getAttribute('data-item-title');
+      if (!confirm('Delete item "' + itemTitle + '"? This cannot be undone.')) return;
+      deleteResource(API_BASE + '/del_item/' + btn.getAttribute('data-item-id'), btn);
+    });
+  });
+
+  // ---------- Add Tax ----------
+  document.getElementById('btn-open-add-tax').addEventListener('click', function () {
+    document.getElementById('form-add-tax').reset();
+    clearError('add-tax-error');
+    openModal('modal-add-tax');
+  });
+
+  document.getElementById('form-add-tax').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError('add-tax-error');
+
+    const payload = {
+      title: document.getElementById('tax-title').value.trim(),
+      rate: parseFloat(document.getElementById('tax-rate').value),
+    };
+
+    if (!payload.title || Number.isNaN(payload.rate) || payload.rate < 0 || payload.rate > 1) {
+      showError('add-tax-error', 'Please fill in all fields. Rate must be between 0 and 1.');
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    postJSON(API_BASE + '/add_tax/' + extractId, payload)
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError('add-tax-error', 'Could not add tax. ' + err.message);
+      });
+  });
+
+  // ---------- Delete Tax ----------
+  document.querySelectorAll('.line-delete[data-tax-id]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const taxTitle = btn.getAttribute('data-tax-title');
+      if (!confirm('Remove tax "' + taxTitle + '"?')) return;
+      deleteResource(API_BASE + '/del_tax/' + btn.getAttribute('data-tax-id'), btn);
+    });
+  });
+
+  // ---------- Add Deduction ----------
+  document.getElementById('btn-open-add-deduction').addEventListener('click', function () {
+    document.getElementById('form-add-deduction').reset();
+    clearError('add-deduction-error');
+    openModal('modal-add-deduction');
+  });
+
+  document.getElementById('form-add-deduction').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError('add-deduction-error');
+
+    const payload = {
+      title: document.getElementById('ded-title').value.trim(),
+      amount: parseFloat(document.getElementById('ded-amount').value),
+    };
+
+    if (!payload.title || Number.isNaN(payload.amount)) {
+      showError('add-deduction-error', 'Please fill in all fields.');
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    postJSON(API_BASE + '/add_ded/' + extractId, payload)
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError('add-deduction-error', 'Could not add deduction. ' + err.message);
+      });
+  });
+
+  // ---------- Delete Deduction ----------
+  document.querySelectorAll('.line-delete[data-ded-id]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const dedTitle = btn.getAttribute('data-ded-title');
+      if (!confirm('Remove deduction "' + dedTitle + '"?')) return;
+      deleteResource(API_BASE + '/del_ded/' + btn.getAttribute('data-ded-id'), btn);
+    });
+  });
+
+  // ---------- Add Previously Paid ----------
+  document.getElementById('btn-open-add-payment').addEventListener('click', function () {
+    document.getElementById('form-add-payment').reset();
+    clearError('add-payment-error');
+    openModal('modal-add-payment');
+  });
+
+  document.getElementById('form-add-payment').addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError('add-payment-error');
+
+    const payload = {
+      amount: parseFloat(document.getElementById('payment-amount').value),
+    };
+
+    if (Number.isNaN(payload.amount)) {
+      showError('add-payment-error', 'Please enter a valid payment amount.');
+      return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+
+    postJSON(API_BASE + '/add_payment/' + extractId, payload)
+      .then(function () {
+        window.location.reload();
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        showError('add-payment-error', 'Could not add payment. ' + err.message);
+      });
+  });
+
+  // ---------- Delete Previously Paid ----------
+  document.querySelectorAll('.line-delete[data-payment-id]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const paymentAmount = btn.getAttribute('data-payment-amount');
+      if (!confirm('Remove payment of ' + paymentAmount + ' EGP?')) return;
+      deleteResource(API_BASE + '/del_payment/' + btn.getAttribute('data-payment-id'), btn);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
