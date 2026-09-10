@@ -185,17 +185,13 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
         for tax in payload.taxes:
             db.add(ExtractTaxes(extract_id=new_extract.id, title=tax.title, rate=tax.rate))
 
-        total_deductions = sum(
-            (d.amount for d in db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == new_extract.id).all()),
-            Decimal("0"),
-        )
+        for ded in payload.deductions:
+            db.add(ExtractDeduction(extract_id=new_extract.id, title=ded.title, amount=ded.amount))
 
-        total_payments = sum(
-            (p.amount for p in db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == new_extract.id).all()),
-            Decimal("0"),
-        )
-        new_extract.total_deductions = total_deductions + total_payments
-        new_extract.total = new_extract.sub_total - (total_deductions + total_payments)
+        total_deductions = sum((d.amount for d in payload.deductions ), Decimal("0"),)
+
+        new_extract.total_deductions = total_deductions
+        new_extract.total = new_extract.sub_total - total_deductions
         db.commit()
     except SQLAlchemyError:
         db.rollback()
