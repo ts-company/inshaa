@@ -4,7 +4,6 @@ import cloudinary
 import cloudinary.uploader
 from io import BytesIO
 import os
-from urllib.parse import urlparse, parse_qs
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),

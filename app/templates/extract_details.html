@@ -389,6 +389,12 @@
       align-items: start;
     }
 
+    .side-column {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
     /* ---- Categories / items ---- */
     .category-block {
       margin-bottom: 36px;
@@ -445,6 +451,71 @@
       font-size: 14.5px;
     }
 
+    .editable-cell {
+      position: relative;
+      white-space: nowrap;
+    }
+
+    .editable-cell:hover .inline-edit-trigger,
+    .inline-edit-trigger:focus-visible {
+      opacity: 1;
+    }
+
+    .inline-edit-trigger {
+      opacity: 0;
+      background: none;
+      border: 0;
+      color: var(--steel-dark);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      margin-left: 6px;
+      padding: 2px;
+      transition: opacity 0.15s ease, color 0.15s ease;
+    }
+
+    .inline-edit-trigger::before {
+      content: '\270E';
+    }
+
+    .inline-edit-trigger:hover {
+      color: var(--ink);
+    }
+
+    .inline-editor {
+      align-items: center;
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .inline-editor input {
+      width: 92px;
+      font: inherit;
+      padding: 4px 6px;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .inline-editor-actions {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .inline-editor-actions button {
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+      color: var(--steel-dark);
+      cursor: pointer;
+      font: 600 11px var(--font-body);
+      padding: 4px 6px;
+    }
+
+    .inline-editor-actions button:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
     .items-table tbody tr:last-child td {
       border-bottom: none;
     }
@@ -479,6 +550,55 @@
       display: flex;
       flex-direction: column;
       gap: 22px;
+    }
+
+    .history-panel {
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+      padding: 24px;
+    }
+
+    .history-panel h2 {
+      font-size: 21px;
+      margin-bottom: 16px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-link {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .history-link:first-child {
+      border-top-color: var(--line-strong);
+    }
+
+    .history-link:hover {
+      color: var(--steel-dark);
+    }
+
+    .history-link-user {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .history-link-date {
+      color: var(--steel-dark);
+      font-size: 13px;
+    }
+
+    .history-state {
+      color: var(--steel-dark);
+      font-size: 13.5px;
     }
 
     .summary-block-head {
@@ -795,6 +915,20 @@
             <span class="project-detail-value">{{ extract.unit_number }}</span>
           </div>
           <div class="project-detail">
+            <span class="project-detail-label">Job title</span>
+            <span class="project-detail-value">{{ extract.job_title }}</span>
+          </div>
+          {% if history %}
+          <div class="project-detail">
+            <span class="project-detail-label">Updated by</span>
+            <span class="project-detail-value">{{ extract.updated_by }}</span>
+          </div>
+          <div class="project-detail">
+            <span class="project-detail-label">Updated at</span>
+            <span class="project-detail-value">{{ extract.updated_at }}</span>
+          </div>
+          {% endif %}
+          <div class="project-detail">
             <span class="project-detail-label">Contractor</span>
             <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
           </div>
@@ -838,9 +972,22 @@
               <tr>
                 <td class="item-title">{{ item.title }}</td>
                 <td>{{ item.unit_type }}</td>
-                <td class="is-numeric">{{ "{:,.2f}".format(item.amount) }}</td>
-                <td>{{ item.currency }}</td>
-                <td class="is-numeric">{{ item.completion_perc }}</td>
+                <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="amount"
+                  data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
+                  <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
+                  <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
+                </td>
+                <td class="editable-cell" data-item-id="{{ item.id }}" data-edit-field="currency"
+                  data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
+                  <span class="editable-value">{{ item.currency }}</span>
+                  <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
+                </td>
+                <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
+                  data-edit-value="{{ item.completion_perc }}" data-edit-step="0.0001" data-edit-min="0"
+                  data-edit-max="1">
+                  <span class="editable-value">{{ item.completion_perc }}</span>
+                  <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
+                </td>
                 <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
                 <td class="is-actions">
                   <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}"
@@ -860,6 +1007,7 @@
         {% endif %}
       </div>
 
+      <div class="side-column">
       <aside class="summary-panel">
         <div class="summary-block">
           <div class="summary-line is-subtotal">
@@ -878,7 +1026,7 @@
           <div class="summary-line summary-line-removable">
             <span>{{ tax.title }}</span>
             <span>
-              {{ tax.rate }}
+              {{ tax.rate }} · {{ "{:,.2f}".format(tax.amount) }} EGP
               <button type="button" class="line-delete" data-tax-id="{{ tax.id }}" data-tax-title="{{ tax.title }}"
                 title="Remove tax">&times;</button>
             </span>
@@ -922,7 +1070,7 @@
           {% if extract.previously_paid %}
           {% for pp in extract.previously_paid %}
           <div class="summary-line summary-line-removable">
-            <span>{{ pp.date }}</span>
+            <span>{{ pp.details }}</span>
             <span>
               {{ "{:,.2f}".format(pp.amount) }} EGP
               <button type="button" class="line-delete" data-payment-id="{{ pp.id }}"
@@ -944,6 +1092,16 @@
           <span>{{ "{:,.2f}".format(extract.total) }} EGP</span>
         </div>
       </aside>
+
+      {% if not history %}
+      <aside class="history-panel" id="extract-history-panel">
+        <h2>Previous versions</h2>
+        <div class="history-list" id="extract-history-list">
+          <p class="history-state">Loading history...</p>
+        </div>
+      </aside>
+      {% endif %}
+      </div>
 
     </div>
   </main>
@@ -1092,6 +1250,10 @@
 
       <form id="form-add-payment">
         <div class="field">
+          <label for="payment-details">Details</label>
+          <input type="text" id="payment-details" name="details" required>
+        </div>
+        <div class="field">
           <label for="payment-amount">Amount (EGP)</label>
           <input type="number" id="payment-amount" name="amount" step="any" required>
         </div>
@@ -1137,6 +1299,50 @@
     (function () {
       const extractId = document.body.dataset.extractId;
       const API_BASE = '/system/extracts';
+
+      const historyList = document.getElementById('extract-history-list');
+      if (historyList) {
+        fetch(API_BASE + '/histories/' + extractId, { credentials: 'include' })
+          .then(function (res) {
+            if (!res.ok) throw new Error('Request failed with status ' + res.status);
+            return res.json();
+          })
+          .then(function (histories) {
+            historyList.innerHTML = '';
+            if (!histories.length) {
+              const emptyState = document.createElement('p');
+              emptyState.className = 'history-state';
+              emptyState.textContent = 'No previous versions.';
+              historyList.appendChild(emptyState);
+              return;
+            }
+
+            histories.forEach(function (historyItem) {
+              const link = document.createElement('a');
+              link.className = 'history-link';
+              link.href = '/system/extracts/details_hist/' + historyItem.id;
+
+              const user = document.createElement('span');
+              user.className = 'history-link-user';
+              user.textContent = historyItem.updated_by;
+
+              const date = document.createElement('span');
+              date.className = 'history-link-date';
+              date.textContent = historyItem.updated_at;
+
+              link.appendChild(user);
+              link.appendChild(date);
+              historyList.appendChild(link);
+            });
+          })
+          .catch(function () {
+            historyList.innerHTML = '';
+            const errorState = document.createElement('p');
+            errorState.className = 'history-state';
+            errorState.textContent = 'Could not load previous versions.';
+            historyList.appendChild(errorState);
+          });
+      }
 
       // ---------- generic modal open/close ----------
       function openModal(id) {
@@ -1205,6 +1411,89 @@
             alert('Could not delete. ' + err.message);
           });
       }
+
+      function patchJSON(url, body) {
+        return fetch(url, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(body),
+        }).then(function (res) {
+          if (!res.ok) throw new Error('Request failed with status ' + res.status);
+          return res.json();
+        });
+      }
+
+      function openInlineEditor(cell) {
+        if (cell.querySelector('.inline-editor')) return;
+
+        const field = cell.getAttribute('data-edit-field');
+        const itemId = cell.getAttribute('data-item-id');
+        const currentValue = cell.getAttribute('data-edit-value');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.step = cell.getAttribute('data-edit-step');
+        input.min = cell.getAttribute('data-edit-min');
+        if (cell.hasAttribute('data-edit-max')) input.max = cell.getAttribute('data-edit-max');
+
+        const editor = document.createElement('span');
+        editor.className = 'inline-editor';
+        const actions = document.createElement('span');
+        actions.className = 'inline-editor-actions';
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = 'Save';
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.textContent = 'Cancel';
+
+        actions.appendChild(saveButton);
+        actions.appendChild(cancelButton);
+        editor.appendChild(input);
+        editor.appendChild(actions);
+        cell.innerHTML = '';
+        cell.appendChild(editor);
+        input.focus();
+        input.select();
+
+        cancelButton.addEventListener('click', function () {
+          window.location.reload();
+        });
+
+        saveButton.addEventListener('click', function () {
+          const value = parseFloat(input.value);
+          const min = parseFloat(input.min);
+          const max = input.max ? parseFloat(input.max) : Infinity;
+          if (Number.isNaN(value) || value < min || value > max) {
+            alert('Please enter a valid value.');
+            input.focus();
+            return;
+          }
+
+          saveButton.disabled = true;
+          cancelButton.disabled = true;
+          const endpointField = field === 'completion' ? 'completion' : field;
+          patchJSON(API_BASE + '/edit_' + endpointField + '/' + itemId, {
+            [endpointField]: value,
+          })
+            .then(function () {
+              window.location.reload();
+            })
+            .catch(function (err) {
+              saveButton.disabled = false;
+              cancelButton.disabled = false;
+              alert('Could not update item. ' + err.message);
+            });
+        });
+      }
+
+      document.querySelectorAll('.inline-edit-trigger').forEach(function (button) {
+        button.addEventListener('click', function () {
+          openInlineEditor(button.closest('.editable-cell'));
+        });
+      });
 
       // ---------- Add Category ----------
       const rowsContainer = document.getElementById('category-item-rows');
@@ -1436,11 +1725,12 @@
         clearError('add-payment-error');
 
         const payload = {
+          details: document.getElementById('payment-details').value.trim(),
           amount: parseFloat(document.getElementById('payment-amount').value),
         };
 
-        if (Number.isNaN(payload.amount)) {
-          showError('add-payment-error', 'Please enter a valid payment amount.');
+        if (!payload.details || Number.isNaN(payload.amount)) {
+          showError('add-payment-error', 'Please enter payment details and a valid amount.');
           return;
         }
 

@@ -159,7 +159,7 @@ main {
   padding: 48px 32px 96px;
 }
 
-.page-head { margin-bottom: 36px; max-width: 640px; }
+.page-head { margin-bottom: 32px; max-width: 640px; }
 
 .page-kicker {
   font-size: 14px;
@@ -171,25 +171,56 @@ main {
 .page-head h1 { font-size: 38px; margin-bottom: 10px; }
 .page-head p { color: var(--steel-dark); font-size: 16px; }
 
-/* ===== Add extract ===== */
-.add-extract {
-  border-top: 1px solid var(--line-strong);
-  padding-top: 28px;
-  margin-bottom: 64px;
+/* ===== Tabs ===== */
+.tabs-nav {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 36px;
 }
 
-.add-extract h2 { font-size: 22px; margin-bottom: 18px; }
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 4px;
+  margin-right: 28px;
+  font-family: var(--font-head);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  opacity: 0.65;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
 
+.tab-btn:hover { opacity: 0.9; }
+
+.tab-btn.is-active {
+  color: var(--ink);
+  opacity: 1;
+  border-bottom-color: var(--yellow);
+}
+
+.tab-panel { display: none; }
+.tab-panel.is-active { display: block; }
+
+/* ===== Add extract ===== */
 .add-extract-form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 760px;
+  gap: 30px;
+  max-width: 820px;
 }
 
 .field-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
 }
 
@@ -222,16 +253,33 @@ main {
   text-transform: none;
 }
 
+.field-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--steel-dark);
+  opacity: 0.7;
+}
+
 .subgroup {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  border-top: 1px solid var(--line-strong);
+  padding-top: 24px;
 }
 
 .subgroup-label {
-  font-size: 13.5px;
+  font-size: 15px;
+  font-family: var(--font-head);
   font-weight: 600;
+  color: var(--ink);
+}
+
+.subgroup-sub-label {
+  font-size: 13px;
   color: var(--steel-dark);
+  opacity: 0.85;
+  margin-top: -6px;
 }
 
 .entry-list {
@@ -273,6 +321,79 @@ main {
 
 .entry-row-remove:hover { text-decoration: underline; }
 
+/* ---- Category blocks (nested: category -> items) ---- */
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.category-block {
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.category-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.category-header input[type="text"] {
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 600;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.category-header input:focus { outline: none; border-color: var(--steel); }
+
+.item-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.item-row input {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  padding: 8px 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+  width: 100%;
+}
+
+.item-row input:focus { outline: none; border-color: var(--steel); }
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-list-head {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr auto;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--steel-dark);
+  opacity: 0.8;
+  padding: 0 1px;
+}
+
 .btn {
   font-family: var(--font-body);
   font-weight: 600;
@@ -308,8 +429,6 @@ main {
 .form-message[hidden] { display: none; }
 
 /* ===== Extracts table ===== */
-.extracts-section { border-top: 1px solid var(--line-strong); padding-top: 28px; }
-
 .extracts-section h2 { font-size: 22px; margin-bottom: 18px; }
 
 .extract-search {
@@ -318,7 +437,7 @@ main {
   gap: 12px;
   align-items: end;
   margin-bottom: 28px;
-  padding: 18px 0 24px;
+  padding: 0 0 24px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -401,8 +520,10 @@ main {
 
 /* ===== Responsive ===== */
 @media (max-width: 760px) {
-  .field-row { grid-template-columns: 1fr; }
+  .field-row, .field-row-3 { grid-template-columns: 1fr; }
   .entry-row { grid-template-columns: 1fr 100px auto; }
+  .item-row, .item-list-head { grid-template-columns: 1fr; }
+  .item-list-head { display: none; }
   .extract-search { grid-template-columns: 1fr 1fr; }
   .extracts-table thead { display: none; }
   .extracts-table, .extracts-table tbody, .extracts-table tr, .extracts-table td {
@@ -438,13 +559,73 @@ main {
   <div class="page-head">
     <p class="page-kicker">Manage extracts</p>
     <h1>Extracts</h1>
-    <p>Create a new extract with its taxes and deductions, and see all extracts recorded so far.</p>
+    <p>Search extracts already on file, or add a new one with its categories, taxes and deductions.</p>
   </div>
 
-  <section class="add-extract">
-    <h2>Add an extract</h2>
+  <div class="tabs-nav" role="tablist">
+    <button type="button" class="tab-btn is-active" id="tab-btn-view" role="tab" aria-selected="true" aria-controls="tab-panel-view">View &amp; search</button>
+    <button type="button" class="tab-btn" id="tab-btn-add" role="tab" aria-selected="false" aria-controls="tab-panel-add">Add extract</button>
+  </div>
+
+  <section class="tab-panel is-active" id="tab-panel-view" role="tabpanel" aria-labelledby="tab-btn-view">
+    <div class="extracts-section">
+      <form class="extract-search" method="get" action="/system/extracts/">
+        <label>
+          Extract ID
+          <input type="number" name="id" min="1" value="{{ request.query_params.get('id', '') }}">
+        </label>
+        <label>
+          Project name
+          <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
+        </label>
+        <label>
+          Contractor
+          <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
+        </label>
+        <label>
+          Unit number
+          <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
+        </label>
+        <button type="submit" class="btn btn-small">Search</button>
+        <a href="/system/extracts/" class="btn btn-outline btn-small">Clear</a>
+      </form>
+
+      {% if extracts %}
+      <table class="extracts-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Unit number</th>
+            <th>Contractor</th>
+            <th class="is-numeric">Subtotal</th>
+            <th class="is-numeric">Taxes</th>
+            <th class="is-numeric">Deductions</th>
+            <th class="is-numeric">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in extracts %}
+          <tr data-extract-id="{{ e.id }}">
+            <td class="extract-project"><a class="extract-project-link" href="/system/extracts/details/{{ e.id }}">{{ e.project_name }}</a></td>
+            <td>{{ e.unit_number }}</td>
+            <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
+            <td class="is-numeric">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
+            <td class="is-numeric">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
+            <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>
+            <td class="is-numeric extract-total">{{ "{:,.2f}".format(e.total) }} EGP</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="empty-extracts">No extracts yet.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
-      <div class="field-row">
+      <div class="field-row-3">
         <label>
           Project name
           <input type="text" name="project_name" id="project-name" required>
@@ -452,6 +633,10 @@ main {
         <label>
           Unit number
           <input type="text" name="unit_number" id="unit-number" required>
+        </label>
+        <label>
+          Job title
+          <input type="text" name="job_title" id="job-title" required>
         </label>
       </div>
 
@@ -461,7 +646,15 @@ main {
       </label>
 
       <div class="subgroup">
+        <span class="subgroup-label">Categories &amp; items <span class="field-optional">(optional)</span></span>
+        <p class="subgroup-sub-label">Each category groups a set of line items. An item's total is amount × currency rate × completion.</p>
+        <div class="category-list" id="categories-list"></div>
+        <button type="button" class="btn btn-outline btn-small" id="add-category-btn">+ Add category</button>
+      </div>
+
+      <div class="subgroup">
         <span class="subgroup-label">Taxes — at least one required</span>
+        <p class="subgroup-sub-label">Rate is a fraction of the subtotal, e.g. 0.14 for 14%.</p>
         <div class="entry-list" id="taxes-list"></div>
         <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">+ Add tax</button>
       </div>
@@ -472,67 +665,17 @@ main {
         <button type="button" class="btn btn-outline btn-small" id="add-deduction-btn">+ Add deduction</button>
       </div>
 
+      <div class="subgroup">
+        <span class="subgroup-label">Previously paid <span class="field-optional">(optional)</span></span>
+        <div class="entry-list" id="payments-list"></div>
+        <button type="button" class="btn btn-outline btn-small" id="add-payment-btn">+ Add payment</button>
+      </div>
+
       <div>
         <button type="submit" class="btn" id="add-extract-btn">Add extract</button>
         <p class="form-message" id="add-extract-message" role="alert" hidden></p>
       </div>
     </form>
-  </section>
-
-  <section class="extracts-section">
-    <h2>All extracts</h2>
-
-    <form class="extract-search" method="get" action="/system/extracts/">
-      <label>
-        Extract ID
-        <input type="number" name="id" min="1" value="{{ request.query_params.get('id', '') }}">
-      </label>
-      <label>
-        Project name
-        <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
-      </label>
-      <label>
-        Contractor
-        <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
-      </label>
-      <label>
-        Unit number
-        <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
-      </label>
-      <button type="submit" class="btn btn-small">Search</button>
-      <a href="/system/extracts/" class="btn btn-outline btn-small">Clear</a>
-    </form>
-
-    {% if extracts %}
-    <table class="extracts-table">
-      <thead>
-        <tr>
-          <th>Project</th>
-          <th>Unit number</th>
-          <th>Contractor</th>
-          <th class="is-numeric">Subtotal</th>
-          <th class="is-numeric">Taxes</th>
-          <th class="is-numeric">Deductions</th>
-          <th class="is-numeric">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in extracts %}
-        <tr data-extract-id="{{ e.id }}">
-          <td class="extract-project"><a class="extract-project-link" href="/system/extracts/details/{{ e.id }}">{{ e.project_name }}</a></td>
-          <td>{{ e.unit_number }}</td>
-          <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
-          <td class="is-numeric">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
-          <td class="is-numeric">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
-          <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>
-          <td class="is-numeric extract-total">{{ "{:,.2f}".format(e.total) }} EGP</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p class="empty-extracts">No extracts yet.</p>
-    {% endif %}
   </section>
 </main>
 
@@ -543,6 +686,34 @@ main {
 <script>
 const EXTRACTS_BASE = `/system/extracts`;
 
+const tabButtons = {
+  view: document.getElementById('tab-btn-view'),
+  add: document.getElementById('tab-btn-add'),
+};
+const tabPanels = {
+  view: document.getElementById('tab-panel-view'),
+  add: document.getElementById('tab-panel-add'),
+};
+
+function activateTab(name) {
+  Object.keys(tabButtons).forEach((key) => {
+    const isActive = key === name;
+    tabButtons[key].classList.toggle('is-active', isActive);
+    tabButtons[key].setAttribute('aria-selected', String(isActive));
+    tabPanels[key].classList.toggle('is-active', isActive);
+  });
+}
+
+tabButtons.view.addEventListener('click', () => activateTab('view'));
+tabButtons.add.addEventListener('click', () => activateTab('add'));
+
+// Land on the "Add extract" tab directly if the add form failed
+// validation server-side and the page was reloaded with a hash.
+if (window.location.hash === '#add') activateTab('add');
+
+/* ==========================================================
+   Extract search
+   ========================================================== */
 const extractSearchForm = document.querySelector('.extract-search');
 extractSearchForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -558,21 +729,21 @@ extractSearchForm.addEventListener('submit', (event) => {
 });
 
 /* ==========================================================
-   Repeatable tax / deduction rows
+   Repeatable flat rows (taxes / deductions / payments)
    ========================================================== */
-function buildEntryRow(list, amountLabel, amountStep) {
+function buildEntryRow(list, fieldAConfig, fieldBConfig) {
   const row = document.createElement('div');
   row.className = 'entry-row';
 
-  const titleInput = document.createElement('input');
-  titleInput.type = 'text';
-  titleInput.placeholder = 'Title';
+  const fieldA = document.createElement('input');
+  fieldA.type = fieldAConfig.type || 'text';
+  fieldA.placeholder = fieldAConfig.placeholder;
 
-  const amountInput = document.createElement('input');
-  amountInput.type = 'number';
-  amountInput.step = amountStep;
-  amountInput.min = '0';
-  amountInput.placeholder = amountLabel;
+  const fieldB = document.createElement('input');
+  fieldB.type = fieldBConfig.type || 'number';
+  if (fieldBConfig.step) fieldB.step = fieldBConfig.step;
+  if (fieldBConfig.min !== undefined) fieldB.min = fieldBConfig.min;
+  fieldB.placeholder = fieldBConfig.placeholder;
 
   const remove = document.createElement('button');
   remove.type = 'button';
@@ -580,39 +751,172 @@ function buildEntryRow(list, amountLabel, amountStep) {
   remove.textContent = 'Remove';
   remove.addEventListener('click', () => row.remove());
 
-  row.appendChild(titleInput);
-  row.appendChild(amountInput);
+  row.appendChild(fieldA);
+  row.appendChild(fieldB);
   row.appendChild(remove);
   list.appendChild(row);
   return row;
 }
 
-function collectEntries(list, amountKey) {
+function collectFlatEntries(list, keyA, keyB, numericB = true) {
   const rows = Array.from(list.querySelectorAll('.entry-row'));
   const entries = [];
   rows.forEach((row) => {
-    const [titleInput, amountInput] = row.querySelectorAll('input');
-    const title = titleInput.value.trim();
-    const amountRaw = amountInput.value.trim();
-    if (!title || amountRaw === '') return;
-    entries.push({ title, [amountKey]: Number(amountRaw) });
+    const [fieldA, fieldB] = row.querySelectorAll('input');
+    const valueA = fieldA.value.trim();
+    const valueBRaw = fieldB.value.trim();
+    if (!valueA || valueBRaw === '') return;
+    entries.push({ [keyA]: valueA, [keyB]: numericB ? Number(valueBRaw) : valueBRaw });
   });
   return entries;
 }
 
 const taxesList = document.getElementById('taxes-list');
 const deductionsList = document.getElementById('deductions-list');
+const paymentsList = document.getElementById('payments-list');
 
-buildEntryRow(taxesList, 'Rate %', '0.01');
-buildEntryRow(deductionsList, 'Amount EGP', '0.01');
+buildEntryRow(taxesList, { placeholder: 'Title' }, { placeholder: 'Rate (e.g. 0.14)', step: '0.0001', min: '0' });
+buildEntryRow(deductionsList, { placeholder: 'Title' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
+buildEntryRow(paymentsList, { placeholder: 'Details' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
 
 document.getElementById('add-tax-btn').addEventListener('click', () => {
-  buildEntryRow(taxesList, 'Rate %', '0.01');
+  buildEntryRow(taxesList, { placeholder: 'Title' }, { placeholder: 'Rate (e.g. 0.14)', step: '0.0001', min: '0' });
 });
 
 document.getElementById('add-deduction-btn').addEventListener('click', () => {
-  buildEntryRow(deductionsList, 'Amount EGP', '0.01');
+  buildEntryRow(deductionsList, { placeholder: 'Title' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
 });
+
+document.getElementById('add-payment-btn').addEventListener('click', () => {
+  buildEntryRow(paymentsList, { placeholder: 'Details' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
+});
+
+
+const categoriesList = document.getElementById('categories-list');
+
+function buildItemRow(itemList) {
+  const row = document.createElement('div');
+  row.className = 'item-row';
+
+  const title = document.createElement('input');
+  title.type = 'text';
+  title.placeholder = 'Item title';
+
+  const unitType = document.createElement('input');
+  unitType.type = 'text';
+  unitType.placeholder = 'Unit type (e.g. sqm)';
+
+  const amount = document.createElement('input');
+  amount.type = 'number';
+  amount.step = '0.01';
+  amount.min = '0';
+  amount.placeholder = 'Amount';
+
+  const currency = document.createElement('input');
+  currency.type = 'number';
+  currency.step = '0.0001';
+  currency.min = '0';
+  currency.placeholder = 'Currency rate';
+  currency.value = '1';
+
+  const completion = document.createElement('input');
+  completion.type = 'number';
+  completion.step = '0.01';
+  completion.min = '0';
+  completion.max = '1';
+  completion.placeholder = 'Completion (0–1)';
+  completion.value = '1';
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'entry-row-remove';
+  remove.textContent = 'Remove';
+  remove.addEventListener('click', () => row.remove());
+
+  row.appendChild(title);
+  row.appendChild(unitType);
+  row.appendChild(amount);
+  row.appendChild(currency);
+  row.appendChild(completion);
+  row.appendChild(remove);
+  itemList.appendChild(row);
+  return row;
+}
+
+function buildCategoryBlock() {
+  const block = document.createElement('div');
+  block.className = 'category-block';
+
+  const header = document.createElement('div');
+  header.className = 'category-header';
+
+  const titleInput = document.createElement('input');
+  titleInput.type = 'text';
+  titleInput.placeholder = 'Category title';
+
+  const removeCategory = document.createElement('button');
+  removeCategory.type = 'button';
+  removeCategory.className = 'entry-row-remove';
+  removeCategory.textContent = 'Remove category';
+  removeCategory.addEventListener('click', () => block.remove());
+
+  header.appendChild(titleInput);
+  header.appendChild(removeCategory);
+
+  const itemListHead = document.createElement('div');
+  itemListHead.className = 'item-list-head';
+  itemListHead.innerHTML = '<span>Item</span><span>Unit type</span><span>Amount</span><span>Currency rate</span><span>Completion</span><span></span>';
+
+  const itemList = document.createElement('div');
+  itemList.className = 'item-list';
+
+  const addItemBtn = document.createElement('button');
+  addItemBtn.type = 'button';
+  addItemBtn.className = 'btn btn-outline btn-small';
+  addItemBtn.textContent = '+ Add item';
+  addItemBtn.addEventListener('click', () => buildItemRow(itemList));
+
+  block.appendChild(header);
+  block.appendChild(itemListHead);
+  block.appendChild(itemList);
+  block.appendChild(addItemBtn);
+
+  categoriesList.appendChild(block);
+  buildItemRow(itemList);
+  return block;
+}
+
+document.getElementById('add-category-btn').addEventListener('click', buildCategoryBlock);
+
+function collectCategories() {
+  const blocks = Array.from(categoriesList.querySelectorAll('.category-block'));
+  const categories = [];
+
+  blocks.forEach((block) => {
+    const categoryTitle = block.querySelector('.category-header input[type="text"]').value.trim();
+    const itemRows = Array.from(block.querySelectorAll('.item-row'));
+
+    const items = [];
+    itemRows.forEach((row) => {
+      const [title, unitType, amount, currency, completion] = row.querySelectorAll('input');
+      const titleVal = title.value.trim();
+      const amountVal = amount.value.trim();
+      if (!titleVal || amountVal === '') return;
+      items.push({
+        title: titleVal,
+        unit_type: unitType.value.trim(),
+        amount: Number(amountVal),
+        currency: currency.value.trim() === '' ? 1 : Number(currency.value),
+        completion_perc: completion.value.trim() === '' ? 1 : Number(completion.value),
+      });
+    });
+
+    if (!categoryTitle || items.length === 0) return;
+    categories.push({ title: categoryTitle, items });
+  });
+
+  return categories;
+}
 
 /* ==========================================================
    Add extract
@@ -632,12 +936,16 @@ addForm.addEventListener('submit', async (e) => {
 
   const projectName = document.getElementById('project-name').value.trim();
   const unitNumber = document.getElementById('unit-number').value.trim();
+  const jobTitle = document.getElementById('job-title').value.trim();
   const contractorName = document.getElementById('contractor-name').value.trim();
-  const taxes = collectEntries(taxesList, 'rate');
-  const deductions = collectEntries(deductionsList, 'amount');
 
-  if (!projectName || !unitNumber) {
-    showAddMessage('Add a project name and unit number.', 'error');
+  const categories = collectCategories();
+  const taxes = collectFlatEntries(taxesList, 'title', 'rate');
+  const deductions = collectFlatEntries(deductionsList, 'title', 'amount');
+  const payments = collectFlatEntries(paymentsList, 'details', 'amount');
+
+  if (!projectName || !unitNumber || !jobTitle) {
+    showAddMessage('Add a project name, unit number and job title.', 'error');
     return;
   }
   if (taxes.length === 0) {
@@ -653,8 +961,11 @@ addForm.addEventListener('submit', async (e) => {
     project_name: projectName,
     unit_number: unitNumber,
     contractor_name: contractorName || null,
+    job_title: jobTitle,
+    categories,
     taxes,
     deductions,
+    payments,
   };
 
   addBtn.disabled = true;
@@ -678,7 +989,7 @@ addForm.addEventListener('submit', async (e) => {
       return;
     }
 
-    window.location.reload();
+    window.location.href = '/system/extracts/';
   } catch (err) {
     showAddMessage(`Couldn't reach the server (${err.message}).`, 'error');
   } finally {

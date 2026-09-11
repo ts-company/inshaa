@@ -1,10 +1,13 @@
-from sqlalchemy import Column, Integer, String, Numeric, Boolean
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime
 from app.database import Base
 
-class Extract(Base):
-    __tablename__ = "extracts"
+class ExtractHistory(Base):
+    __tablename__ = "extract_histories"
 
     id = Column(Integer, primary_key=True, index=True)
+    extract_id = Column(Integer, ForeignKey("extracts.id", ondelete="CASCADE"), nullable=False)
+    updated_at = Column(DateTime, nullable=False)
+    updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     project_name = Column(String(500), nullable=False)
     unit_number = Column(Integer, nullable=False)
     contractor_name = Column(String(500), nullable=True)
@@ -14,4 +17,3 @@ class Extract(Base):
     total_deductions = Column(Numeric(12, 2), nullable=False)
     total_payments = Column(Numeric(12, 2), nullable=False)
     total = Column(Numeric(12, 2), nullable=False)
-    approved = Column(Boolean, nullable=False)
