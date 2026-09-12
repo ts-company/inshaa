@@ -381,18 +381,24 @@
       opacity: 0.7;
     }
 
-    /* ===== Layout: categories + summary ===== */
-    .extract-layout {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 48px;
-      align-items: start;
+    /* ===== Layout: categories full width, summary + history below ===== */
+    .categories-column {
+      width: 100%;
     }
 
-    .side-column {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .below-categories-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+      margin-top: 48px;
+      padding-top: 40px;
+      border-top: 1px solid var(--line-strong);
+    }
+
+    .below-categories-row .summary-panel:only-child {
+      grid-column: 1 / -1;
+      max-width: 560px;
     }
 
     /* ---- Categories / items ---- */
@@ -422,15 +428,16 @@
 
     .items-table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
     }
 
     .items-table thead th {
       text-align: left;
-      font-size: 12.5px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--steel-dark);
-      padding: 0 10px 10px;
+      padding: 0 14px 12px;
       border-bottom: 1px solid var(--line-strong);
     }
 
@@ -442,13 +449,14 @@
     .items-table th.is-actions,
     .items-table td.is-actions {
       text-align: right;
-      width: 1%;
+      width: 90px;
     }
 
     .items-table tbody td {
-      padding: 12px 10px;
+      padding: 15px 14px;
       border-bottom: 1px solid var(--line);
-      font-size: 14.5px;
+      font-size: 15.5px;
+      word-break: break-word;
     }
 
     .editable-cell {
@@ -542,11 +550,9 @@
 
     /* ---- Summary panel ---- */
     .summary-panel {
-      position: sticky;
-      top: 24px;
       border: 1px solid var(--line-strong);
       background: var(--white);
-      padding: 24px;
+      padding: 28px;
       display: flex;
       flex-direction: column;
       gap: 22px;
@@ -555,7 +561,7 @@
     .history-panel {
       border: 1px solid var(--line-strong);
       background: var(--white);
-      padding: 24px;
+      padding: 28px;
     }
 
     .history-panel h2 {
@@ -842,12 +848,12 @@
 
     /* ===== Responsive ===== */
     @media (max-width: 900px) {
-      .extract-layout {
+      .below-categories-row {
         grid-template-columns: 1fr;
       }
 
-      .summary-panel {
-        position: static;
+      .below-categories-row .summary-panel:only-child {
+        max-width: none;
       }
     }
 
@@ -918,6 +924,10 @@
             <span class="project-detail-label">Job title</span>
             <span class="project-detail-value">{{ extract.job_title }}</span>
           </div>
+          <div class="project-detail">
+            <span class="project-detail-label">Contractor</span>
+            <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
+          </div>
           {% if history %}
           <div class="project-detail">
             <span class="project-detail-label">Updated by</span>
@@ -928,86 +938,80 @@
             <span class="project-detail-value">{{ extract.updated_at }}</span>
           </div>
           {% endif %}
-          <div class="project-detail">
-            <span class="project-detail-label">Contractor</span>
-            <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
-          </div>
         </div>
       </div>
 
       <button type="button" class="btn btn-primary" id="btn-open-add-category">+ Add category</button>
     </div>
 
-    <div class="extract-layout">
-
-      <div class="categories-column">
-        {% if extract.categories %}
-        {% for cat in extract.categories %}
-        <div class="category-block">
-          <div class="category-head">
-            <h2>{{ cat.title }}</h2>
-            <div class="category-head-actions">
-              <button type="button" class="btn btn-ghost btn-open-add-item" data-cat-id="{{ cat.id }}"
-                data-cat-title="{{ cat.title }}">+ Add item</button>
-              <button type="button" class="btn-text btn-delete-category" data-cat-id="{{ cat.id }}"
-                data-cat-title="{{ cat.title }}">Delete category</button>
-            </div>
+    <div class="categories-column">
+      {% if extract.categories %}
+      {% for cat in extract.categories %}
+      <div class="category-block">
+        <div class="category-head">
+          <h2>{{ cat.title }}</h2>
+          <div class="category-head-actions">
+            <button type="button" class="btn btn-ghost btn-open-add-item" data-cat-id="{{ cat.id }}"
+              data-cat-title="{{ cat.title }}">+ Add item</button>
+            <button type="button" class="btn-text btn-delete-category" data-cat-id="{{ cat.id }}"
+              data-cat-title="{{ cat.title }}">Delete category</button>
           </div>
-
-          {% if cat["items"] %}
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Unit</th>
-                <th class="is-numeric">Amount</th>
-                <th>Currency</th>
-                <th class="is-numeric">Completion</th>
-                <th class="is-numeric">Total</th>
-                <th class="is-actions"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in cat["items"] %}
-              <tr>
-                <td class="item-title">{{ item.title }}</td>
-                <td>{{ item.unit_type }}</td>
-                <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="amount"
-                  data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
-                  <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
-                  <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
-                </td>
-                <td class="editable-cell" data-item-id="{{ item.id }}" data-edit-field="currency"
-                  data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
-                  <span class="editable-value">{{ item.currency }}</span>
-                  <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
-                </td>
-                <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
-                  data-edit-value="{{ item.completion_perc }}" data-edit-step="0.0001" data-edit-min="0"
-                  data-edit-max="1">
-                  <span class="editable-value">{{ item.completion_perc }}</span>
-                  <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
-                </td>
-                <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
-                <td class="is-actions">
-                  <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}"
-                    data-item-title="{{ item.title }}">Delete</button>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          {% else %}
-          <p class="empty-items">No items in this category.</p>
-          {% endif %}
         </div>
-        {% endfor %}
+
+        {% if cat["items"] %}
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Unit</th>
+              <th class="is-numeric">Amount</th>
+              <th>Currency</th>
+              <th class="is-numeric">Completion</th>
+              <th class="is-numeric">Total</th>
+              <th class="is-actions"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cat["items"] %}
+            <tr>
+              <td class="item-title">{{ item.title }}</td>
+              <td>{{ item.unit_type }}</td>
+              <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="amount"
+                data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
+                <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
+              </td>
+              <td class="editable-cell" data-item-id="{{ item.id }}" data-edit-field="currency"
+                data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
+                <span class="editable-value">{{ item.currency }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
+              </td>
+              <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
+                data-edit-value="{{ item.completion_perc * 100 }}" data-edit-step="0.01" data-edit-min="1"
+                data-edit-max="100">
+                <span class="editable-value">{{ item.completion_perc * 100 }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
+              </td>
+              <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
+              <td class="is-actions">
+                <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}"
+                  data-item-title="{{ item.title }}">Delete</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
         {% else %}
-        <p class="empty-categories">No categories added to this extract yet.</p>
+        <p class="empty-items">No items in this category.</p>
         {% endif %}
       </div>
+      {% endfor %}
+      {% else %}
+      <p class="empty-categories">No categories added to this extract yet.</p>
+      {% endif %}
+    </div>
 
-      <div class="side-column">
+    <div class="below-categories-row">
       <aside class="summary-panel">
         <div class="summary-block">
           <div class="summary-line is-subtotal">
@@ -1026,7 +1030,7 @@
           <div class="summary-line summary-line-removable">
             <span>{{ tax.title }}</span>
             <span>
-              {{ tax.rate }} · {{ "{:,.2f}".format(tax.amount) }} EGP
+              {{ tax.rate * 100 }} · {{ "{:,.2f}".format(tax.amount) }} EGP
               <button type="button" class="line-delete" data-tax-id="{{ tax.id }}" data-tax-title="{{ tax.title }}"
                 title="Remove tax">&times;</button>
             </span>
@@ -1038,6 +1042,10 @@
           <div class="summary-line is-subtotal">
             <span>Total taxes</span>
             <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
+          </div>
+          <div class="summary-line is-subtotal">
+            <span>Subtotal + taxes</span>
+            <span>{{ "{:,.2f}".format(extract.sub_total + extract.total_taxes) }} EGP</span>
           </div>
         </div>
 
@@ -1060,6 +1068,10 @@
           {% else %}
           <p class="summary-empty">No deductions recorded.</p>
           {% endif %}
+          <div class="summary-line is-subtotal">
+            <span>Total deductions</span>
+            <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
+          </div>
         </div>
 
         <div class="summary-block">
@@ -1082,9 +1094,14 @@
           <p class="summary-empty">No previous payments recorded.</p>
           {% endif %}
           <div class="summary-line is-subtotal">
-            <span>Total deductions</span>
-            <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
+            <span>Total payments</span>
+            <span>{{ "{:,.2f}".format(extract.total_payments) }} EGP</span>
           </div>
+        </div>
+
+        <div class="summary-line is-subtotal">
+          <span>Total deductions + payments</span>
+          <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments) }} EGP</span>
         </div>
 
         <div class="summary-line is-grand-total">
@@ -1101,8 +1118,6 @@
         </div>
       </aside>
       {% endif %}
-      </div>
-
     </div>
   </main>
 
@@ -1197,9 +1212,9 @@
           <input type="text" id="tax-title" name="title" placeholder="e.g. VAT" required>
         </div>
         <div class="field">
-          <label for="tax-rate">Rate (0-1)</label>
-          <input type="number" id="tax-rate" name="rate" step="0.0001" min="0" max="1" required>
-          <p class="field-hint">Enter the rate as a decimal (e.g. 0.05 for 5%).</p>
+          <label for="tax-rate">Rate (1-100)</label>
+          <input type="number" id="tax-rate" name="rate" step="0.01" min="1" max="100" required>
+          <p class="field-hint">Enter the rate as a percentage from 1 to 100.</p>
         </div>
 
         <div class="modal-actions">
@@ -1419,8 +1434,12 @@
           credentials: 'include',
           body: JSON.stringify(body),
         }).then(function (res) {
-          if (!res.ok) throw new Error('Request failed with status ' + res.status);
-          return res.json();
+          return res.text().then(function (message) {
+            if (!res.ok) {
+              throw new Error(message || 'Request failed with status ' + res.status);
+            }
+            return message;
+          });
         });
       }
 
@@ -1474,9 +1493,9 @@
 
           saveButton.disabled = true;
           cancelButton.disabled = true;
-          const endpointField = field === 'completion' ? 'completion' : field;
-          patchJSON(API_BASE + '/edit_' + endpointField + '/' + itemId, {
-            [endpointField]: value,
+          const backendValue = field === 'completion' ? value / 100 : value;
+          patchJSON(API_BASE + '/edit_' + field + '/' + itemId, {
+            [field]: backendValue,
           })
             .then(function () {
               window.location.reload();
@@ -1486,6 +1505,11 @@
               cancelButton.disabled = false;
               alert('Could not update item. ' + err.message);
             });
+        });
+
+        input.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') saveButton.click();
+          if (event.key === 'Escape') cancelButton.click();
         });
       }
 
@@ -1643,10 +1667,12 @@
           rate: parseFloat(document.getElementById('tax-rate').value),
         };
 
-        if (!payload.title || Number.isNaN(payload.rate) || payload.rate < 0 || payload.rate > 1) {
-          showError('add-tax-error', 'Please fill in all fields. Rate must be between 0 and 1.');
+        if (!payload.title || Number.isNaN(payload.rate) || payload.rate < 1 || payload.rate > 100) {
+          showError('add-tax-error', 'Please fill in all fields. Rate must be between 1 and 100.');
           return;
         }
+
+        payload.rate /= 100;
 
         const submitBtn = e.target.querySelector('button[type="submit"]');
         submitBtn.disabled = true;

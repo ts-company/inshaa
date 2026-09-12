@@ -220,7 +220,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "details": pp.details,
             "amount": pp.amount
         }
-        for pp in db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+        for pp in db.query(ExtractPreviouslyPaidHistory).filter(ExtractPreviouslyPaidHistory.extract_history_id == extract.id).all()
     ]
 
     taxes = [
@@ -230,7 +230,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "rate": t.rate,
             "amount": t.rate * extract.sub_total
         }
-        for t in db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+        for t in db.query(ExtractTaxesHistory).filter(ExtractTaxesHistory.extract_history_id == extract.id).all()
     ]
 
     deductions = [
@@ -239,7 +239,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "title": d.title,
             "amount": d.amount
         }
-        for d in db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+        for d in db.query(ExtractDeductionHistory).filter(ExtractDeductionHistory.extract_history_id == extract.id).all()
     ]
 
 
@@ -397,66 +397,19 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     try:
-        new_category = ExtractCategory(
-            extract_id=extract.id,
-            title=payload.title
-        )
-        db.add(new_category)
-        db.flush()
-        items_total = 0
-        for item in payload.items:
-            item_total = round(item.amount * item.currency * item.completion_perc, 2)
-            db.add(ExtractCategoryItem(
-                    category_id=new_category.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item_total
-                ))
-            items_total += item_total
-        extract.sub_total += items_total
-
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
-        total_rates = sum(
-            (t.rate for t in old_taxes),
-            Decimal("0"),
-        )
-        total_taxes = round(total_rates * extract.sub_total, 2)
-
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
-        total_deductions = sum(
-            (d.amount for d in old_deductions),
-            Decimal("0"),
-        )
-
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
-        total_payments = sum(
-            (p.amount for p in old_payments),
-            Decimal("0"),
-        )
-
-        extract.total_taxes = total_taxes
-        extract.total_deductions = total_deductions
-        extract.total_payments = total_payments
-        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
         history = ExtractHistory(
             extract_id=extract.id,
             updated_at=datetime.now(timezone.utc),
@@ -465,11 +418,11 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
             unit_number=extract.unit_number,
             contractor_name=extract.contractor_name,
             job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
+            sub_total=extract.sub_total,
+            total_taxes=extract.total_taxes,
+            total_deductions=extract.total_deductions,
+            total_payments=extract.total_payments,
+            total=extract.total
         )
         db.add(history)
         db.flush()
@@ -498,6 +451,47 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
         for p in old_payments:
             db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
+        new_category = ExtractCategory(
+            extract_id=extract.id,
+            title=payload.title
+        )
+        db.add(new_category)
+        db.flush()
+        items_total = 0
+        for item in payload.items:
+            item_total = round(item.amount * item.currency * item.completion_perc, 2)
+            db.add(ExtractCategoryItem(
+                    category_id=new_category.id,
+                    title=item.title,
+                    unit_type=item.unit_type,
+                    amount=item.amount,
+                    currency=item.currency,
+                    completion_perc=item.completion_perc,
+                    total=item_total
+                ))
+            items_total += item_total
+        extract.sub_total += items_total
+
+        total_rates = sum(
+            (t.rate for t in old_taxes),
+            Decimal("0"),
+        )
+        total_taxes = round(total_rates * extract.sub_total, 2)
+
+        total_deductions = sum(
+            (d.amount for d in old_deductions),
+            Decimal("0"),
+        )
+
+        total_payments = sum(
+            (p.amount for p in old_payments),
+            Decimal("0"),
+        )
+
+        extract.total_taxes = total_taxes
+        extract.total_deductions = total_deductions
+        extract.total_payments = total_payments
+        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -523,29 +517,67 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     cat, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
-    old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
-    item_total = round(payload.amount * payload.currency * payload.completion_perc, 2)
+    old_items_by_cat = {}
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for item in old_items_by_cat.get(cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=item.title,
+                unit_type=item.unit_type,
+                amount=item.amount,
+                currency=item.currency,
+                completion_perc=item.completion_perc,
+                total=item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
+        item_total = round(payload.amount * payload.currency * payload.completion_perc, 2)
         new_item = ExtractCategoryItem(category_id=cat.id, title=payload.title, unit_type=payload.unit_type,
                                        amount=payload.amount, currency=payload.currency, completion_perc=payload.completion_perc,
                                        total=item_total)
         db.add(new_item)
         extract.sub_total += item_total
 
-        old_taxes =  db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
@@ -553,13 +585,11 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db:
 
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -569,48 +599,6 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db:
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -637,26 +625,64 @@ def del_cat(request: Request, cat_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     cat, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
 
     try:
         items_total = sum((item.total for item in db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id == cat_id).all()), Decimal('0'))
         extract.sub_total -= items_total
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
@@ -664,13 +690,11 @@ def del_cat(request: Request, cat_id: int, db: Session = Depends(get_db)):
 
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -681,48 +705,6 @@ def del_cat(request: Request, cat_id: int, db: Session = Depends(get_db)):
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.delete(cat)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -755,24 +737,62 @@ def del_item(request: Request, item_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     item, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
     try:
         extract.sub_total -= item.total
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
@@ -780,13 +800,11 @@ def del_item(request: Request, item_id: int, db: Session = Depends(get_db)):
 
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -797,48 +815,6 @@ def del_item(request: Request, item_id: int, db: Session = Depends(get_db)):
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.delete(item)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -865,23 +841,60 @@ def add_tax(request: Request, ext_id: int, payload: AddExtractTax, db: Session =
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
     try:
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
-
         new_tax = ExtractTaxes(extract_id=extract.id, title=payload.title, rate=payload.rate)
         db.add(new_tax)
 
@@ -891,13 +904,11 @@ def add_tax(request: Request, ext_id: int, payload: AddExtractTax, db: Session =
         ) + payload.rate
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -907,48 +918,6 @@ def add_tax(request: Request, ext_id: int, payload: AddExtractTax, db: Session =
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -979,35 +948,72 @@ def del_tax(request: Request, tax_id: int,  db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     tax, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     old_items_by_cat = {}
     for item in old_items:
         old_items_by_cat.setdefault(item.category_id, []).append(item)
 
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id, ExtractTaxes.id != tax_id).all()),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -1018,48 +1024,6 @@ def del_tax(request: Request, tax_id: int,  db: Session = Depends(get_db)):
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.delete(tax)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1085,38 +1049,74 @@ def add_ded(request: Request, ext_id: int, payload: AddExtractDeduction, db: Ses
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     old_items_by_cat = {}
     for item in old_items:
         old_items_by_cat.setdefault(item.category_id, []).append(item)
 
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
         new_ded = ExtractDeduction(extract_id=extract.id, title=payload.title, amount=payload.amount)
         db.add(new_ded)
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         ) + payload.amount
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -1126,48 +1126,6 @@ def add_ded(request: Request, ext_id: int, payload: AddExtractDeduction, db: Ses
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1198,35 +1156,71 @@ def del_ded(request: Request, ded_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     ded, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     old_items_by_cat = {}
     for item in old_items:
         old_items_by_cat.setdefault(item.category_id, []).append(item)
 
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id, ExtractDeduction.id != ded_id).all()),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -1237,48 +1231,6 @@ def del_ded(request: Request, ded_id: int, db: Session = Depends(get_db)):
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.delete(ded)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1304,38 +1256,74 @@ def add_payment(request: Request, ext_id: int, payload: PreviouslyPaid, db: Sess
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     old_items_by_cat = {}
     for item in old_items:
         old_items_by_cat.setdefault(item.category_id, []).append(item)
 
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
         new_paid = ExtractPreviouslyPaid(extract_id=extract.id, details=payload.details, amount=payload.amount)
         db.add(new_paid)
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in old_payments),
             Decimal("0"),
@@ -1345,48 +1333,6 @@ def add_payment(request: Request, ext_id: int, payload: PreviouslyPaid, db: Sess
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1417,35 +1363,71 @@ def del_payment(request: Request, pay_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     paid, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
 
     old_items_by_cat = {}
     for item in old_items:
         old_items_by_cat.setdefault(item.category_id, []).append(item)
 
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
     try:
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
             (p.amount for p in
              db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id, ExtractPreviouslyPaid.id != pay_id).all()),
@@ -1457,48 +1439,6 @@ def del_payment(request: Request, pay_id: int, db: Session = Depends(get_db)):
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.delete(paid)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1529,43 +1469,79 @@ def del_payment(request: Request, item_id: int, payload: UpdateAmount, db: Sessi
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     item, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
     try:
         extract.sub_total -= item.total
         item_new_total = round(item.currency*item.completion_perc*payload.amount, 2)
+        item.amount = payload.amount
         item.total = item_new_total
         extract.sub_total += item_new_total
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
-            (p.amount for p in
-             db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()),
+            (p.amount for p in old_payments),
             Decimal("0"),
         )
 
@@ -1573,48 +1549,6 @@ def del_payment(request: Request, item_id: int, payload: UpdateAmount, db: Sessi
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1647,43 +1581,79 @@ def del_payment(request: Request, item_id: int, payload: UpdateCurrency, db: Ses
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     item, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    history = ExtractHistory(
+        extract_id=extract.id,
+        updated_at=datetime.now(timezone.utc),
+        updated_by=user_id,
+        project_name=extract.project_name,
+        unit_number=extract.unit_number,
+        contractor_name=extract.contractor_name,
+        job_title=extract.job_title,
+        sub_total=extract.sub_total,
+        total_taxes=extract.total_taxes,
+        total_deductions=extract.total_deductions,
+        total_payments=extract.total_payments,
+        total=extract.total
+    )
+    db.add(history)
+    db.flush()
+    for old_cat in old_cats:
+        history_cat = ExtractCategoryHistory(
+            extract_history_id=history.id,
+            title=old_cat.title
+        )
+        db.add(history_cat)
+        db.flush()
+        for old_item in old_items_by_cat.get(old_cat.id, []):
+            db.add(ExtractCategoryItemHistory(
+                extract_category_history_id=history_cat.id,
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
+            ))
+
+    for t in old_taxes:
+        db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+    for d in old_deductions:
+        db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+    for p in old_payments:
+        db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
     try:
         extract.sub_total -= item.total
         item_new_total = round(payload.currency * item.completion_perc * item.amount, 2)
+        item.currency = payload.currency
         item.total = item_new_total
         extract.sub_total += item_new_total
 
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
         total_rates = sum(
             (t.rate for t in old_taxes),
             Decimal("0"),
         )
         total_taxes = round(total_rates * extract.sub_total, 2)
 
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
         total_deductions = sum(
             (d.amount for d in old_deductions),
             Decimal("0"),
         )
 
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
         total_payments = sum(
-            (p.amount for p in
-             db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()),
+            (p.amount for p in old_payments),
             Decimal("0"),
         )
 
@@ -1691,48 +1661,6 @@ def del_payment(request: Request, item_id: int, payload: UpdateCurrency, db: Ses
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
-        history = ExtractHistory(
-            extract_id=extract.id,
-            updated_at=datetime.now(timezone.utc),
-            updated_by=user_id,
-            project_name=extract.project_name,
-            unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
-            job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
-        )
-        db.add(history)
-        db.flush()
-        for cat in old_cats:
-            history_cat = ExtractCategoryHistory(
-                extract_history_id=history.id,
-                title=cat.title
-            )
-            db.add(history_cat)
-            db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
-                db.add(ExtractCategoryItemHistory(
-                    extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
-                ))
-
-        for t in old_taxes:
-            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
-        for d in old_deductions:
-            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
-        for p in old_payments:
-            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
-
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1765,51 +1693,19 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     item, extract = result
 
-    old_sub_total = extract.sub_total
-    old_total_taxes = extract.total_taxes
-    old_total_deductions = extract.total_deductions
-    old_total_payments = extract.total_payments
-    old_total = extract.total
-
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
 
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
     old_items_by_cat = {}
-    for item in old_items:
-        old_items_by_cat.setdefault(item.category_id, []).append(item)
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
 
     try:
-        extract.sub_total -= item.total
-        item_new_total = round(payload.completion * item.currency * item.amount, 2)
-        item.total = item_new_total
-        extract.sub_total += item_new_total
-
-        old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
-        total_rates = sum(
-            (t.rate for t in old_taxes),
-            Decimal("0"),
-        )
-        total_taxes = round(total_rates * extract.sub_total, 2)
-
-        old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
-        total_deductions = sum(
-            (d.amount for d in old_deductions),
-            Decimal("0"),
-        )
-
-        old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
-        total_payments = sum(
-            (p.amount for p in
-             db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()),
-            Decimal("0"),
-        )
-
-        extract.total_taxes = total_taxes
-        extract.total_deductions = total_deductions
-        extract.total_payments = total_payments
-        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
-
         history = ExtractHistory(
             extract_id=extract.id,
             updated_at=datetime.now(timezone.utc),
@@ -1818,30 +1714,30 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
             unit_number=extract.unit_number,
             contractor_name=extract.contractor_name,
             job_title=extract.job_title,
-            sub_total=old_sub_total,
-            total_taxes=old_total_taxes,
-            total_deductions=old_total_deductions,
-            total_payments=old_total_payments,
-            total=old_total
+            sub_total=extract.sub_total,
+            total_taxes=extract.total_taxes,
+            total_deductions=extract.total_deductions,
+            total_payments=extract.total_payments,
+            total=extract.total
         )
         db.add(history)
         db.flush()
-        for cat in old_cats:
+        for old_cat in old_cats:
             history_cat = ExtractCategoryHistory(
                 extract_history_id=history.id,
-                title=cat.title
+                title=old_cat.title
             )
             db.add(history_cat)
             db.flush()
-            for item in old_items_by_cat.get(cat.id, []):
+            for old_item in old_items_by_cat.get(old_cat.id, []):
                 db.add(ExtractCategoryItemHistory(
                     extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
+                    title=old_item.title,
+                    unit_type=old_item.unit_type,
+                    amount=old_item.amount,
+                    currency=old_item.currency,
+                    completion_perc=old_item.completion_perc,
+                    total=old_item.total
                 ))
 
         for t in old_taxes:
@@ -1851,6 +1747,32 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
         for p in old_payments:
             db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
+        extract.sub_total -= item.total
+        item_new_total = round(payload.completion * item.currency * item.amount, 2)
+        item.completion_perc = payload.completion
+        item.total = item_new_total
+        extract.sub_total += item_new_total
+
+        total_rates = sum(
+            (t.rate for t in old_taxes),
+            Decimal("0"),
+        )
+        total_taxes = round(total_rates * extract.sub_total, 2)
+
+        total_deductions = sum(
+            (d.amount for d in old_deductions),
+            Decimal("0"),
+        )
+
+        total_payments = sum(
+            (p.amount for p in old_payments),
+            Decimal("0"),
+        )
+
+        extract.total_taxes = total_taxes
+        extract.total_deductions = total_deductions
+        extract.total_payments = total_payments
+        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
         db.commit()
     except SQLAlchemyError:
         db.rollback()
