@@ -1,4 +1,4 @@
-from pydantic import BaseModel, conlist, Field
+from pydantic import BaseModel, conlist
 from decimal import Decimal
 from typing import List
 
@@ -8,7 +8,7 @@ class PreviouslyPaid(BaseModel):
 
 class AddExtractTax(BaseModel):
     title: str
-    rate: Decimal = Field(..., max_digits=5, decimal_places=4, ge=0, le=1)
+    rate: Decimal
 
 class AddExtractDeduction(BaseModel):
     title: str
@@ -17,9 +17,12 @@ class AddExtractDeduction(BaseModel):
 class AddExtractCategoryItem(BaseModel):
     title: str
     unit_type: str
-    amount: Decimal = Field(..., max_digits=12, decimal_places=2, ge=0)
-    currency: Decimal = Field(..., max_digits=12, decimal_places=2, ge=0)
-    completion_perc: Decimal = Field(..., max_digits=5, decimal_places=4, ge=0, le=1)
+    amount: Decimal
+    currency: Decimal
+    completion_perc: Decimal
+
+class AddExtractCategoryItems(BaseModel):
+    items: List[AddExtractCategoryItem]
 
 class AddExtractCategory(BaseModel):
     title: str

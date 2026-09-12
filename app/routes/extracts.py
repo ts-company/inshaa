@@ -16,7 +16,7 @@ from app.models.extracts.history_category_item import ExtractCategoryItemHistory
 from app.models.extracts.taxes_history import ExtractTaxesHistory
 from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
-from app.schemas.exctract import AddExtract, AddExtractCategory, AddExtractCategoryItem, AddExtractTax, AddExtractDeduction, PreviouslyPaid, UpdateAmount, UpdateCompletion, UpdateCurrency
+from app.schemas.exctract import AddExtract, AddExtractCategory, AddExtractCategoryItems, AddExtractTax, AddExtractDeduction, PreviouslyPaid, UpdateAmount, UpdateCompletion, UpdateCurrency
 from app.core.auth import validate_user
 from app.database import get_db
 from app.config import BASE_DIR
@@ -29,7 +29,7 @@ router = APIRouter(prefix="/system/extracts")
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @router.get("/")
-def get_extracts(request: Request, id: int = None, name: str = None, contractor: str = None, unit: int = None, db: Session = Depends(get_db)):
+def get_extracts(request: Request, id: int = None, name: str = None, contractor: str = None, unit: int = None, job_title: str = None, db: Session = Depends(get_db)):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -54,7 +54,10 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
         query = query.filter(Extract.contractor_name.ilike(f"%{contractor}%"))
 
     if unit:
-        query = query.filter(Extract.unit_number.ilike(f"%{unit}%"))
+        query = query.filter(Extract.unit_number == unit)
+
+    if job_title:
+        query = query.filter(Extract.job_title.ilike(f"%{job_title}%"))
 
     extracts = [
         {
@@ -499,7 +502,7 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
     return {"success": True}
 
 @router.post("/add_item/{cat_id}")
-def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db: Session = Depends(get_db)):
+def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItems, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -545,22 +548,22 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db:
     )
     db.add(history)
     db.flush()
-    for cat in old_cats:
+    for old_cat in old_cats:
         history_cat = ExtractCategoryHistory(
             extract_history_id=history.id,
-            title=cat.title
+            title=old_cat.title
         )
         db.add(history_cat)
         db.flush()
-        for item in old_items_by_cat.get(cat.id, []):
+        for old_item in old_items_by_cat.get(old_cat.id, []):
             db.add(ExtractCategoryItemHistory(
                 extract_category_history_id=history_cat.id,
-                title=item.title,
-                unit_type=item.unit_type,
-                amount=item.amount,
-                currency=item.currency,
-                completion_perc=item.completion_perc,
-                total=item.total
+                title=old_item.title,
+                unit_type=old_item.unit_type,
+                amount=old_item.amount,
+                currency=old_item.currency,
+                completion_perc=old_item.completion_perc,
+                total=old_item.total
             ))
 
     for t in old_taxes:
@@ -571,12 +574,15 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItem, db:
         db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
 
     try:
-        item_total = round(payload.amount * payload.currency * payload.completion_perc, 2)
-        new_item = ExtractCategoryItem(category_id=cat.id, title=payload.title, unit_type=payload.unit_type,
-                                       amount=payload.amount, currency=payload.currency, completion_perc=payload.completion_perc,
-                                       total=item_total)
-        db.add(new_item)
-        extract.sub_total += item_total
+        items_total = Decimal("0")
+        for item in payload.items:
+            item_total = round(item.amount * item.currency * item.completion_perc, 2)
+            new_item = ExtractCategoryItem(category_id=cat.id, title=item.title, unit_type=item.unit_type,
+                                           amount=item.amount, currency=item.currency, completion_perc=item.completion_perc,
+                                           total=item_total)
+            db.add(new_item)
+            items_total += item_total
+        extract.sub_total += items_total
 
         total_rates = sum(
             (t.rate for t in old_taxes),

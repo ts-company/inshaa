@@ -443,7 +443,7 @@ main {
 
 .extract-search {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto auto;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto auto;
   gap: 12px;
   align-items: end;
   margin-bottom: 28px;
@@ -593,12 +593,16 @@ main {
           <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
         </label>
         <label>
-          Contractor
-          <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
-        </label>
-        <label>
           Unit number
           <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
+        </label>
+        <label>
+          Job title
+          <input type="text" name="job_title" value="{{ request.query_params.get('job_title', '') }}">
+        </label>
+        <label>
+          Contractor
+          <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
         </label>
         <button type="submit" class="btn btn-small">Search</button>
         <a href="/system/extracts/" class="btn btn-outline btn-small">Clear</a>
@@ -608,6 +612,7 @@ main {
       <table class="extracts-table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Project</th>
             <th>Unit number</th>
             <th>Job title</th>
@@ -622,6 +627,7 @@ main {
         <tbody>
           {% for e in extracts %}
           <tr data-extract-id="{{ e.id }}">
+            <td>{{ e.id }}</td>
             <td class="extract-project"><a class="extract-project-link" href="/system/extracts/details/{{ e.id }}">{{ e.project_name }}</a></td>
             <td>{{ e.unit_number }}</td>
             <td>{{ e.job_title }}</td>

@@ -404,8 +404,9 @@
     /* ---- Categories / items ---- */
     .category-block {
       margin-bottom: 36px;
-      border-top: 1px solid var(--line-strong);
-      padding-top: 20px;
+      border: 1px solid var(--line-strong);
+      padding: 20px;
+      background: var(--white);
     }
 
     .category-head {
@@ -424,6 +425,99 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+
+    .inline-category-editor {
+      display: none;
+      margin-bottom: 28px;
+      padding: 24px;
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+    }
+
+    .inline-category-editor.is-open {
+      display: block;
+    }
+
+    .inline-category-editor .modal {
+      max-width: none;
+      padding: 0;
+      border: 0;
+    }
+
+    .inline-add-item-row {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 14px;
+      padding: 14px;
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+    }
+
+    .inline-add-item-editor {
+      margin-bottom: 14px;
+      padding: 14px;
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+    }
+
+    .inline-add-item-editor .inline-add-item-row {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .inline-add-item-row + .inline-add-item-row {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .inline-add-item-row .field {
+      margin-bottom: 0;
+    }
+
+    .inline-add-item-row .field label {
+      font-size: 12px;
+    }
+
+    .inline-add-item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .inline-add-item-row .inline-add-item-actions {
+      align-items: flex-end;
+    }
+
+    .inline-add-item-remove {
+      background: none;
+      border: 0;
+      color: var(--error);
+      cursor: pointer;
+      font: 600 12.5px var(--font-body);
+      padding: 4px 6px;
+      white-space: nowrap;
+    }
+
+    .inline-add-item-remove:hover {
+      text-decoration: underline;
+    }
+
+    .inline-add-item-editor-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .inline-add-item-actions .btn {
+      padding: 8px 12px;
+      font-size: 12.5px;
     }
 
     .items-table {
@@ -858,6 +952,22 @@
     }
 
     @media (max-width: 600px) {
+      .inline-add-item-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .inline-add-item-actions {
+        grid-column: 1 / -1;
+      }
+
+      .inline-add-item-editor-actions {
+        justify-content: stretch;
+      }
+
+      .inline-add-item-editor-actions .btn {
+        flex: 1;
+      }
+
       .items-table thead {
         display: none;
       }
@@ -1126,7 +1236,7 @@
   </footer>
 
   <!-- ===== Add Category modal ===== -->
-  <div class="modal-overlay" id="modal-add-category">
+  <div class="inline-category-editor" id="modal-add-category">
     <div class="modal">
       <div class="modal-head">
         <h2>Add category</h2>
@@ -1184,8 +1294,8 @@
           <input type="number" id="item-currency" name="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-          <label for="item-completion">Completion (0-1)</label>
-          <input type="number" id="item-completion" name="completion_perc" step="0.0001" min="0" max="1" required>
+            <label for="item-completion">Completion (%)</label>
+            <input type="number" id="item-completion" name="completion_perc" step="0.01" min="1" max="100" required>
         </div>
 
         <div class="modal-actions">
@@ -1303,8 +1413,8 @@
           <input type="number" data-field="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-          <label>Completion (0-1)</label>
-          <input type="number" data-field="completion_perc" step="0.0001" min="0" max="1" required>
+            <label>Completion (%)</label>
+            <input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required>
         </div>
       </div>
     </div>
@@ -1522,6 +1632,7 @@
       // ---------- Add Category ----------
       const rowsContainer = document.getElementById('category-item-rows');
       const rowTemplate = document.getElementById('item-row-template');
+      const categoriesColumn = document.querySelector('.categories-column');
 
       function addItemRow() {
         const node = rowTemplate.content.cloneNode(true);
@@ -1532,7 +1643,9 @@
         document.getElementById('form-add-category').reset();
         rowsContainer.innerHTML = '';
         clearError('add-category-error');
+        categoriesColumn.prepend(document.getElementById('modal-add-category'));
         openModal('modal-add-category');
+        document.getElementById('cat-title').focus();
       });
 
       document.getElementById('btn-add-item-row').addEventListener('click', addItemRow);
@@ -1554,22 +1667,23 @@
         let invalid = false;
         rowsContainer.querySelectorAll('.item-row').forEach(function (row) {
           const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
+          const completionPercentage = parseFloat(get('completion_perc').value);
           const item = {
             title: get('title').value.trim(),
             unit_type: get('unit_type').value.trim(),
             amount: parseFloat(get('amount').value),
             currency: parseFloat(get('currency').value),
-            completion_perc: parseFloat(get('completion_perc').value),
+            completion_perc: completionPercentage / 100,
           };
           if (!item.title || Number.isNaN(item.amount) || Number.isNaN(item.currency) ||
-            Number.isNaN(item.completion_perc) || item.completion_perc < 0 || item.completion_perc > 1) {
+            Number.isNaN(completionPercentage) || completionPercentage < 1 || completionPercentage > 100) {
             invalid = true;
           }
           items.push(item);
         });
 
         if (invalid) {
-          showError('add-category-error', 'Please fill in all fields for every item row, or remove incomplete rows.');
+          showError('add-category-error', 'Please fill in all fields for every item row. Completion must be between 1 and 100.');
           return;
         }
 
@@ -1596,50 +1710,103 @@
       });
 
       // ---------- Add Item (per existing category) ----------
-      let activeCatId = null;
+      function createInlineItemRow(editor) {
+        const row = document.createElement('div');
+        row.className = 'inline-add-item-row';
+        row.innerHTML =
+          '<div class="field"><label>Title</label><input type="text" data-field="title" required></div>' +
+          '<div class="field"><label>Unit type</label><input type="text" data-field="unit_type" required></div>' +
+          '<div class="field"><label>Amount</label><input type="number" data-field="amount" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>Currency rate</label><input type="number" data-field="currency" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>Completion (%)</label><input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required></div>' +
+          '<div class="inline-add-item-actions"><button type="button" class="inline-add-item-remove" data-inline-remove>Remove</button></div>';
+
+        editor.querySelector('[data-inline-rows]').appendChild(row);
+        row.querySelector('[data-field="title"]').focus();
+
+        row.querySelector('[data-inline-remove]').addEventListener('click', function () {
+          row.remove();
+        });
+      }
+
+      function createInlineItemEditor(button) {
+        const categoryBlock = button.closest('.category-block');
+        let editor = categoryBlock.querySelector('.inline-add-item-editor');
+
+        if (editor) {
+          createInlineItemRow(editor);
+          return editor;
+        }
+
+        editor = document.createElement('div');
+        editor.className = 'inline-add-item-editor';
+        editor.setAttribute('data-category-id', button.getAttribute('data-cat-id'));
+        editor.innerHTML =
+          '<div data-inline-rows></div>' +
+          '<div class="inline-add-item-editor-actions">' +
+          '<button type="button" class="btn btn-secondary" data-inline-cancel>Cancel</button>' +
+          '<button type="button" class="btn btn-primary" data-inline-save>Save</button>' +
+          '</div>';
+
+        categoryBlock.querySelector('.category-head').after(editor);
+        createInlineItemRow(editor);
+
+        editor.querySelector('[data-inline-cancel]').addEventListener('click', function () {
+          editor.remove();
+        });
+
+        editor.querySelector('[data-inline-save]').addEventListener('click', function () {
+          const rows = Array.from(editor.querySelectorAll('.inline-add-item-row'));
+          const items = [];
+          let invalid = false;
+
+          rows.forEach(function (row) {
+            const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
+            const completionPercentage = parseFloat(get('completion_perc').value);
+            const item = {
+              title: get('title').value.trim(),
+              unit_type: get('unit_type').value.trim(),
+              amount: parseFloat(get('amount').value),
+              currency: parseFloat(get('currency').value),
+              completion_perc: completionPercentage / 100,
+            };
+
+            if (!item.title || !item.unit_type || Number.isNaN(item.amount) ||
+              Number.isNaN(item.currency) || Number.isNaN(completionPercentage) ||
+              completionPercentage < 1 || completionPercentage > 100) {
+              invalid = true;
+            }
+            items.push(item);
+          });
+
+          if (invalid || !items.length) {
+            alert('Please fill in all item fields. Completion must be between 1 and 100.');
+            return;
+          }
+
+          const saveButton = editor.querySelector('[data-inline-save]');
+          const cancelButton = editor.querySelector('[data-inline-cancel]');
+          saveButton.disabled = true;
+          cancelButton.disabled = true;
+
+          postJSON(API_BASE + '/add_item/' + editor.getAttribute('data-category-id'), { items: items })
+            .then(function () {
+              window.location.reload();
+            })
+            .catch(function (err) {
+              saveButton.disabled = false;
+              cancelButton.disabled = false;
+              alert('Could not add items. ' + err.message);
+            });
+        });
+
+        return editor;
+      }
 
       document.querySelectorAll('.btn-open-add-item').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          activeCatId = btn.getAttribute('data-cat-id');
-          const catTitle = btn.getAttribute('data-cat-title');
-          document.getElementById('add-item-heading').textContent = 'Add item — ' + catTitle;
-          document.getElementById('form-add-item').reset();
-          clearError('add-item-error');
-          openModal('modal-add-item');
+          createInlineItemEditor(btn);
         });
-      });
-
-      document.getElementById('form-add-item').addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearError('add-item-error');
-
-        if (!activeCatId) return;
-
-        const payload = {
-          title: document.getElementById('item-title').value.trim(),
-          unit_type: document.getElementById('item-unit-type').value.trim(),
-          amount: parseFloat(document.getElementById('item-amount').value),
-          currency: parseFloat(document.getElementById('item-currency').value),
-          completion_perc: parseFloat(document.getElementById('item-completion').value),
-        };
-
-        if (!payload.title || Number.isNaN(payload.amount) || Number.isNaN(payload.currency) ||
-          Number.isNaN(payload.completion_perc) || payload.completion_perc < 0 || payload.completion_perc > 1) {
-          showError('add-item-error', 'Please fill in all fields. Completion must be between 0 and 1.');
-          return;
-        }
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-
-        postJSON(API_BASE + '/add_item/' + activeCatId, payload)
-          .then(function () {
-            window.location.reload();
-          })
-          .catch(function (err) {
-            submitBtn.disabled = false;
-            showError('add-item-error', 'Could not add item. ' + err.message);
-          });
       });
 
       // ---------- Delete Item ----------
