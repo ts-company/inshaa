@@ -2,8 +2,17 @@ from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
 import cloudinary
 import cloudinary.uploader
-from io import BytesIO
 import os
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from io import BytesIO
+
+
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -93,3 +102,79 @@ def is_valid_image(upload_file) -> bool:
     finally:
         upload_file.file.seek(0)
 
+
+def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph(f"Extract number {extract.id}", styles["Title"]))
+    story.append(Paragraph(f"Project: {extract.project_name}", styles["Normal"]))
+    story.append(Paragraph(f"Contractor: {extract.contractor_name  or '-'}", styles["Normal"]))
+    story.append(Paragraph(f"Unit: {extract.unit_number}", styles["Normal"]))
+    story.append(Spacer(1, 12))
+
+    styles = getSampleStyleSheet()
+    cell_style = ParagraphStyle(
+        "cell",
+        parent=styles["Normal"],
+        fontSize=9,
+        leading=11,
+        wordWrap="CJK",
+    )
+    header_style = ParagraphStyle(
+        "cell_header",
+        parent=cell_style,
+        textColor=colors.white,
+        fontName="Helvetica-Bold",
+    )
+
+    for cat in categories:
+        story.append(Paragraph(cat.title, styles["Heading2"]))
+
+        table_data = [[Paragraph(h, header_style) for h in ["Item", "Unit Type", "Amount", "Currency", "Completion %", "Total"]]]
+        for item in items_by_cat.get(cat.id, []):
+            table_data.append([
+                Paragraph(item.title, cell_style),
+                Paragraph(item.unit_type, cell_style),
+                Paragraph(f"{item.amount}", cell_style),
+                Paragraph(f"{item.currency}", cell_style),
+                Paragraph(f"{item.completion_perc}%", cell_style),
+                Paragraph(f"{item.total}", cell_style),
+            ])
+
+        table = Table(table_data, colWidths=[4*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm], repeatRows=1, hAlign="CENTER")
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f2f2f2")]),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 16))
+
+    totals_data = [
+        ["Subtotal", f"{extract.sub_total}"],
+        ["Taxes", f"{extract.total_taxes}"],
+        ["Deductions", f"{extract.total_deductions}"],
+        ["Payments", f"{extract.total_payments}"],
+        ["Total", f"{extract.total}"],
+    ]
+    totals_table = Table(totals_data, colWidths=[4 * cm, 4 * cm], hAlign="RIGHT")
+    totals_table.setStyle(TableStyle([
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+        ("LINEABOVE", (0, -1), (-1, -1), 1, colors.black),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+    ]))
+    story.append(totals_table)
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer

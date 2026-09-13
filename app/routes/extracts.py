@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -18,6 +19,7 @@ from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
 from app.schemas.exctract import AddExtract, AddExtractCategory, AddExtractCategoryItems, AddExtractTax, AddExtractDeduction, PreviouslyPaid, UpdateAmount, UpdateCompletion, UpdateCurrency
 from app.core.auth import validate_user
+from app.utils import generate_extract_pdf
 from app.database import get_db
 from app.config import BASE_DIR
 from decimal import Decimal
@@ -1852,3 +1854,42 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
+
+@router.get("/generate_pdf/{ext_id}")
+def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "approve extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not extract.approved:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+    category_ids = [c.id for c in categories]
+    items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(category_ids)).all()
+
+    items_by_cat = {}
+    for item in items:
+        items_by_cat.setdefault(item.category_id, []).append(item)
+
+    try:
+        pdf_buffer = generate_extract_pdf(extract, categories, items_by_cat)
+    except RuntimeError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=extract_{extract.id}.pdf"}
+    )
