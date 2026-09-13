@@ -16,3 +16,4 @@ pgvector
 pillow
 cloudinary
 reportlab
+arabic_reshaper

@@ -3,14 +3,21 @@ from PIL import Image, UnidentifiedImageError
 import cloudinary
 import cloudinary.uploader
 import os
+import arabic_reshaper
+from bidi.algorithm import get_display
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import cm
-from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-)
+from reportlab.lib.enums import TA_RIGHT
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from io import BytesIO
+from app.config import BASE_DIR
+
+pdfmetrics.registerFont(TTFont("Arabic", f"{BASE_DIR}/static/fonts/NotoSansArabic-Regular.ttf"))
+pdfmetrics.registerFont(TTFont("Arabic-Bold", f"{BASE_DIR}/static/fonts/NotoSansArabic-Bold.ttf"))
 
 
 
@@ -102,6 +109,13 @@ def is_valid_image(upload_file) -> bool:
     finally:
         upload_file.file.seek(0)
 
+def ar(text) -> str:
+    if text is None:
+        return ""
+    text = str(text)
+    if not text:
+        return text
+    return get_display(arabic_reshaper.reshape(text))
 
 def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
     buffer = BytesIO()
@@ -114,64 +128,90 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph(f"Extract number {extract.id}", styles["Title"]))
-    story.append(Paragraph(f"Project: {extract.project_name}", styles["Normal"]))
-    story.append(Paragraph(f"Contractor: {extract.contractor_name  or '-'}", styles["Normal"]))
-    story.append(Paragraph(f"Unit: {extract.unit_number}", styles["Normal"]))
-    story.append(Spacer(1, 12))
-
-    styles = getSampleStyleSheet()
+    # --- Arabic paragraph styles ---
+    title_style = ParagraphStyle(
+        "title_ar", parent=styles["Title"], fontName="Arabic-Bold", alignment=TA_RIGHT
+    )
+    normal_style = ParagraphStyle(
+        "normal_ar", parent=styles["Normal"], fontName="Arabic", fontSize=11,
+        leading=15, alignment=TA_RIGHT, wordWrap="RTL"
+    )
+    heading_style = ParagraphStyle(
+        "heading_ar", parent=styles["Heading2"], fontName="Arabic-Bold", alignment=TA_RIGHT
+    )
     cell_style = ParagraphStyle(
-        "cell",
-        parent=styles["Normal"],
-        fontSize=9,
-        leading=11,
-        wordWrap="CJK",
+        "cell_ar", parent=styles["Normal"], fontName="Arabic", fontSize=9,
+        leading=13, alignment=TA_RIGHT, wordWrap="RTL"
     )
     header_style = ParagraphStyle(
-        "cell_header",
-        parent=cell_style,
-        textColor=colors.white,
-        fontName="Helvetica-Bold",
+        "cell_header_ar", parent=cell_style, fontName="Arabic-Bold", textColor=colors.white
+    )
+    totals_label_style = ParagraphStyle(
+        "totals_label_ar", parent=cell_style, fontName="Arabic-Bold"
+    )
+    totals_value_style = ParagraphStyle(
+        "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_RIGHT
     )
 
-    for cat in categories:
-        story.append(Paragraph(cat.title, styles["Heading2"]))
+    # --- Header ---
+    story.append(Paragraph(f"{extract.id} {ar('مستخلص رقم')}", title_style))
+    story.append(Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style))
+    story.append(Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style))
+    story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
+    story.append(Spacer(1, 12))
 
-        table_data = [[Paragraph(h, header_style) for h in ["Item", "Unit Type", "Amount", "Currency", "Completion %", "Total"]]]
+    for cat in categories:
+        story.append(Paragraph(ar(cat.title), heading_style))
+
+        headers = ["بند فرعي", "الوحدة", "الكمية", "الفئة", "نسبة الانجاز", "الاجمالي"]
+        table_data = [[Paragraph(ar(h), header_style) for h in headers]]
+
         for item in items_by_cat.get(cat.id, []):
             table_data.append([
-                Paragraph(item.title, cell_style),
-                Paragraph(item.unit_type, cell_style),
-                Paragraph(f"{item.amount}", cell_style),
-                Paragraph(f"{item.currency}", cell_style),
-                Paragraph(f"{item.completion_perc}%", cell_style),
+                Paragraph(ar(item.title), cell_style),
+                Paragraph(ar(item.unit_type), cell_style),
+                Paragraph(f"{int(item.amount)}", cell_style),
+                Paragraph(ar(int(item.currency)), cell_style),
+                Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
                 Paragraph(f"{item.total}", cell_style),
             ])
 
-        table = Table(table_data, colWidths=[4*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm, 2.5*cm], repeatRows=1, hAlign="CENTER")
+        table = Table(
+            table_data,
+            colWidths=[4 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm],
+            repeatRows=1,
+            hAlign="CENTER"
+        )
         table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f2f2f2")]),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
         ]))
         story.append(table)
         story.append(Spacer(1, 16))
 
-    totals_data = [
-        ["Subtotal", f"{extract.sub_total}"],
-        ["Taxes", f"{extract.total_taxes}"],
-        ["Deductions", f"{extract.total_deductions}"],
-        ["Payments", f"{extract.total_payments}"],
-        ["Total", f"{extract.total}"],
+    # --- Totals ---
+    totals_rows = [
+        ("الاجمالي", extract.sub_total),
+        ("اجمالي الضرائب", extract.total_taxes),
+        ("اجمالي الخصومات", extract.total_deductions),
+        ("اجمالي ما سبق صرفه", extract.total_payments),
+        ("صافي المستخلص", extract.total),
     ]
-    totals_table = Table(totals_data, colWidths=[4 * cm, 4 * cm], hAlign="RIGHT")
+    totals_data = [
+        [Paragraph(ar(label), totals_label_style), Paragraph(f"{value}", totals_value_style)]
+        for label, value in totals_rows
+    ]
+    totals_table = Table(totals_data, colWidths=[6 * cm, 4 * cm], hAlign="RIGHT")
     totals_table.setStyle(TableStyle([
-        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
         ("LINEABOVE", (0, -1), (-1, -1), 1, colors.black),
-        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(totals_table)
 
