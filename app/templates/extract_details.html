@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 
 <head>
   <meta charset="UTF-8">
@@ -40,6 +40,7 @@
       font-family: var(--font-body);
       font-size: 16px;
       line-height: 1.55;
+      text-align: right;
       -webkit-font-smoothing: antialiased;
       display: flex;
       flex-direction: column;
@@ -1143,6 +1144,15 @@
     </div>
 
     <div class="below-categories-row">
+      {% if not history %}
+      <aside class="history-panel" id="extract-history-panel">
+        <h2>Previous versions</h2>
+        <div class="history-list" id="extract-history-list">
+          <p class="history-state">Loading history...</p>
+        </div>
+      </aside>
+      {% endif %}
+
       <aside class="summary-panel">
         <div class="summary-block">
           <div class="summary-line is-subtotal">
@@ -1240,15 +1250,6 @@
           <span>{{ "{:,.2f}".format(extract.total) }} EGP</span>
         </div>
       </aside>
-
-      {% if not history %}
-      <aside class="history-panel" id="extract-history-panel">
-        <h2>Previous versions</h2>
-        <div class="history-list" id="extract-history-list">
-          <p class="history-state">Loading history...</p>
-        </div>
-      </aside>
-      {% endif %}
     </div>
 
     <label class="approval-control" for="extract-approved">

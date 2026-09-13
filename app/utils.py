@@ -10,9 +10,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import cm
-from reportlab.lib.enums import TA_RIGHT
+from reportlab.lib.enums import TA_RIGHT, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Image as RLImage
 from io import BytesIO
 from app.config import BASE_DIR
 
@@ -150,11 +151,26 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
         "totals_label_ar", parent=cell_style, fontName="Arabic-Bold"
     )
     totals_value_style = ParagraphStyle(
-        "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_RIGHT
+        "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_LEFT
     )
 
-    # --- Header ---
-    story.append(Paragraph(f"{extract.id} {ar('مستخلص رقم')}", title_style))
+    logo_path = os.path.join(BASE_DIR, "static", "logo.jpeg")
+    logo = RLImage(logo_path, width=4 * cm, height=2 * cm)
+
+    header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style)
+
+    header_table = Table(
+        [[logo, header_text]],
+        colWidths=[4 * cm, 12 * cm]
+    )
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # vertically centers logo + text relative to each other
+        ("ALIGN", (0, 0), (0, 0), "CENTER"),  # centers the logo within its cell
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),  # keeps Arabic text right-aligned within its cell
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 12))
+
     story.append(Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style))
     story.append(Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style))
     story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
@@ -163,22 +179,22 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
     for cat in categories:
         story.append(Paragraph(ar(cat.title), heading_style))
 
-        headers = ["بند فرعي", "الوحدة", "الكمية", "الفئة", "نسبة الانجاز", "الاجمالي"]
+        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
         for item in items_by_cat.get(cat.id, []):
             table_data.append([
-                Paragraph(ar(item.title), cell_style),
-                Paragraph(ar(item.unit_type), cell_style),
-                Paragraph(f"{int(item.amount)}", cell_style),
-                Paragraph(ar(int(item.currency)), cell_style),
-                Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
                 Paragraph(f"{item.total}", cell_style),
+                Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
+                Paragraph(ar(int(item.currency)), cell_style),
+                Paragraph(f"{int(item.amount)}", cell_style),
+                Paragraph(ar(item.unit_type), cell_style),
+                Paragraph(ar(item.title), cell_style),
             ])
 
         table = Table(
             table_data,
-            colWidths=[4 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm],
+            colWidths=[2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm],
             repeatRows=1,
             hAlign="CENTER"
         )
@@ -194,19 +210,18 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
         story.append(table)
         story.append(Spacer(1, 16))
 
-    # --- Totals ---
     totals_rows = [
-        ("الاجمالي", extract.sub_total),
+        ("اجمالي المستخلص", extract.sub_total),
         ("اجمالي الضرائب", extract.total_taxes),
         ("اجمالي الخصومات", extract.total_deductions),
         ("اجمالي ما سبق صرفه", extract.total_payments),
         ("صافي المستخلص", extract.total),
     ]
     totals_data = [
-        [Paragraph(ar(label), totals_label_style), Paragraph(f"{value}", totals_value_style)]
+        [Paragraph(f"{value}", totals_value_style), Paragraph(ar(label), totals_label_style)]
         for label, value in totals_rows
     ]
-    totals_table = Table(totals_data, colWidths=[6 * cm, 4 * cm], hAlign="RIGHT")
+    totals_table = Table(totals_data, colWidths=[6 * cm, 4 * cm], hAlign="LEFT")
     totals_table.setStyle(TableStyle([
         ("LINEABOVE", (0, -1), (-1, -1), 1, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -214,6 +229,7 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(totals_table)
+    story.append(Paragraph(f"{ar('مدير المشروع')}", normal_style))
 
     doc.build(story)
     buffer.seek(0)
