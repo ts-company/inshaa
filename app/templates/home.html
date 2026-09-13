@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <style>
 
 :root {
@@ -48,6 +50,17 @@ h1, h2, h3 {
 
 p { margin: 0; }
 button { font-family: 'Barlow', sans-serif; cursor: pointer; }
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(34px);
+  transition: opacity 780ms ease, transform 780ms ease;
+}
+
+.scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 :focus-visible {
   outline: 2px solid var(--steel);
@@ -96,27 +109,48 @@ button { font-family: 'Barlow', sans-serif; cursor: pointer; }
 
 /* ===== Layout helpers ===== */
 main {
-  max-width: 1180px;
+  width: 100vw;
+  max-width: none;
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0;
 }
 
 .section-head { margin-bottom: 40px; max-width: 680px; }
 .section-head h2 { font-size: 34px; letter-spacing: 0.1px; }
 .section-head p { color: var(--steel-dark); font-size: 17px; }
 
-/* ===== Hero (cover image, contained to page width) ===== */
+/* ===== Hero (cover image, full-width page video) ===== */
 .hero-wrap { padding-top: 40px; }
 
 .hero-cover {
   position: relative;
-  width: 100%;
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   aspect-ratio: 16 / 9;
   min-height: 360px;
   overflow: hidden;
   background: var(--concrete);
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: 0 18px 44px rgba(42, 58, 71, 0.14);
+  isolation: isolate;
+  transform-style: preserve-3d;
+  perspective: 1600px;
+}
+
+.hero-cover::before {
+  content: '';
+  position: absolute;
+  inset: -7%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 72% 12%, rgba(217, 154, 24, 0.18), transparent 13%),
+    radial-gradient(circle at 35% 85%, rgba(246, 243, 236, 0.10), transparent 15%);
+  filter: blur(50px);
+  opacity: 0.8;
+  transform: scale(1.10);
+  pointer-events: none;
 }
 
 .hero-cover img,
@@ -127,10 +161,133 @@ main {
   display: block;
 }
 
+.hero-cover video {
+  position: relative;
+  z-index: 0;
+  opacity: 0;
+  transform: scale(1.16);
+  filter: blur(7px) brightness(0.78) saturate(1.05) contrast(1.12);
+  clip-path: inset(0 0 0 0 round 0px);
+  animation: hero-video-rise 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) 140ms forwards;
+}
+
+.hero-cover::after {
+  content: '';
+  position: absolute;
+  inset: -12%;
+  z-index: 2;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.12) 50%, transparent 65%);
+  transform: translateX(-150%);
+  animation: hero-shine 1500ms ease-out 250ms forwards;
+  pointer-events: none;
+}
+
+@keyframes hero-video-rise {
+  0% {
+    opacity: 0;
+    filter: blur(10px) brightness(0.62) saturate(1.05) contrast(1.14);
+    transform: scale(1.22) translate3d(0, 0, 0);
+    clip-path: inset(8% 0 8% 0 round 0px);
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0) brightness(0.92) saturate(1.12) contrast(1.12);
+    transform: scale(1.08) translate3d(0, -6px, 0);
+    clip-path: inset(0 0 0 0 round 0px);
+  }
+}
+
+@keyframes hero-shine {
+  from { transform: translateX(-150%); opacity: 0; }
+  45% { opacity: 1; }
+  to { transform: translateX(145%); opacity: 0; }
+}
+
 .hero-cover-scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(0deg, rgba(20, 22, 24, 0.78) 0%, rgba(20, 22, 24, 0.45) 42%, rgba(20, 22, 24, 0.1) 68%);
+}
+
+.hero-cover-scrim::before,
+.hero-cover-scrim::after {
+  content: '';
+  position: absolute;
+  top: -4%;
+  bottom: -4%;
+  width: 50%;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.88)),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(246,243,236,0.03) 3px);
+  filter: blur(2px);
+  box-shadow: 0 0 70px rgba(217, 154, 24, 0.18), inset 0 0 40px rgba(246, 243, 236, 0.04);
+}
+
+.hero-cover-scrim::before {
+  left: -55%;
+  right: auto;
+  transform-origin: left center;
+  transform: perspective(1600px) rotateY(0deg) translateX(0);
+  clip-path: inset(0 0 0 0 round 0px);
+  animation: hero-curtain-left 1600ms cubic-bezier(0.76, 0, 0.2, 1) 150ms forwards;
+}
+
+.hero-cover-scrim::after {
+  right: -55%;
+  left: auto;
+  transform-origin: right center;
+  transform: perspective(1600px) rotateY(0deg) translateX(0);
+  clip-path: inset(0 0 0 0 round 0px);
+  animation: hero-curtain-right 1600ms cubic-bezier(0.76, 0, 0.2, 1) 150ms forwards;
+}
+
+@keyframes hero-curtain-left {
+  0% {
+    left: -55%;
+    clip-path: inset(0 0 0 0 round 0px);
+    transform: perspective(1600px) rotateY(0deg) translateX(0);
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    left: -55%;
+    clip-path: inset(0 0 0 100% round 0px);
+    transform: perspective(1600px) rotateY(-56deg) translateX(-10%);
+    opacity: 0;
+  }
+}
+
+@keyframes hero-curtain-right {
+  0% {
+    right: -55%;
+    clip-path: inset(0 0 0 0 round 0px);
+    transform: perspective(1600px) rotateY(0deg) translateX(0);
+    opacity: 1;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    right: -55%;
+    clip-path: inset(0 0 0 100% round 0px);
+    transform: perspective(1600px) rotateY(56deg) translateX(10%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cover-scrim::before,
+  .hero-cover-scrim::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 .hero-cover-inner {
@@ -138,6 +295,28 @@ main {
   inset: 0;
   display: flex;
   align-items: flex-end;
+  z-index: 4;
+}
+
+.hero-logo-lockup {
+  position: absolute;
+  top: 30px;
+  left: 42px;
+  z-index: 4;
+  width: min(320px, 30vw);
+  animation: hero-logo-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) 350ms both;
+}
+
+.hero-logo-lockup img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes hero-logo-in {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .hero-copy {
@@ -174,87 +353,275 @@ main {
 
 .btn:active { transform: translateY(1px); }
 
+.hero-cover::selection {
+  background: transparent;
+}
+
+.hero-cover .hero-video-spotlight {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 1px solid rgba(246, 243, 236, 0.45);
+  background: radial-gradient(circle, rgba(217, 154, 24, 0.26), transparent 76%);
+  filter: blur(26px);
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.hero-cover.exposed .hero-video-spotlight {
+  opacity: 1;
+}
+
+.hero-cover::before {
+  content: '';
+  position: absolute;
+  inset: -10%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 78% 8%, rgba(217,154,24,0.34), transparent 16%),
+    linear-gradient(90deg, transparent, rgba(190, 196, 190, 0.06), transparent);
+  filter: blur(52px);
+  opacity: 0.9;
+  transform: scale(1.1);
+  pointer-events: none;
+}
+
+.hero-cover video {
+  position: relative;
+  z-index: 0;
+  opacity: 0;
+  transform: scale(1.22);
+  filter: blur(8px) brightness(0.76) saturate(1.04) contrast(1.12);
+  clip-path: inset(10% round 0px);
+  animation: hero-video-rise 1500ms cubic-bezier(0.2, 0.8, 0.2, 1) 140ms forwards;
+}
+
+.hero-cover-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(0deg, rgba(20, 22, 24, 0.78) 0%, rgba(20, 22, 24, 0.46) 42%, rgba(20, 22, 24, 0.14) 68%),
+    radial-gradient(circle at 70% 15%, rgba(217,154,24,0.08), transparent 18%);
+  pointer-events: none;
+}
+
+.hero-cover-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 4;
+}
+
 /* ===== Company summary ===== */
 .company-summary {
+  width: 100vw;
+  max-width: none;
   margin-top: 56px;
-  max-width: 820px;
-  padding: 0 0 4px 22px;
-  border-left: 4px solid var(--yellow);
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 80px 40px;
+  border-left: none;
+  border-bottom: 1px solid var(--line-strong);
+  background: linear-gradient(120deg, #ffffff 0%, #eeeeee 100%);
+  color: var(--ink);
+}
+
+.company-summary-grid {
+  width: min(1420px, calc(100vw - 80px));
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 20px;
 }
 
-.company-summary h2 {
-  font-size: 34px;
-  margin-top: 22px;
-  margin-bottom: 16px;
+.company-summary-image {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(111, 93, 58, 0.3), 0 0 0 14px rgba(255, 237, 205, 0.7), 0 14px 36px rgba(77, 53, 18, 0.2);
+  overflow: hidden;
 }
 
-.company-summary p {
+.company-summary-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+  border: 0;
+  box-shadow: none;
+  background: var(--concrete);
+  position: relative;
+  z-index: 1;
+}
+
+.company-summary-person {
+  position: absolute;
+  left: 0;
+  bottom: 22px;
+  min-width: 220px;
+  padding: 16px 20px;
+  color: var(--paper);
+  background: rgba(205, 151, 75, 0.78);
+  border-radius: 0 16px 16px 0;
+  box-shadow: 0 16px 34px rgba(96, 71, 35, 0.15);
+  font-size: 13px;
+  text-align: left;
+}
+
+.company-summary-person-name {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--paper);
+  margin-bottom: 4px;
+}
+
+.company-summary-person-role {
+  display: block;
+  font-size: 13px;
+  color: var(--paper);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.company-summary-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  min-height: 380px;
+  padding: 0;
+}
+
+.company-summary-copy .company-summary-content {
+  max-width: 640px;
+  padding-left: 30px;
+}
+
+.company-summary-content h2 {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-family: 'Barlow Condensed', 'Arial', sans-serif;
+  font-size: clamp(40px, 4vw, 56px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.company-summary-content h2 span {
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+.company-summary-content .company-summary-rule {
+  width: 180px;
+  height: 2px;
+  background: var(--line-strong);
+  margin: 18px 0 20px;
+}
+
+.company-summary-message {
+  margin-top: 14px;
+}
+
+.company-summary-message h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-family: 'Barlow Condensed', 'Arial', sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.company-summary-message p {
+  margin: 0;
   color: var(--steel-dark);
   font-size: 18px;
   line-height: 1.6;
 }
 
-.company-signature {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 16px;
-  padding: 12px 0 12px 16px;
-  border-left: 3px solid var(--yellow);
-  border-top: none;
-  border-bottom: none;
-  max-width: 820px;
-  width: 100%;
-}
-
-.company-signature-label {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--steel-dark);
-  text-transform: uppercase;
-  line-height: 1.1;
-}
-
-.company-signature-name {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--ink);
-  line-height: 1.2;
-}
-
 /* ===== Spec strip ===== */
 .spec-strip {
   margin-top: 40px;
-  border-top: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: var(--surface);
-  border-radius: 6px;
-  overflow: hidden;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px;
+  background: transparent;
+  border-radius: 10px;
+  overflow: visible;
 }
 
 .spec-item {
-  padding: 26px 20px;
+  padding: 32px 30px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  border-left: 1px solid var(--line);
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgba(42, 58, 71, 0.06);
 }
 
-.spec-item:first-child { border-left: none; }
-.spec-value { font-family: 'Barlow Condensed', sans-serif; font-size: 40px; font-weight: 600; color: var(--steel-dark); }
-.spec-label { font-size: 14px; color: var(--steel-dark); opacity: 0.85; }
+.spec-item:first-child { border-left: 1px solid var(--line-strong); }
+.spec-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 52px;
+}
+.spec-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(44px, 4vw, 60px);
+  font-weight: 700;
+  color: var(--steel-dark);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.spec-plus {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(36px, 3vw, 46px);
+  font-weight: 700;
+  color: var(--yellow);
+  line-height: 1;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+.spec-label {
+  font-size: 14px;
+  color: var(--steel-dark);
+  opacity: 0.9;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+}
 
-/* ===== Services ===== */
+/* ===== Services / Process ===== */
 .services { margin-top: 84px; }
 .services h2 { font-size: 30px; margin-bottom: 28px; }
 
@@ -272,6 +639,76 @@ main {
 .service-row h3 { font-size: 22px; margin-bottom: 8px; font-weight: 600; }
 .service-row p { color: var(--steel-dark); font-size: 15.5px; }
 
+.process-section {
+  margin-top: 44px;
+}
+
+.process-panel {
+  background: var(--paper);
+  border-radius: 6px;
+  box-shadow: 0 14px 40px rgba(42, 58, 71, 0.08);
+  padding: 44px 28px;
+}
+
+.process-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--steel-dark);
+  text-align: center;
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 26px;
+  align-items: stretch;
+}
+
+.process-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 210px;
+}
+
+.process-number {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 72px;
+  font-weight: 500;
+  color: var(--steel-dark);
+  line-height: 0.86;
+  opacity: 0.7;
+  margin-bottom: 16px;
+}
+
+.process-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--steel);
+  margin-bottom: 14px;
+}
+
+.process-card p {
+  color: var(--steel-dark);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.process-card:nth-child(2) .process-name,
+.process-card:nth-child(2) .process-number {
+  color: var(--steel-dark);
+}
+
 /* ===== Projects: minimal grid + lightbox ===== */
 .projects { margin-top: 84px; }
 .projects .section-head { margin-bottom: 32px; }
@@ -287,8 +724,9 @@ main {
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 40px 28px;
+  grid-auto-flow: row dense;
   align-items: stretch;
 }
 
@@ -356,7 +794,32 @@ main {
   transition: transform 0.35s ease;
 }
 
-.project-card:hover .project-card-thumb img { transform: scale(1.045); }
+.project-card-thumb {
+  position: relative;
+}
+
+.project-card-media-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s ease;
+}
+
+.project-card-media-track img {
+  flex: 0 0 100%;
+  min-width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  animation: projectImageScroll 7s ease-in-out infinite alternate;
+}
+
+@keyframes projectImageScroll {
+  0% { transform: translateY(0); object-position: center top; }
+  100% { transform: translateY(-14%); object-position: center bottom; }
+}
+
+.project-card:hover .project-card-media-track img { transform: scale(1.045); }
 
 .project-card-thumb-empty {
   width: 100%;
@@ -563,15 +1026,16 @@ main {
 
 .sector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-auto-rows: 360px;
   gap: 32px 28px;
+  grid-auto-flow: row dense;
   align-items: stretch;
 }
 
 .sector-card {
   width: 100%;
-  min-height: 360px;
-  height: 100%;
+  height: 360px;
   perspective: 1000px;
   display: flex;
 }
@@ -579,8 +1043,7 @@ main {
 .sector-card-inner {
   position: relative;
   display: grid;
-  min-height: 360px;
-  height: 100%;
+  height: 360px;
   width: 100%;
   transform-style: preserve-3d;
   transition: transform 0.6s ease;
@@ -596,6 +1059,7 @@ main {
 .sector-card-face {
   grid-area: 1 / 1;
   width: 100%;
+  height: 360px;
   padding: 26px 28px;
   display: flex;
   flex-direction: column;
@@ -603,6 +1067,7 @@ main {
   align-items: center;
   text-align: center;
   backface-visibility: hidden;
+  overflow: hidden;
   border-radius: 8px;
   background: var(--surface);
 }
@@ -614,16 +1079,145 @@ main {
 }
 
 .sector-card-back {
+  position: relative;
   background: var(--steel-dark);
   color: var(--paper);
   transform: rotateX(180deg);
   justify-content: center;
+  isolation: isolate;
+}
+
+.sector-card-back::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(rgba(16, 33, 46, 0.52), rgba(16, 33, 46, 0.52)), var(--sector-bg-image);
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.sector-card-back > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sector-card-front {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.sector-card-front::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(rgba(16, 33, 46, 0.42), rgba(16, 33, 46, 0.42)), var(--sector-front-bg-image);
+  background-size: cover;
+  background-position: center;
+  pointer-events: none;
+}
+
+.sector-card-front > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sector-card-back p {
   font-size: 15px;
   color: var(--concrete);
   line-height: 1.6;
+}
+
+.sector-subcategory-viewport {
+  width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.sector-subcategory-track {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+}
+
+.sector-subcategory-item {
+  flex: 0 0 auto;
+  width: 100%;
+  text-align: center;
+}
+
+.sector-read-more {
+  margin-top: 18px;
+  padding: 8px 14px;
+  border: 1px solid var(--concrete);
+  background: transparent;
+  color: var(--paper);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sector-read-more:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.sector-details {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(20, 22, 24, 0.82);
+}
+
+.sector-details.is-visible { display: flex; }
+
+.sector-details-frame {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  padding: 36px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.sector-details-frame h3 {
+  margin-bottom: 22px;
+  color: var(--ink);
+  font-size: 30px;
+}
+
+.sector-details-frame ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0 20px 0 0;
+}
+
+.sector-details-frame li {
+  color: var(--steel-dark);
+  line-height: 1.6;
+}
+
+.sector-details-close {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 28px;
+  cursor: pointer;
 }
 
 .sector-card-skeleton .sector-card-face {
@@ -725,7 +1319,14 @@ main {
   white-space: nowrap;
 }
 
-.country-flag { font-size: 26px; line-height: 1; }
+.country-flag {
+  display: block;
+  width: 52px;
+  height: 34px;
+  object-fit: cover;
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 4px 10px rgba(42, 58, 71, 0.14);
+}
 .country-name { font-size: 15px; font-weight: 600; color: var(--steel-dark); }
 
 /* ===== Footer ===== */
@@ -748,6 +1349,13 @@ main {
 .footer-brand { max-width: 300px; }
 .footer-wordmark { color: var(--paper); font-size: 22px; }
 .footer-tag { margin-top: 10px; font-size: 14px; color: var(--line-strong); }
+
+.footer-logo {
+  display: block;
+  width: min(280px, 100%);
+  height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.24));
+}
 
 .footer-contact { display: flex; gap: 48px; flex-wrap: wrap; }
 .footer-contact .info-block h3 { font-size: 15px; font-weight: 600; color: var(--yellow); margin-bottom: 6px; }
@@ -966,9 +1574,10 @@ main {
 
 .projects-grid { gap: 46px 32px; }
 .project-card-inner { box-shadow: 0 14px 30px rgba(16, 33, 46, 0.1); }
-.project-card-back { background: var(--ink); padding: 32px; }
+.project-card-back { background: var(--paper); padding: 32px; }
 .project-card-back h3 { font-size: 26px; }
-.project-card-back p { color: #C7D8DF; }
+.project-card-back h3 { color: var(--ink); }
+.project-card-back p { color: var(--steel-dark); }
 .project-card-thumb { border-radius: 10px; }
 .project-card-body h3 { font-size: 23px; }
 .project-card-body p { color: var(--steel); }
@@ -1048,22 +1657,24 @@ main {
 
 /* ===== Reference-inspired construction layout ===== */
 :root {
-  --ink: #1C1F22;
-  --concrete: #E7E2D8;
-  --paper: #F6F3EC;
-  --surface: #FFFFFF;
-  --steel: #3E5468;
-  --steel-dark: #2A3A47;
-  --yellow: #0B4D72;
-  --line: #D8D2C4;
-  --line-strong: #B9B2A1;
+  --ink: #141414;
+  --concrete: #E9E9E9;
+  --paper: #FFFFFF;
+  --surface: #F7F7F7;
+  --steel: #666666;
+  --steel-dark: #292929;
+  --yellow: #E31B23;
+  --line: #DDDDDD;
+  --line-strong: #AFAFAF;
 }
 
-body { background: var(--paper); }
+body {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F3F3F3 76%, #FFE9EA 100%);
+}
 
 .site-header {
   position: relative;
-  background: #0B4D72;
+  background: #141414;
   border-bottom: 0;
   box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
 }
@@ -1073,7 +1684,7 @@ body { background: var(--paper); }
   display: block;
   height: 5px;
   width: 32%;
-  background: #55C2D8;
+  background: #E31B23;
 }
 
 .header-inner {
@@ -1095,7 +1706,7 @@ body { background: var(--paper); }
 }
 
 .brand-copy small {
-  color: #B8D7E3;
+  color: #D6D6D6;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 2px;
@@ -1111,7 +1722,7 @@ body { background: var(--paper); }
   padding: 10px 14px;
   border: 1px solid transparent;
   border-radius: 3px;
-  color: #D9EDF3;
+  color: #E9E9E9;
   font-size: 13px;
   letter-spacing: 0.4px;
   transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
@@ -1130,7 +1741,7 @@ body { background: var(--paper); }
   margin-left: 14px;
   padding: 0 20px;
   background: var(--paper);
-  color: #0B4D72;
+  color: #141414;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.4px;
@@ -1142,13 +1753,13 @@ body { background: var(--paper); }
 .header-cta::after {
   content: '\2192';
   margin-left: 10px;
-  color: #1685A6;
+  color: #E31B23;
   font-size: 18px;
 }
 
 .header-cta:hover {
-  background: #55C2D8;
-  color: #083954;
+  background: #E31B23;
+  color: #FFFFFF;
   transform: translateY(-2px);
 }
 
@@ -1166,7 +1777,7 @@ body { background: var(--paper); }
   align-items: center;
   gap: 8px;
   margin-top: 5px;
-  color: #B8D7E3;
+  color: #D6D6D6;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 2.8px;
@@ -1177,14 +1788,14 @@ body { background: var(--paper); }
   content: '';
   width: 22px;
   height: 2px;
-  background: #55C2D8;
+  background: #E31B23;
 }
 
-.wordmark::before { background: #55C2D8; }
-.header-nav a { color: #D9EDF3; }
+.wordmark::before { background: #E31B23; }
+.header-nav a { color: #E9E9E9; }
 .header-nav a:hover { color: var(--paper); }
 
-main { max-width: 1180px; }
+main { max-width: none; width: 100%; }
 
 .hero-wrap {
   margin-left: -32px;
@@ -1240,15 +1851,144 @@ main { max-width: 1180px; }
 .marquee-section { margin-left: auto; margin-right: auto; }
 
 .company-summary {
-  max-width: 860px;
-  margin-top: 92px;
-  padding: 0;
-  border-left: 0;
-  text-align: center;
+  width: 100vw;
+  max-width: none;
+  margin-top: 56px;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 80px 40px;
+  border-left: none;
+  border-bottom: 1px solid var(--line-strong);
+  background: linear-gradient(120deg, #ffffff 0%, #eeeeee 100%);
+  color: var(--ink);
 }
 
-.company-summary h2 { font-size: 46px; }
-.company-summary p { color: var(--steel); font-size: 19px; }
+.company-summary-grid {
+  width: min(1420px, calc(100vw - 80px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(410px, 0.95fr) minmax(560px, 1.05fr);
+  align-items: center;
+  gap: 30px;
+}
+
+.company-summary-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 380px;
+  padding: 0;
+  background: transparent;
+}
+
+.company-summary-copy .company-summary-content {
+  max-width: 640px;
+  padding-left: 30px;
+}
+
+.company-summary-content h2 {
+  color: var(--ink);
+  font-family: 'Barlow Condensed', 'Arial', sans-serif;
+  font-size: clamp(40px, 4vw, 56px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.company-summary-content h2 span {
+  color: var(--yellow);
+  font-weight: 700;
+}
+
+.company-summary-content .company-summary-rule {
+  width: 180px;
+  height: 2px;
+  background: var(--line-strong);
+  margin: 18px 0 20px;
+}
+
+.company-summary-message h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-family: 'Barlow Condensed', 'Arial', sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.company-summary-message p {
+  margin: 0;
+  color: var(--steel-dark);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.company-summary-image {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  width: min(430px, 100%);
+  height: auto;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.company-summary-image img {
+  width: 100%;
+  max-width: 100%;
+  height: 300px;
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  border: 0;
+  box-shadow: none;
+  background: var(--concrete);
+}
+
+.company-summary-person {
+  position: static;
+  left: auto;
+  bottom: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: var(--ink);
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.company-summary-person-name {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--ink);
+  position: static;
+  padding-bottom: 0;
+  margin-bottom: 6px;
+}
+
+.company-summary-person-role {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--yellow);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
 
 .spec-strip {
   max-width: 980px;
@@ -1294,7 +2034,7 @@ main { max-width: 1180px; }
 .projects-grid { gap: 52px 32px; }
 .project-card-inner { border-radius: 0; box-shadow: none; }
 .project-card-thumb { border-radius: 0; }
-.project-card-back { border-radius: 0; background: var(--ink); }
+.project-card-back { border-radius: 0; background: var(--paper); }
 .project-card-body h3 { font-size: 25px; }
 .project-card-body p { color: var(--steel); }
 
@@ -1320,6 +2060,7 @@ main { max-width: 1180px; }
   .hero-cover { min-height: 560px; }
   .hero-copy { width: 92%; }
   .hero-copy h1 { font-size: 56px; }
+  .hero-logo-lockup { top: 24px; left: 20px; width: min(250px, 38vw); }
   .company-summary h2 { font-size: 38px; }
   .section-head h2, .services h2 { font-size: 40px; }
   .services, .projects, .team, .sectors, .marquee-section { margin-top: 92px; }
@@ -1336,9 +2077,44 @@ main { max-width: 1180px; }
   .site-header::after { width: 42%; }
   .hero-cover { min-height: 500px; }
   .hero-copy h1 { font-size: 44px; }
+  .hero-logo-lockup { top: 20px; left: 20px; width: 200px; }
   .hero-kicker { font-size: 10px; letter-spacing: 3px; }
   .company-summary h2 { font-size: 33px; }
   .section-head h2, .services h2 { font-size: 34px; }
+}
+
+/* ===== Floating scroll arrow ===== */
+.floating-scroll-arrow {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 50;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--yellow);
+  background: var(--yellow);
+  color: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  line-height: 1;
+  box-shadow: 0 10px 28px rgba(42, 58, 71, 0.24);
+  cursor: pointer;
+  transition: transform 280ms ease, background 280ms ease, color 280ms ease;
+}
+
+.floating-scroll-arrow:hover {
+  background: var(--paper);
+  color: var(--yellow);
+  transform: translateY(-3px);
+}
+
+.floating-scroll-arrow .floating-scroll-arrow-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ===== CV section: photo on the front face of each card ===== */
@@ -1347,10 +2123,7 @@ main { max-width: 1180px; }
   justify-content: flex-end;
   color: var(--paper);
   background-color: var(--ink);
-  background-image: linear-gradient(180deg, rgba(16, 33, 46, 0.05) 0%, rgba(16, 33, 46, 0.05) 55%, rgba(16, 33, 46, 0.9) 100%), url('assets/cv-card-bg.jpg');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-image: linear-gradient(180deg, rgba(16, 33, 46, 0.05) 0%, rgba(16, 33, 46, 0.05) 55%, rgba(16, 33, 46, 0.9) 100%);
 }
 
 .sector-card-face.sector-card-front h3 {
@@ -1360,33 +2133,15 @@ main { max-width: 1180px; }
 </head>
 <body>
 
-<header class="site-header">
-  <div class="header-inner">
-    <div class="brand-lockup">
-      <div>
-        <a href="#top" class="wordmark">Inshaa Minka</a>
-        <span class="brand-tagline">Building &amp; Construction</span>
-      </div>
-    </div>
-    <nav class="header-nav" aria-label="Main navigation">
-      <a href="#company-summary">Company</a>
-      <a href="#services-section">Services</a>
-      <a href="#projects-section">Projects</a>
-      <a href="#team-section">Our team</a>
-      <a href="#cv-section">Track record</a>
-      <a href="#partners-section">Partners</a>
-      <a href="#countries-section">Countries</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </div>
-</header>
-
 <main id="top">
 
   <div class="hero-wrap">
     <div class="hero-cover">
       <video id="hero-video" poster="/static/hero.jpg" preload="none" muted loop playsinline aria-label="Inshaa building site under construction"></video>
       <div class="hero-cover-scrim" aria-hidden="true"></div>
+      <div class="hero-logo-lockup">
+        <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+      </div>
       <div class="hero-cover-inner">
         <div class="hero-copy">
           <p class="hero-kicker">Integrated construction partner</p>
@@ -1400,51 +2155,68 @@ main { max-width: 1180px; }
     </div>
   </div>
 
-  <section class="company-summary" id="company-summary" aria-labelledby="company-summary-title">
-    <div class="company-signature">
-      <span class="company-signature-label">CEO</span>
-      <span class="company-signature-name">Eng. Abdelrahman El Gredly</span>
+  <section class="company-summary scroll-reveal" id="company-summary">
+    <div class="company-summary-grid">
+      <div class="company-summary-image">
+        <img src="/static/team.jpg" alt="Company photo">
+        <div class="company-summary-person">
+          <span class="company-summary-person-name">Abdelrahman Elgeredly</span>
+          <span class="company-summary-person-role">CEO &amp; Founder</span>
+        </div>
+      </div>
+      <div class="company-summary-copy">
+        <div class="company-summary-content">
+          <h2>Welcome Message<br>From <span>CEO</span> To New<br>Employee</h2>
+          <div class="company-summary-rule"></div>
+          <div class="company-summary-message">
+            <h3>Welcome Message</h3>
+            <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio.</p>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <h2 id="company-summary-title">Construction that stays accountable.</h2>
-    <p>Inshaa is an integrated construction partner for residential and commercial projects. We bring engineering, site leadership and skilled trades together under one coordinated team, taking each project from early planning through structure, finishes, services and final handover.</p>
   </section>
 
-  <div class="spec-strip">
+  <div class="spec-strip scroll-reveal">
     <div class="spec-item">
-      <span class="spec-value">0</span>
+      <span class="spec-value-wrap"><span class="spec-value" data-target="126">0</span><span class="spec-plus">+</span></span>
       <span class="spec-label">projects delivered</span>
     </div>
     <div class="spec-item">
-      <span class="spec-value">0</span>
+      <span class="spec-value-wrap"><span class="spec-value" data-target="340">0</span><span class="spec-plus">+</span></span>
       <span class="spec-label">specialists in our network</span>
     </div>
   </div>
 
-  <div class="services" id="services-section">
-    <h2>What we deliver</h2>
-    <p class="section-intro">A single accountable team across the decisions, details and deadlines that make a project successful.</p>
-    <div class="services-grid">
-      <div class="service-row">
-        <h3>Residential construction</h3>
-        <p>End-to-end delivery for homes and villas, from the first setting-out to the final finish, with one team responsible for quality and coordination.</p>
-      </div>
-      <div class="service-row">
-        <h3>Commercial fit-out</h3>
-        <p>Efficient fit-outs for offices, retail and industrial spaces, planned around operational priorities and the date your business needs to open.</p>
-      </div>
-      <div class="service-row">
-        <h3>Renovation &amp; structural works</h3>
-        <p>Carefully managed upgrades, extensions and structural interventions that respect the existing building and meet engineering requirements.</p>
-      </div>
-      <div class="service-row">
-        <h3>Project &amp; site management</h3>
-        <p>Clear site leadership, dependable subcontractor coordination and disciplined material planning from mobilization through handover.</p>
+  <div class="services process-section scroll-reveal" id="services-section">
+    <div class="process-panel">
+      <div class="process-title">What we deliver</div>
+      <div class="process-grid">
+        <div class="process-card">
+          <span class="process-number">01</span>
+          <span class="process-name">Residential construction</span>
+          <p>End-to-end delivery for homes and villas, from the first setting-out to the final finish, with one team responsible for quality and coordination.</p>
+        </div>
+        <div class="process-card">
+          <span class="process-number">02</span>
+          <span class="process-name">Commercial fit-out</span>
+          <p>Efficient fit-outs for offices, retail and industrial spaces, planned around operational priorities and the date your business needs to open.</p>
+        </div>
+        <div class="process-card">
+          <span class="process-number">03</span>
+          <span class="process-name">Renovation & structural works</span>
+          <p>Carefully managed upgrades, extensions and structural interventions that respect the existing building and meet engineering requirements.</p>
+        </div>
+        <div class="process-card">
+          <span class="process-number">04</span>
+          <span class="process-name">Project & site management</span>
+          <p>Clear site leadership, dependable subcontractor coordination and disciplined material planning from mobilization through handover.</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="projects" id="projects-section">
+  <div class="projects scroll-reveal" id="projects-section">
     <div class="section-head">
       <h2>Selected projects</h2>
       <p>Recent work where disciplined planning, skilled execution and clear communication shaped the final result.</p>
@@ -1458,7 +2230,7 @@ main { max-width: 1180px; }
     </div>
   </div>
 
-  <div class="team" id="team-section">
+  <div class="team scroll-reveal" id="team-section">
     <div class="section-head">
       <h2>The people behind the work</h2>
       <p>Experienced professionals who keep every decision close to the site and every commitment visible.</p>
@@ -1471,12 +2243,12 @@ main { max-width: 1180px; }
     <p class="team-summary">Our core team brings together engineers, site supervisors and finishing specialists with long-standing experience working side by side. Each project has a dedicated manager from mobilization to handover, supported by a trusted network of trade partners and specialists.</p>
   </div>
 
-  <div class="sectors" id="cv-section">
+  <div class="sectors scroll-reveal" id="cv-section">
 
     <div class="sectors-rtl" dir="rtl">
       <div class="section-head">
         <h2>Track record  </h2>
-        <p>Insha’a Construction Company offers its expertise in the execution and management of advanced contracting projects—spanning electromechanical works, construction, and finishing. We collaborate with our partners to transform requirements into precise results, while remaining committed to quality, schedules, and operational requirements.</p>
+        <p>Insha'a Construction Company offers its expertise in the execution and management of advanced contracting projects—spanning electromechanical works, construction, and finishing. We collaborate with our partners to transform requirements into precise results, while remaining committed to quality, schedules, and operational requirements.</p>
       </div>
 
       <div id="sectors-status" class="sectors-status"></div>
@@ -1485,7 +2257,7 @@ main { max-width: 1180px; }
     </div>
   </div>
 
-  <div class="marquee-section" id="partners-section">
+  <div class="marquee-section scroll-reveal" id="partners-section">
     <div class="section-head">
       <h2>Trusted relationships</h2>
       <p>We work alongside organizations that value precision, communication and dependable delivery.</p>
@@ -1496,7 +2268,7 @@ main { max-width: 1180px; }
     </div>
   </div>
 
-  <div class="marquee-section" id="countries-section">
+  <div class="marquee-section scroll-reveal" id="countries-section">
     <div class="section-head">
       <h2>Our operating reach</h2>
       <p>Local knowledge and regional experience supporting projects across multiple markets.</p>
@@ -1512,8 +2284,9 @@ main { max-width: 1180px; }
 <footer class="site-footer" id="contact">
   <div class="footer-inner">
     <div class="footer-brand">
-      <a href="#top" class="wordmark footer-wordmark">Inshaa Minka</a>
-      <p class="footer-tag">Integrated construction delivery, built on clarity, craftsmanship and accountability.</p>
+      <a href="#top" aria-label="Back to top">
+        <img class="footer-logo" src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+      </a>
     </div>
 
     <div class="footer-contact">
@@ -1537,6 +2310,10 @@ main { max-width: 1180px; }
   </div>
 </footer>
 
+<button class="floating-scroll-arrow" id="floating-scroll-arrow" aria-label="Scroll page">
+  <span class="floating-scroll-arrow-icon" id="floating-scroll-arrow-icon">↓</span>
+</button>
+
 <!-- Lightbox overlay, shared by all project cards -->
 <div class="lightbox" id="lightbox">
   <div class="lightbox-frame">
@@ -1554,14 +2331,271 @@ main { max-width: 1180px; }
   </div>
 </div>
 
+<div class="sector-details" id="sector-details">
+  <div class="sector-details-frame" dir="rtl">
+    <button type="button" class="sector-details-close" id="sector-details-close" aria-label="Close">&times;</button>
+    <h3 id="sector-details-title"></h3>
+    <ul id="sector-details-list"></ul>
+  </div>
+</div>
+
 <script>
+
+// ===== Scroll reveal animation =====
+(function setupScrollReveal() {
+  const revealTargets = Array.from(document.querySelectorAll('.scroll-reveal'));
+  if (!revealTargets.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    revealTargets.forEach((el) => el.classList.add('is-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.18 });
+
+  revealTargets.forEach((el) => observer.observe(el));
+})();
+
+function animateCounter(el, target) {
+  const start = 0;
+  const duration = 2800;
+  const startTime = performance.now();
+
+  function tick(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = Math.round(start + (target - start) * eased);
+    el.textContent = value;
+
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = target;
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function setupStatsCounters() {
+  const strip = document.querySelector('.spec-strip');
+  const counters = Array.from(document.querySelectorAll('.spec-value'));
+
+  if (!strip || counters.length === 0) return;
+
+  if (!('IntersectionObserver' in window)) {
+    counters.forEach((counter) => {
+      const target = Number(counter.dataset.target || 0);
+      counter.textContent = 0;
+      animateCounter(counter, target);
+    });
+    return;
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+
+      counters.forEach((counter) => {
+        const target = Number(counter.dataset.target || 0);
+        counter.textContent = 0;
+        animateCounter(counter, target);
+      });
+
+      counterObserver.disconnect();
+    });
+  }, { threshold: 0.12 });
+
+  counterObserver.observe(strip);
+}
+
+setupStatsCounters();
+
+(function setupFloatingScrollArrow() {
+  const arrow = document.getElementById('floating-scroll-arrow');
+  const arrowIcon = document.getElementById('floating-scroll-arrow-icon');
+  if (!arrow || !arrowIcon) return;
+
+  const getAtBottom = () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    return window.scrollY >= Math.max(scrollable - 8, 0);
+  };
+
+  const updateArrowState = () => {
+    const atBottom = getAtBottom();
+    arrowIcon.textContent = atBottom ? '↑' : '↓';
+    arrow.setAttribute('aria-label', atBottom ? 'Go to top' : 'Go to bottom');
+  };
+
+  updateArrowState();
+  window.addEventListener('scroll', updateArrowState, { passive: true });
+
+  arrow.addEventListener('click', () => {
+    if (getAtBottom()) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  });
+})();
 
 const API_BASE = '';
 const PROJECTS_ENDPOINT = `${API_BASE}/home/projects`;
 const CV_ENDPOINT = `${API_BASE}/home/cv`;
 const PROJECTS_INITIAL_COUNT = 6;
 
-// ===== Hero video: lazy-loaded so the poster paints instantly =====
+const PDF_CV_CARDS = [
+  {
+    title: 'قطاع البترول',
+    sub_categories: [
+      'مقر شركة شلمبرجير بالمعادي',
+      'معامل شركة شلمبرجير بالقطامية',
+      'المقر الإداري والورش المركزية لشركة شلمبرجير بطرابلس',
+      'مقر شركة بتروجاس بطرابلس',
+    ],
+  },
+  {
+    title: 'مكاتب ومبان إدارية',
+    sub_categories: [
+      'مقر شركة سيزون للتجارة',
+      'مقر شركة فندايز',
+      'شركة نايل لتداول الأوراق المالية',
+      'شركة النعيم لتداول الأوراق المالية',
+      'بنك الشركة المصرفية العربية الدولية',
+      'مقر شركة ميتك للمقاولات بطرابلس',
+      'شركة وصلة لخدمات الاتصالات',
+      'مبنى المبيعات لشركة إيجي كان بأرض كندا - تاج سيتي',
+      'المقر الإداري لشركة منكا تاج سيتي',
+      'المقر الإداري لشركة منكا ووتراوي',
+      'مول وشقق بكومباوند كندا',
+      'مدخل إدارة شركة مدينة مصر بحي مدينة نصر',
+    ],
+  },
+  {
+    title: 'مستشفيات',
+    sub_categories: ['مصحة 11 يونيو للنفط بطرابلس'],
+  },
+  {
+    title: 'محلات ومعارض',
+    sub_categories: [
+      'معرض سوني الإسكندرية - سيتي سنتر',
+      'مركز خدمة سوني - سموحة',
+      'معرض سوني سيتي ستارز',
+      'معارض فندايز في المعادي والمقطم والتجمع الخامس والرحاب ووادي دجلة ونادي المعادي',
+    ],
+  },
+  {
+    title: 'فنادق ونواد رياضية',
+    sub_categories: [
+      'فندق ميركيور - الإسماعيلية',
+      'ملعب التنس البحري بنادي الجزيرة الرياضي',
+      'ملاعب التنس الغربي بنادي الجزيرة الرياضي',
+      'ملاعب الفروسية بنادي الجزيرة',
+      'ملعب كرة قدم بالحرس الجمهوري',
+      'ملعب كرة قدم خماسي وملعب متعدد الأغراض بفيلا خاصة',
+    ],
+  },
+  {
+    title: 'مشاريع دينية',
+    sub_categories: ['مسجد النصير بطرابلس'],
+  },
+  {
+    title: 'أعمال خرسانات وتشطيبات',
+    sub_categories: [
+      'كمبوند Kinda - Taj City',
+      'عدد 84 فيلا بكمبوند كندا تاج سيتي',
+      'عدد 12 عمارة كومبوند كندا تاج سيتي',
+    ],
+  },
+];
+
+const SECTOR_BACKGROUND_IMAGES = [
+  'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=900&q=70',
+];
+
+const SECTOR_FRONT_BACKGROUND_IMAGES = [
+  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=70',
+  'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=900&q=70',
+];
+
+const STATIC_PROJECTS = [
+  {
+    title: 'Residential Community',
+    description: 'A coordinated residential construction project with finished site delivery.',
+    media_urls: [
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0005.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0006.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0007.jpg',
+    ]
+  },
+  {
+    title: 'Urban Commercial Build',
+    description: 'Commercial project for a visible urban construction and fit-out program.',
+    media_urls: [
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0008.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0009.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0010.jpg',
+    ]
+  },
+  {
+    title: 'Site Development',
+    description: 'Groundworks and infrastructure development for a disciplined project sequence.',
+    media_urls: [
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0011.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0012.jpg',
+      '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0013.jpg',
+    ]
+  },
+  {
+    title: 'Executive Housing',
+    description: 'A private residential and building delivery project with high standards.',
+    media_urls: [
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0026.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0027.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0028.jpg',
+    ]
+  },
+  {
+    title: 'Construction Operations',
+    description: 'Project coordination and construction progression across multiple work fronts.',
+    media_urls: [
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0030.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0031.jpg',
+    ]
+  },
+  {
+    title: 'Building Progress',
+    description: 'Integrated site delivery with strong finish and quality control focus.',
+    media_urls: [
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0032.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0033.jpg',
+      '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0034.jpg',
+    ]
+  }
+];
+
+// ===== Hero video: cinematic load + scroll + pointer depth =====
 (function loadHeroVideo() {
   const heroVideo = document.getElementById('hero-video');
   if (!heroVideo) return;
@@ -1572,6 +2606,10 @@ const PROJECTS_INITIAL_COUNT = 6;
 
   const startLoad = () => {
     heroVideo.src = '/static/hero.mp4';
+    heroVideo.load();
+    heroVideo.muted = true;
+    heroVideo.playsInline = true;
+    heroVideo.loop = true;
     heroVideo.play().catch(() => {});
   };
 
@@ -1580,6 +2618,157 @@ const PROJECTS_INITIAL_COUNT = 6;
   } else {
     window.addEventListener('load', startLoad, { once: true });
   }
+})();
+
+(function setupCinematicHero() {
+  const heroWrap = document.querySelector('.hero-wrap');
+  const heroCover = document.querySelector('.hero-cover');
+  const heroVideo = document.getElementById('hero-video');
+  const heroCopy = document.querySelector('.hero-copy');
+  const heroKicker = document.querySelector('.hero-kicker');
+  const heroActions = document.querySelector('.hero-actions');
+
+  if (!heroWrap || !heroCover || !heroVideo || !heroCopy || !heroKicker || !heroActions) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const spotlight = document.createElement('span');
+  spotlight.className = 'hero-video-spotlight';
+  spotlight.setAttribute('aria-hidden', 'true');
+  heroCover.appendChild(spotlight);
+
+  heroCover.classList.add('hero-cinematic-active');
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  if (reduceMotion) {
+    heroVideo.style.opacity = '1';
+    heroVideo.style.filter = 'blur(0) brightness(0.95) contrast(1.1)';
+    heroVideo.style.transform = 'scale(1.04)';
+    heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
+    return;
+  }
+
+  heroVideo.style.opacity = '0';
+  heroVideo.style.transform = 'scale(1.22) translate3d(0,0,0)';
+  heroVideo.style.filter = 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)';
+  heroVideo.style.clipPath = 'inset(10% round 0px)';
+
+  const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
+  if (hasGsap) {
+    window.gsap.registerPlugin(window.ScrollTrigger);
+
+    const heroReveal = window.gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+    heroReveal
+      .fromTo(heroVideo,
+        { opacity: 0, scale: 1.22, filter: 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)', clipPath: 'inset(10% round 0px)' },
+        { opacity: 1, scale: 1.10, filter: 'blur(0px) brightness(0.96) saturate(1.12) contrast(1.12)', clipPath: 'inset(0% round 0px)', duration: 1.3 }
+      )
+      .fromTo(heroCover,
+        { boxShadow: '0 18px 44px rgba(42,58,71,0.14)' },
+        { boxShadow: '0 0 70px rgba(217,154,24,0.16), 0 24px 60px rgba(42,58,71,0.14)', duration: 0.9, ease: 'sine.inOut' },
+        '-=0.85'
+      );
+
+    window.gsap.to(heroVideo, {
+      scale: 1.14,
+      yPercent: -4,
+      filter: 'blur(0px) brightness(0.94) contrast(1.14) saturate(1.08)',
+      clipPath: 'inset(0% round 0px)',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: heroWrap,
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1.2
+      }
+    });
+
+    window.gsap.to(heroCopy, {
+      yPercent: -10,
+      xPercent: -1,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: heroWrap,
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1.5
+      }
+    });
+
+    window.gsap.to(heroActions, {
+      yPercent: -8,
+      opacity: 0.96,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: heroWrap,
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1.2
+      }
+    });
+  } else {
+    heroVideo.style.opacity = '1';
+    heroVideo.style.filter = 'blur(0px) brightness(0.96) contrast(1.1)';
+    heroVideo.style.transform = 'scale(1.08)';
+    heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
+  }
+
+  const defaultDepth = { x: 0, y: 0 };
+  let target = { x: 0, y: 0 };
+  let current = { x: 0, y: 0 };
+  let frame = null;
+
+  window.addEventListener('mousemove', (event) => {
+    const x = event.clientX / Math.max(window.innerWidth, 1);
+    const y = event.clientY / Math.max(window.innerHeight, 1);
+
+    target.x = (x - 0.5) * 16;
+    target.y = (y - 0.5) * -14;
+
+    const rect = heroCover.getBoundingClientRect();
+    const px = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
+    const py = clamp((event.clientY - rect.top) / Math.max(rect.height, 1), 0, 1);
+
+    spotlight.style.left = `${px * 100}%`;
+    spotlight.style.top = `${py * 100}%`;
+
+    if (frame) return;
+
+    frame = requestAnimationFrame(() => {
+      current.x += (target.x - current.x) * 0.12;
+      current.y += (target.y - current.y) * 0.12;
+
+      heroCover.style.transform = `perspective(1800px) rotateX(${current.y}deg) rotateY(${current.x}deg)`;
+      heroVideo.style.transform = `scale(${1.105 + Math.abs(current.x) / 40}) translate3d(${current.x * 3}px, ${current.y * 3}px, 0)`;
+      heroCopy.style.transform = `translate3d(${current.x * 2}px, ${current.y * 2}px, 0)`;
+      heroKicker.style.transform = `translateX(${current.x * 1.5}px)`;
+      heroActions.style.transform = `translateY(${Math.abs(current.y) * -1.4}px)`;
+
+      frame = null;
+    });
+  }, { passive: true });
+
+  const updateScrollDepth = () => {
+    if (!heroCover || !heroVideo) return;
+
+    const rect = heroWrap.getBoundingClientRect();
+    const scrollY = clamp(Math.abs(rect.top) / Math.max(window.innerHeight, 1), 0, 1);
+
+    if (hasGsap) {
+      heroCover.style.filter = `blur(${Math.max(0, scrollY * 0.4)}px)`;
+    }
+  };
+
+  window.addEventListener('scroll', () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      updateScrollDepth();
+      frame = null;
+    });
+  }, { passive: true });
+
+  heroCover.classList.add('exposed');
 })();
 
 const PARTNER_LOGOS = [
@@ -1592,12 +2781,12 @@ const PARTNER_LOGOS = [
 ];
 
 const COUNTRIES = [
-  { name: 'Egypt', flag: '' },
-  { name: 'Saudi Arabia', flag: '' },
-  { name: 'United Arab Emirates', flag: '' },
-  { name: 'Qatar', flag: '' },
-  { name: 'Kuwait', flag: '' },
-  { name: 'Jordan', flag: '' },
+  { name: 'Egypt', flag: 'https://flagcdn.com/w160/eg.png' },
+  { name: 'Saudi Arabia', flag: 'https://flagcdn.com/w160/sa.png' },
+  { name: 'United Arab Emirates', flag: 'https://flagcdn.com/w160/ae.png' },
+  { name: 'Qatar', flag: 'https://flagcdn.com/w160/qa.png' },
+  { name: 'Kuwait', flag: 'https://flagcdn.com/w160/kw.png' },
+  { name: 'Jordan', flag: 'https://flagcdn.com/w160/jo.png' },
 ];
 
 function setupMarquee(trackId, items, renderItem) {
@@ -1666,12 +2855,16 @@ setupMarquee('partners-track', PARTNER_LOGOS, (p) => (
 ));
 
 setupMarquee('countries-track', COUNTRIES, (c) => (
-  `<span class="country-chip"><span class="country-flag" aria-hidden="true">${c.flag}</span><span class="country-name">${c.name}</span></span>`
+  `<span class="country-chip" aria-label="${c.name}" title="${c.name}"><img class="country-flag" src="${c.flag}" alt="${c.name}" loading="lazy"></span>`
 ));
 
 // ===== Track record / sectors (from /cv) =====
 const sectorsStatusEl = document.getElementById('sectors-status');
 const sectorGridEl = document.getElementById('sector-grid');
+const sectorDetailsEl = document.getElementById('sector-details');
+const sectorDetailsCloseBtn = document.getElementById('sector-details-close');
+const sectorDetailsTitleEl = document.getElementById('sector-details-title');
+const sectorDetailsListEl = document.getElementById('sector-details-list');
 
 loadSectors();
 
@@ -1684,7 +2877,8 @@ async function loadSectors() {
     const res = await fetch(CV_ENDPOINT);
     if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
     const categories = await res.json();
-    renderSectorsGrid(Array.isArray(categories) ? categories : []);
+    const databaseCards = Array.isArray(categories) ? categories : [];
+    renderSectorsGrid([...PDF_CV_CARDS, ...databaseCards]);
   } catch (err) {
     sectorGridEl.innerHTML = '';
     sectorsStatusEl.classList.add('is-error');
@@ -1703,6 +2897,9 @@ function renderSectorSkeletons(count) {
 }
 
 function renderSectorsGrid(categories) {
+  sectorGridEl.querySelectorAll('.sector-card[data-carousel-timer]').forEach((card) => {
+    clearInterval(Number(card.dataset.carouselTimer));
+  });
   sectorGridEl.innerHTML = '';
 
   if (categories.length === 0) {
@@ -1711,12 +2908,12 @@ function renderSectorsGrid(categories) {
   }
 
   sectorsStatusEl.textContent = '';
-  categories.forEach((category) => {
-    sectorGridEl.appendChild(buildSectorCard(category));
+  categories.forEach((category, index) => {
+    sectorGridEl.appendChild(buildSectorCard(category, index));
   });
 }
 
-function buildSectorCard(category) {
+function buildSectorCard(category, categoryIndex) {
   const card = document.createElement('div');
   card.className = 'sector-card';
   card.tabIndex = 0;
@@ -1726,6 +2923,10 @@ function buildSectorCard(category) {
 
   const front = document.createElement('span');
   front.className = 'sector-card-face sector-card-front';
+  front.style.setProperty(
+    '--sector-front-bg-image',
+    `url("${SECTOR_FRONT_BACKGROUND_IMAGES[categoryIndex % SECTOR_FRONT_BACKGROUND_IMAGES.length]}")`,
+  );
 
   const title = document.createElement('h3');
   title.textContent = category.title || 'Untitled';
@@ -1733,11 +2934,43 @@ function buildSectorCard(category) {
 
   const back = document.createElement('span');
   back.className = 'sector-card-face sector-card-back';
+  back.style.setProperty(
+    '--sector-bg-image',
+    `url("${SECTOR_BACKGROUND_IMAGES[categoryIndex % SECTOR_BACKGROUND_IMAGES.length]}")`,
+  );
 
-  const desc = document.createElement('p');
   const subCategories = Array.isArray(category.sub_categories) ? category.sub_categories.filter(Boolean) : [];
-  desc.textContent = subCategories.length > 0 ? subCategories.join('، ') : 'لا يوجد وصف متاح حالياً.';
-  back.appendChild(desc);
+  const subcategoryViewport = document.createElement('span');
+  subcategoryViewport.className = 'sector-subcategory-viewport';
+
+  const subcategoryTrack = document.createElement('span');
+  subcategoryTrack.className = 'sector-subcategory-track';
+
+  const visibleSubCategories = subCategories.length > 0
+    ? subCategories.slice(0, 4)
+    : ['لا يوجد وصف متاح حالياً.'];
+
+  visibleSubCategories.forEach((text) => {
+    const item = document.createElement('p');
+    item.className = 'sector-subcategory-item';
+    item.textContent = text;
+    subcategoryTrack.appendChild(item);
+  });
+
+  subcategoryViewport.appendChild(subcategoryTrack);
+  back.appendChild(subcategoryViewport);
+
+  if (subCategories.length >= 5) {
+    const readMoreBtn = document.createElement('button');
+    readMoreBtn.type = 'button';
+    readMoreBtn.className = 'sector-read-more';
+    readMoreBtn.textContent = 'Read more';
+    readMoreBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openSectorDetails(category);
+    });
+    back.appendChild(readMoreBtn);
+  }
 
   inner.appendChild(front);
   inner.appendChild(back);
@@ -1745,6 +2978,37 @@ function buildSectorCard(category) {
 
   return card;
 }
+
+function openSectorDetails(category) {
+  sectorDetailsTitleEl.textContent = category.title || 'Untitled';
+  sectorDetailsListEl.innerHTML = '';
+
+  (category.sub_categories || []).filter(Boolean).forEach((text) => {
+    const item = document.createElement('li');
+    item.textContent = text;
+    sectorDetailsListEl.appendChild(item);
+  });
+
+  sectorDetailsEl.classList.add('is-visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSectorDetails() {
+  sectorDetailsEl.classList.remove('is-visible');
+  document.body.style.overflow = '';
+}
+
+sectorDetailsCloseBtn.addEventListener('click', closeSectorDetails);
+
+sectorDetailsEl.addEventListener('click', (event) => {
+  if (event.target === sectorDetailsEl) closeSectorDetails();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && sectorDetailsEl.classList.contains('is-visible')) {
+    closeSectorDetails();
+  }
+});
 
 // ===== Projects grid + lightbox =====
 const statusEl = document.getElementById('projects-status');
@@ -1773,23 +3037,22 @@ function looksLikeVideo(url) {
 loadProjects();
 
 async function loadProjects() {
-  renderSkeletons(6);
-  statusEl.textContent = 'Loading projects…';
-  statusEl.classList.remove('is-error');
+  projectsExpanded = false;
 
   try {
-    const res = await fetch(PROJECTS_ENDPOINT);
-    if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-    const projects = await res.json();
-    projectsCache = Array.isArray(projects) ? projects : [];
-    projectsExpanded = false;
-    renderProjectsGrid();
-  } catch (err) {
-    gridEl.innerHTML = '';
-    moreWrapEl.hidden = true;
-    statusEl.classList.add('is-error');
-    statusEl.textContent = `Couldn't load projects (${err.message}). Check that the API is running and reachable at ${PROJECTS_ENDPOINT}.`;
+    const response = await fetch(PROJECTS_ENDPOINT);
+    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+
+    const storedProjects = await response.json();
+    projectsCache = [
+      ...STATIC_PROJECTS,
+      ...(Array.isArray(storedProjects) ? storedProjects : []),
+    ];
+  } catch (error) {
+    projectsCache = STATIC_PROJECTS;
   }
+
+  renderProjectsGrid();
 }
 
 function renderSkeletons(count) {
@@ -1803,6 +3066,9 @@ function renderSkeletons(count) {
 }
 
 function renderProjectsGrid() {
+  gridEl.querySelectorAll('.project-card[data-carousel-timer]').forEach((card) => {
+    clearInterval(Number(card.dataset.carouselTimer));
+  });
   gridEl.innerHTML = '';
   statusEl.textContent = '';
 
@@ -1848,12 +3114,29 @@ function buildProjectCard(project, index) {
 
   const thumb = document.createElement('div');
   thumb.className = 'project-card-thumb';
-  if (urls.length > 0 && !looksLikeVideo(urls[0])) {
-    const img = document.createElement('img');
-    img.src = urls[0];
-    img.alt = '';
-    img.loading = 'lazy';
-    thumb.appendChild(img);
+  const imageUrls = urls.filter((url) => !looksLikeVideo(url));
+  if (imageUrls.length > 0) {
+    const mediaTrack = document.createElement('div');
+    mediaTrack.className = 'project-card-media-track';
+
+    imageUrls.forEach((url, mediaIndex) => {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = '';
+      img.loading = mediaIndex === 0 ? 'eager' : 'lazy';
+      mediaTrack.appendChild(img);
+    });
+
+    thumb.appendChild(mediaTrack);
+
+    if (imageUrls.length > 1) {
+      let currentMediaIndex = 0;
+      const carouselTimer = window.setInterval(() => {
+        currentMediaIndex = (currentMediaIndex + 1) % imageUrls.length;
+        mediaTrack.style.transform = `translateX(-${currentMediaIndex * 100}%)`;
+      }, 3500);
+      card.dataset.carouselTimer = String(carouselTimer);
+    }
   } else if (urls.length > 0) {
     const label = document.createElement('span');
     label.className = 'project-card-thumb-empty';
