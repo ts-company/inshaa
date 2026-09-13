@@ -429,7 +429,7 @@ main {
     </a>
     {% endif %}
 
-    {% if "manage extracts" in permissions %}
+    {% if "manage extracts" in permissions or "approve extracts" in permissions %}
     <a class="action-card" href="/system/extracts/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">

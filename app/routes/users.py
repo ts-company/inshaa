@@ -55,7 +55,7 @@ def add_user(request: Request, payload: UserCreate, db: Session = Depends(get_db
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    available_roles = {"super_admin", "eng_admin", "acc_admin", "engineer", "accountant"}
+    available_roles = preset_permissions.keys()
     if payload.role not in available_roles:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 

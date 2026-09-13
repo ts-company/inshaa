@@ -37,9 +37,9 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "manage extracts").first()
-        if not permission:
+        if "manage extracts" not in permission_types and "approve extracts" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     query = db.query(Extract)
@@ -86,10 +86,11 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "manage extracts").first()
-        if not permission:
+        if "manage extracts" not in permission_types and "approve extracts" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
@@ -163,10 +164,11 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "categories": category_dicts,
             "previously_paid": previously_paid,
             "taxes": taxes,
-            "deductions": deductions
+            "deductions": deductions,
+            "approved": extract.approved
         }
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": False})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": False, "permissions": permission_types})
 
 
 @router.get("/details_hist/{history_id}")
@@ -495,6 +497,7 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -605,6 +608,7 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItems, db
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -710,6 +714,7 @@ def del_cat(request: Request, cat_id: int, db: Session = Depends(get_db)):
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.delete(cat)
         db.commit()
     except SQLAlchemyError:
@@ -820,6 +825,7 @@ def del_item(request: Request, item_id: int, db: Session = Depends(get_db)):
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.delete(item)
         db.commit()
     except SQLAlchemyError:
@@ -924,6 +930,7 @@ def add_tax(request: Request, ext_id: int, payload: AddExtractTax, db: Session =
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1029,6 +1036,7 @@ def del_tax(request: Request, tax_id: int,  db: Session = Depends(get_db)):
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.delete(tax)
         db.commit()
     except SQLAlchemyError:
@@ -1132,6 +1140,7 @@ def add_ded(request: Request, ext_id: int, payload: AddExtractDeduction, db: Ses
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1236,6 +1245,7 @@ def del_ded(request: Request, ded_id: int, db: Session = Depends(get_db)):
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.delete(ded)
         db.commit()
     except SQLAlchemyError:
@@ -1339,6 +1349,7 @@ def add_payment(request: Request, ext_id: int, payload: PreviouslyPaid, db: Sess
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -1444,6 +1455,7 @@ def del_payment(request: Request, pay_id: int, db: Session = Depends(get_db)):
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
         db.delete(paid)
         db.commit()
     except SQLAlchemyError:
@@ -1534,6 +1546,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateAmount, db: Sessi
         item.amount = payload.amount
         item.total = item_new_total
         extract.sub_total += item_new_total
+        extract.approved = False
 
         total_rates = sum(
             (t.rate for t in old_taxes),
@@ -1646,6 +1659,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateCurrency, db: Ses
         item.currency = payload.currency
         item.total = item_new_total
         extract.sub_total += item_new_total
+        extract.approved = False
 
         total_rates = sum(
             (t.rate for t in old_taxes),
@@ -1758,6 +1772,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
         item.completion_perc = payload.completion
         item.total = item_new_total
         extract.sub_total += item_new_total
+        extract.approved = False
 
         total_rates = sum(
             (t.rate for t in old_taxes),
@@ -1779,6 +1794,59 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
         extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
+
+@router.patch("/approve/{ext_id}")
+def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "approve extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        extract.approved = True
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
+@router.patch("/disapprove/{ext_id}")
+def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "approve extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        extract.approved = False
         db.commit()
     except SQLAlchemyError:
         db.rollback()

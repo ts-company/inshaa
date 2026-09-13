@@ -778,6 +778,27 @@
       font-size: 13.5px;
     }
 
+    .approval-control {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line-strong);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--steel-dark);
+    }
+
+    .approval-control input {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      accent-color: var(--steel-dark);
+      cursor: pointer;
+    }
+
     /* ===== Modals ===== */
     .modal-overlay {
       display: none;
@@ -1229,6 +1250,16 @@
       </aside>
       {% endif %}
     </div>
+
+    <label class="approval-control" for="extract-approved">
+      <span>Approved</span>
+      {% if "approve extracts" in permissions %}
+      <input type="checkbox" id="extract-approved"{% if extract.approved %} checked{% endif %}
+        aria-label="Approve extract">
+      {% else %}
+      <strong class="approval-status">{% if extract.approved %}Yes{% else %}No{% endif %}</strong>
+      {% endif %}
+    </label>
   </main>
 
   <footer class="site-footer">
@@ -1426,13 +1457,19 @@
       const API_BASE = '/system/extracts';
 
       const historyList = document.getElementById('extract-history-list');
+      const historyPanel = document.getElementById('extract-history-panel');
       if (historyList) {
         fetch(API_BASE + '/histories/' + extractId, { credentials: 'include' })
           .then(function (res) {
+            if (res.status === 403) {
+              historyPanel.remove();
+              return null;
+            }
             if (!res.ok) throw new Error('Request failed with status ' + res.status);
             return res.json();
           })
           .then(function (histories) {
+            if (!histories) return;
             historyList.innerHTML = '';
             if (!histories.length) {
               const emptyState = document.createElement('p');
@@ -1948,6 +1985,25 @@
           deleteResource(API_BASE + '/del_payment/' + btn.getAttribute('data-payment-id'), btn);
         });
       });
+
+      // ---------- Approve extract ----------
+      const approvalCheckbox = document.getElementById('extract-approved');
+      if (approvalCheckbox) {
+        approvalCheckbox.addEventListener('change', function () {
+          const approved = approvalCheckbox.checked;
+          const approvalAction = approved ? 'approve' : 'disapprove';
+          approvalCheckbox.disabled = true;
+
+          patchJSON(API_BASE + '/' + approvalAction + '/' + extractId, {})
+            .catch(function (err) {
+              approvalCheckbox.checked = !approved;
+              alert('Could not update approval. ' + err.message);
+            })
+            .finally(function () {
+              approvalCheckbox.disabled = false;
+            });
+        });
+      }
     })();
   </script>
 

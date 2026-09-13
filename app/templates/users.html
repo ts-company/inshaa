@@ -585,6 +585,7 @@ main {
           <option value="super_admin">Super Admin</option>
           <option value="eng_admin">Engineer Admin</option>
           <option value="acc_admin">Accountant Admin</option>
+          <option value="site_manager">Site Manager</option>
           <option value="engineer">Engineer</option>
           <option value="accountant">Accountant</option>
         </select>
@@ -657,6 +658,7 @@ main {
           <option value="manage users">Manage Users</option>
           <option value="manage page">Manage Page</option>
           <option value="manage extracts">Manage Extracts</option>
+          <option value="approve extracts">Approve Extracts</option>
         </select>
       </label>
       <button type="submit" class="btn btn-small">Add</button>
@@ -674,7 +676,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'manage page', 'manage extracts'];
+const PERMISSION_OPTIONS = ['manage users', 'manage page', 'manage extracts', 'approve extracts'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');
