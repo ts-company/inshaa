@@ -494,6 +494,12 @@ h1, h2, h3 { font-weight: 700; }
 .extracts-table th.is-numeric,
 .extracts-table td.is-numeric { text-align: right; }
 
+.extracts-table th.is-actions,
+.extracts-table td.is-actions {
+  width: 90px;
+  text-align: right;
+}
+
 .extracts-table tbody td {
   padding: 16px 14px;
   border-bottom: 1px solid var(--line);
@@ -514,6 +520,21 @@ h1, h2, h3 { font-weight: 700; }
 }
 
 .extract-project { font-weight: inherit; }
+
+.extract-delete {
+  background: none;
+  border: 1px solid var(--error);
+  color: var(--error);
+  font: 600 13px var(--font-body);
+  padding: 6px 10px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.extract-delete:hover {
+  background: var(--error);
+  color: var(--white);
+}
 
 .extract-contractor { color: var(--steel-dark); }
 .extract-total { font-weight: 600; }
@@ -627,6 +648,7 @@ h1, h2, h3 { font-weight: 700; }
             <th class="is-numeric">اجمالي الخصومات</th>
             <th class="is-numeric">ما سبق صرفه</th>
             <th class="is-numeric">الصافي</th>
+            <th class="is-actions"></th>
           </tr>
         </thead>
         <tbody>
@@ -642,6 +664,10 @@ h1, h2, h3 { font-weight: 700; }
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_payments) }} EGP</td>
             <td class="is-numeric extract-total">{{ "{:,.2f}".format(e.total) }} EGP</td>
+            <td class="is-actions">
+              <button type="button" class="extract-delete" data-action="delete-extract"
+                aria-label="حذف مستخلص {{ e.project_name }}">حذف</button>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -712,7 +738,31 @@ h1, h2, h3 { font-weight: 700; }
 <script>
 const EXTRACTS_BASE = `/system/extracts`;
 
-document.querySelector('.extracts-table')?.addEventListener('click', (event) => {
+document.querySelector('.extracts-table')?.addEventListener('click', async (event) => {
+  const deleteButton = event.target.closest('[data-action="delete-extract"]');
+  if (deleteButton) {
+    const row = deleteButton.closest('tbody tr[data-extract-id]');
+    if (!row || !window.confirm('هل تريد حذف هذا المستخلص؟')) return;
+
+    deleteButton.disabled = true;
+    try {
+      const response = await fetch(`${EXTRACTS_BASE}/del_extract/${row.dataset.extractId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      row.remove();
+    } catch (error) {
+      deleteButton.disabled = false;
+      window.alert(`تعذر حذف المستخلص. ${error.message}`);
+    }
+    return;
+  }
+
   const row = event.target.closest('tbody tr[data-extract-id]');
   if (!row || event.target.closest('a, button, input, select, textarea')) return;
   window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;

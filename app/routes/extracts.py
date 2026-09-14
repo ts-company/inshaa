@@ -41,25 +41,25 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        if "manage extracts" not in permission_types and "approve extracts" not in permission_types:
+        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     query = db.query(Extract)
 
     if id is not None:
-        query = query.filter(Extract.id == id)
+        query = query.filter(Extract.id == id).order_by(Extract.id)
 
     if name:
-        query = query.filter(Extract.project_name.ilike(f"%{name}%"))
+        query = query.filter(Extract.project_name.ilike(f"%{name}%")).order_by(Extract.id)
 
     if contractor:
-        query = query.filter(Extract.contractor_name.ilike(f"%{contractor}%"))
+        query = query.filter(Extract.contractor_name.ilike(f"%{contractor}%")).order_by(Extract.id)
 
     if unit:
-        query = query.filter(Extract.unit_number == unit)
+        query = query.filter(Extract.unit_number == unit).order_by(Extract.id)
 
     if job_title:
-        query = query.filter(Extract.job_title.ilike(f"%{job_title}%"))
+        query = query.filter(Extract.job_title.ilike(f"%{job_title}%")).order_by(Extract.id)
 
     extracts = [
         {
@@ -90,7 +90,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        if "manage extracts" not in permission_types and "approve extracts" not in permission_types:
+        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
 
@@ -98,10 +98,10 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+    categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).order_by(ExtractCategory.id).all()
     categories_ids = [row.id for row in categories]
 
-    all_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(categories_ids)).all()
+    all_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(categories_ids)).order_by(ExtractCategoryItem.id).all()
     items_by_category = {}
     for item in all_items:
         items_by_category.setdefault(item.category_id, []).append({
@@ -183,7 +183,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "manage extracts").first()
+        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "extracts history").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -282,7 +282,7 @@ def get_histories(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "extracts history").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -317,7 +317,7 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "add extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -384,6 +384,31 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
 
+@router.delete("/del_extract/{ext_id}")
+def add_cat(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "delete extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        db.delete(extract)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
 
 @router.post("/add_category/{ext_id}")
 def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Session = Depends(get_db)):
@@ -396,7 +421,7 @@ def add_cat(request: Request, ext_id: int, payload: AddExtractCategory, db: Sess
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -516,7 +541,7 @@ def add_item(request: Request, cat_id: int, payload: AddExtractCategoryItems, db
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -628,7 +653,7 @@ def del_cat(request: Request, cat_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -735,7 +760,7 @@ def del_item(request: Request, item_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -847,7 +872,7 @@ def add_tax(request: Request, ext_id: int, payload: AddExtractTax, db: Session =
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -950,7 +975,7 @@ def del_tax(request: Request, tax_id: int,  db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1057,7 +1082,7 @@ def add_ded(request: Request, ext_id: int, payload: AddExtractDeduction, db: Ses
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1160,7 +1185,7 @@ def del_ded(request: Request, ded_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1266,7 +1291,7 @@ def add_payment(request: Request, ext_id: int, payload: PreviouslyPaid, db: Sess
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1369,7 +1394,7 @@ def del_payment(request: Request, pay_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1475,7 +1500,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateAmount, db: Sessi
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1587,7 +1612,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateCurrency, db: Ses
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -1700,7 +1725,7 @@ def del_payment(request: Request, item_id: int, payload: UpdateCompletion, db: S
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "manage extracts").first()
+                                                 Permission.type == "edit extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
