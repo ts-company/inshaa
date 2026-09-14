@@ -1889,10 +1889,11 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "approve extracts").first()
-        if not permission:
+        permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
+        permission_types = [p.type for p in permissions]
+        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
