@@ -154,8 +154,8 @@ def generate_extract_pdf(extract, categories, items_by_cat) -> BytesIO:
         "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_LEFT
     )
 
-    logo_path = os.path.join(BASE_DIR, "static", "logo.png")
-    logo = RLImage(logo_path, width=4 * cm, height=2 * cm)
+    logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
+    logo = RLImage(logo_path, width=6 * cm, height=2 * cm)
 
     header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style)
 
