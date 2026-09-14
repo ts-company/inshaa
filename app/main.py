@@ -9,7 +9,7 @@ from app.database import engine, Base, get_db
 from app.models.users_model import User
 from app.models.permissions_model import Permission
 from app.core.security import hash_password
-from app.config import BASE_DIR
+from app.config import BASE_DIR, preset_permissions
 from app.routes import login, home, dashboard, users, page, extracts
 
 load_dotenv()
@@ -54,13 +54,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
         )
         db.add(new_admin)
         db.flush()
-        db.add(Permission(user_id=new_admin.id, type="manage users"))
-        db.add(Permission(user_id=new_admin.id, type="manage page"))
-        db.add(Permission(user_id=new_admin.id, type="extracts history"))
-        db.add(Permission(user_id=new_admin.id, type="edit extracts"))
-        db.add(Permission(user_id=new_admin.id, type="add extracts"))
-        db.add(Permission(user_id=new_admin.id, type="delete extracts"))
-        db.add(Permission(user_id=new_admin.id, type="accounting"))
+        for perm in preset_permissions["super_admin"]:
+            db.add(Permission(user_id=new_admin.id, type=perm))
         db.commit()
 
     return templates.TemplateResponse("home.html", {"request": request})
