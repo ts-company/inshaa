@@ -21,6 +21,8 @@
   --white: #FFFFFF;
   --error: #A2402C;
   --active-dot: #3E6B4E;
+  --heading: #111111;
+  --small-text: #D71920;
 
   --font-head: 'Barlow Condensed', sans-serif;
   --font-body: 'Barlow', sans-serif;
@@ -31,7 +33,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--paper);
+  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -41,12 +43,12 @@ body {
   flex-direction: column;
 }
 
-h1, h2 {
+h1, h2, h3 {
   font-family: var(--font-head);
   font-weight: 600;
   line-height: 1.05;
   margin: 0;
-  color: var(--ink);
+  color: var(--heading);
 }
 
 p { margin: 0; }
@@ -106,20 +108,56 @@ main {
   max-width: 1180px;
   width: 100%;
   margin: 0 auto;
-  padding: 48px 32px 96px;
+  padding: 56px 32px 96px;
 }
 
-.page-head { margin-bottom: 36px; max-width: 640px; }
+.page-head { margin-bottom: 30px; max-width: 720px; }
 
 .page-kicker {
   font-size: 14px;
-  color: var(--steel);
+  color: var(--small-text);
   font-weight: 600;
   margin-bottom: 10px;
 }
 
 .page-head h1 { font-size: 38px; margin-bottom: 10px; }
-.page-head p { color: var(--steel-dark); font-size: 16px; }
+.page-head p { color: var(--small-text); font-size: 16px; }
+
+.page-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 44px;
+}
+
+.overview-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--steel);
+}
+
+.overview-card.is-active { border-left-color: var(--active-dot); }
+.overview-card.is-inactive { border-left-color: var(--line-strong); }
+
+.overview-label {
+  color: var(--small-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.overview-value {
+  font-family: var(--font-head);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--ink);
+}
 
 /* ===== Add user ===== */
 .add-user {
@@ -143,7 +181,7 @@ main {
   gap: 7px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--steel-dark);
+  color: var(--small-text);
   grid-column: span 2;
 }
 
@@ -188,6 +226,16 @@ main {
 .btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
 .btn:disabled { opacity: 0.55; cursor: default; }
 
+#add-user-btn {
+  background: #D71920;
+  border-color: #D71920;
+}
+
+#add-user-btn:hover {
+  background: #B9151B;
+  border-color: #B9151B;
+}
+
 .btn-outline {
   background: none;
   color: var(--ink);
@@ -218,37 +266,116 @@ main {
 /* ===== Users table ===== */
 .users-section { border-top: 1px solid var(--line-strong); padding-top: 28px; }
 
-.users-section h2 { font-size: 22px; margin-bottom: 18px; }
+.users-section h2 { font-size: 22px; margin: 0; }
+
+.users-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.users-toolbar-copy { color: var(--small-text); font-size: 14px; margin-top: 4px; }
+
+.users-filters {
+  display: flex;
+  gap: 10px;
+  width: min(470px, 100%);
+}
+
+.users-filters input,
+.users-filters select {
+  min-width: 0;
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.users-filters input:focus,
+.users-filters select:focus { outline: none; border-color: var(--steel); }
 
 .users-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--white);
+  border: 1px solid var(--line);
 }
 
 .users-table thead th {
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: var(--steel-dark);
-  padding: 0 14px 12px;
+  color: var(--ink);
+  padding: 13px 16px;
+  background: #F1EEE7;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
   border-bottom: 1px solid var(--line-strong);
 }
 
 .users-table tbody td {
-  padding: 16px 14px;
+  padding: 15px 16px;
   border-bottom: 1px solid var(--line);
   font-size: 15px;
+  color: var(--ink);
   vertical-align: middle;
 }
 
 .users-table tbody tr:last-child td { border-bottom: none; }
 
+.users-table tbody tr { transition: background 0.15s ease; }
+.users-table tbody tr:hover { background: #FBFAF7; }
+.users-table tbody tr.is-hidden { display: none; }
+
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) { width: 30%; }
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) { width: 19%; }
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) { width: 15%; }
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) { width: 30%; }
+
 .users-table tbody tr.is-removing { opacity: 0.4; }
 
 .user-name { font-weight: 500; }
 
+.user-identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  background: var(--steel-dark);
+  color: var(--white);
+  font-family: var(--font-head);
+  font-size: 19px;
+  border-radius: 50%;
+}
+
+.user-name-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .user-role {
-  color: var(--steel-dark);
+  color: var(--ink);
   text-transform: capitalize;
 }
 
@@ -264,13 +391,16 @@ main {
 
 .status-dot.is-active { background: var(--active-dot); }
 
-.status-text { font-size: 14px; color: var(--steel-dark); }
+.status-text { font-size: 14px; color: var(--ink); }
 
 .row-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
+
+.row-actions .btn { min-width: 94px; }
 
 .users-table {
   table-layout: fixed;
@@ -312,10 +442,19 @@ main {
 
 .empty-users {
   padding: 40px 0;
-  color: var(--steel-dark);
+  color: var(--small-text);
   font-size: 15px;
   text-align: center;
 }
+
+.no-filter-results {
+  padding: 28px 0;
+  color: var(--small-text);
+  font-size: 15px;
+  text-align: center;
+}
+
+.no-filter-results[hidden] { display: none; }
 
 .permission-modal-backdrop {
   position: fixed;
@@ -352,7 +491,7 @@ main {
   font-family: var(--font-head);
   font-size: 28px;
   margin: 0;
-  color: var(--ink);
+  color: var(--heading);
 }
 
 .permission-close {
@@ -381,7 +520,7 @@ main {
   gap: 7px;
   font-size: 13.5px;
   font-weight: 600;
-  color: var(--steel-dark);
+  color: var(--small-text);
 }
 
 .permission-add-form select {
@@ -429,7 +568,7 @@ main {
 }
 
 .permission-empty {
-  color: var(--steel-dark);
+  color: var(--small-text);
   font-size: 14px;
   padding: 8px 0;
 }
@@ -456,6 +595,13 @@ main {
 
 /* ===== Responsive ===== */
 @media (max-width: 760px) {
+  main { padding: 36px 18px 64px; }
+  .page-head h1 { font-size: 34px; }
+  .page-overview { gap: 10px; margin-bottom: 34px; }
+  .overview-card { padding: 14px; }
+  .overview-value { font-size: 28px; }
+  .users-toolbar { display: block; }
+  .users-filters { margin-top: 16px; width: 100%; }
   .add-user-form { grid-template-columns: 1fr 1fr; }
   .add-user-form label { grid-column: span 1; }
   .add-user-form .form-actions { grid-column: span 2; }
@@ -472,13 +618,25 @@ main {
     border-bottom: none;
     padding: 4px 0;
   }
+  .users-table tbody tr { padding: 16px; background: var(--white); }
+  .users-table tbody tr:hover { background: var(--white); }
+  .users-table tbody td:first-child { padding-bottom: 10px; }
   .row-actions { justify-content: flex-start; margin-top: 8px; }
+  .row-actions .btn { flex: 1; min-width: 0; }
+}
+
+@media (max-width: 520px) {
+  .page-overview { grid-template-columns: 1fr; }
+  .users-filters { flex-direction: column; }
+  .add-user-form { grid-template-columns: 1fr; }
+  .add-user-form label { grid-column: span 1; }
+  .add-user-form .form-actions { grid-column: span 1; }
 }
 /* Shared public-site header */
 .site-header {
-  background: #0B4D72;
+  background: #111111;
   border-bottom: 0;
-  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
 }
 
 .site-header::after {
@@ -486,7 +644,7 @@ main {
   display: block;
   height: 5px;
   width: 32%;
-  background: #55C2D8;
+  background: #D71920;
 }
 
 .header-inner {
@@ -496,46 +654,19 @@ main {
 }
 
 .wordmark {
-  color: #FFFFFF;
-  font-size: clamp(24px, 2.4vw, 34px);
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
-
-.brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.brand-tagline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-  color: #B8D7E3;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2.8px;
-  text-transform: uppercase;
-}
-
-.brand-tagline::before { content: ''; width: 22px; height: 2px; background: #55C2D8; }
-
-.wordmark::before {
-  content: '';
-  width: 9px;
-  height: 9px;
   display: block;
-  background: #55C2D8;
-  transform: rotate(45deg);
+  width: min(280px, 100%);
+}
+
+.wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (max-width: 640px) {
   .header-inner { min-height: 88px; padding: 20px; }
-  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
-  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
-  .brand-tagline::before { width: 14px; }
+  .wordmark { width: min(230px, 100%); }
 }
 </style>
 </head>
@@ -545,8 +676,9 @@ main {
   <div class="header-inner">
     <div class="brand-lockup">
       <div>
-        <a href="/" class="wordmark">Inshaa Minka</a>
-        <span class="brand-tagline">Building &amp; Construction</span>
+        <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+          <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+        </a>
       </div>
     </div>
   </div>
@@ -554,10 +686,24 @@ main {
 
 <main>
   <div class="page-head">
-    <p class="page-kicker">Manage users</p>
     <h1>Accounts</h1>
     <p>Add new accounts, and activate, deactivate or remove existing ones.</p>
   </div>
+
+  <section class="page-overview" aria-label="User overview">
+    <div class="overview-card">
+      <div class="overview-label">Total accounts</div>
+      <strong class="overview-value" id="total-users">0</strong>
+    </div>
+    <div class="overview-card is-active">
+      <div class="overview-label">Active now</div>
+      <strong class="overview-value" id="active-users">0</strong>
+    </div>
+    <div class="overview-card is-inactive">
+      <div class="overview-label">Inactive</div>
+      <strong class="overview-value" id="inactive-users">0</strong>
+    </div>
+  </section>
 
   <section class="add-user">
     <h2>Add a user</h2>
@@ -598,7 +744,20 @@ main {
   </section>
 
   <section class="users-section">
-    <h2>All users</h2>
+    <div class="users-toolbar">
+      <div>
+        <h2>All users</h2>
+        <p class="users-toolbar-copy" id="users-count">Showing all accounts</p>
+      </div>
+      <div class="users-filters" role="search">
+        <input type="search" id="user-search" placeholder="Search by name or role" aria-label="Search users">
+        <select id="status-filter" aria-label="Filter users by status">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
 
     {% if users %}
     <table class="users-table" id="users-table">
@@ -614,8 +773,13 @@ main {
       <tbody>
         {% for u in users %}
         <tr data-user-id="{{ u.id }}" data-active="{{ 'true' if u.is_active else 'false' }}">
-          <td class="user-name">{{ u.name }}</td>
-          <td class="user-role">{{ u.role }}</td>
+          <td class="user-name">
+            <div class="user-identity">
+              <span class="user-avatar" aria-hidden="true">{{ u.name[0] }}</span>
+              <span class="user-name-text">{{ u.name }}</span>
+            </div>
+          </td>
+          <td class="user-role">{{ u.role.replace('_', ' ') }}</td>
           <td>
             <span class="status-cell">
               <span class="status-dot {{ 'is-active' if u.is_active else '' }}"></span>
@@ -637,6 +801,7 @@ main {
         {% endfor %}
       </tbody>
     </table>
+    <p class="no-filter-results" id="no-filter-results" hidden>No users match your search.</p>
     {% else %}
     <p class="empty-users">No other users yet.</p>
     {% endif %}
@@ -744,6 +909,43 @@ const permissionList = document.getElementById('permission-list');
 const permissionType = document.getElementById('permission-type');
 const permissionAddForm = document.getElementById('permission-add-form');
 const permissionClose = document.getElementById('permission-close');
+const userSearch = document.getElementById('user-search');
+const statusFilter = document.getElementById('status-filter');
+const usersCount = document.getElementById('users-count');
+const noFilterResults = document.getElementById('no-filter-results');
+
+function updateUserView() {
+  if (!table) return;
+
+  const rows = Array.from(table.querySelectorAll('tbody tr'));
+  const activeCount = rows.filter((row) => row.dataset.active === 'true').length;
+  const searchTerm = (userSearch?.value || '').trim().toLowerCase();
+  const selectedStatus = statusFilter?.value || 'all';
+  let visibleCount = 0;
+
+  document.getElementById('total-users').textContent = rows.length;
+  document.getElementById('active-users').textContent = activeCount;
+  document.getElementById('inactive-users').textContent = rows.length - activeCount;
+
+  rows.forEach((row) => {
+    const matchesSearch = row.textContent.toLowerCase().includes(searchTerm);
+    const matchesStatus = selectedStatus === 'all' ||
+      (selectedStatus === 'active' && row.dataset.active === 'true') ||
+      (selectedStatus === 'inactive' && row.dataset.active === 'false');
+    const isVisible = matchesSearch && matchesStatus;
+    row.classList.toggle('is-hidden', !isVisible);
+    if (isVisible) visibleCount += 1;
+  });
+
+  usersCount.textContent = visibleCount === rows.length
+    ? `Showing all ${rows.length} account${rows.length === 1 ? '' : 's'}`
+    : `Showing ${visibleCount} of ${rows.length} accounts`;
+  if (noFilterResults) noFilterResults.hidden = visibleCount > 0;
+}
+
+userSearch?.addEventListener('input', updateUserView);
+statusFilter?.addEventListener('change', updateUserView);
+updateUserView();
 
 function closePermissionsModal() {
   permissionsModal.hidden = true;
@@ -920,6 +1122,8 @@ async function handleDelete(row, userId, btn) {
     row.remove();
     if (table.querySelectorAll('tbody tr').length === 0) {
       table.outerHTML = '<p class="empty-users">No other users yet.</p>';
+    } else {
+      updateUserView();
     }
   } catch (err) {
     row.classList.remove('is-removing');
@@ -953,6 +1157,7 @@ async function handleToggle(row, userId, btn) {
     dot.classList.toggle('is-active', nowActive);
     text.textContent = nowActive ? 'Active' : 'Inactive';
     btn.textContent = nowActive ? 'Deactivate' : 'Activate';
+    updateUserView();
   } catch (err) {
     window.alert(`Couldn't reach the server (${err.message}).`);
   } finally {

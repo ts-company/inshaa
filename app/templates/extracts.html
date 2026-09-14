@@ -64,23 +64,23 @@ button { font-family: var(--font-body); cursor: pointer; }
 
 /* Shared public-site header */
 .site-header {
-  background: #0B4D72;
+  background: #111111;
   border-bottom: 0;
-  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
 }
 
 .site-header::after {
   content: '';
   display: block;
-  height: 4px;
-  width: min(360px, 32%);
-  background: #55C2D8;
+  height: 5px;
+  width: 32%;
+  background: #D71920;
 }
 
 .header-inner {
   max-width: 1240px;
-  min-height: 150px;
-  padding: 28px 32px;
+  min-height: 148px;
+  padding: 38px 32px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -88,28 +88,15 @@ button { font-family: var(--font-body); cursor: pointer; }
 }
 
 .wordmark {
-  color: #FFFFFF;
-  font-family: var(--font-head);
-  font-size: clamp(26px, 2.4vw, 34px);
-  font-weight: 700;
-  letter-spacing: 1px;
-  white-space: nowrap;
+  display: block;
+  width: min(280px, 100%);
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  line-height: 1.15;
 }
 
-.wordmark::before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  display: inline-block;
-  background: #55C2D8;
-  transform: rotate(45deg);
-  margin-right: 10px;
-  vertical-align: middle;
-  border-radius: 2px;
+.wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .brand-lockup {
@@ -125,30 +112,9 @@ button { font-family: var(--font-body); cursor: pointer; }
   align-items: flex-start;
 }
 
-.brand-tagline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-  color: #B8D7E3;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2.8px;
-  text-transform: uppercase;
-}
-
-.brand-tagline::before {
-  content: '';
-  width: 22px;
-  height: 2px;
-  background: #55C2D8;
-}
-
 @media (max-width: 640px) {
   .header-inner { min-height: 88px; padding: 20px; }
-  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
-  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
-  .brand-tagline::before { width: 14px; }
+  .wordmark { width: min(230px, 100%); }
 }
 
 /* ===== Layout ===== */
@@ -563,8 +529,9 @@ main {
   <div class="header-inner">
     <div class="brand-lockup">
       <div>
-        <a href="/" class="wordmark">Inshaa Minka</a>
-        <span class="brand-tagline">Building &amp; Construction</span>
+        <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+          <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+        </a>
       </div>
     </div>
   </div>

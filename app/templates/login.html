@@ -30,7 +30,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--paper);
+  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center center / cover no-repeat fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -92,24 +92,28 @@ button { font-family: var(--font-body); cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
+  padding: 64px 32px;
+  background: transparent;
 }
 
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 430px;
+  padding: 52px 56px;
+  background: var(--white);
+  box-shadow: 0 24px 70px rgba(28, 31, 34, 0.18);
 }
 
 .login-kicker {
   font-size: 14px;
-  color: var(--steel);
+  color: #D71920;
   font-weight: 600;
   margin-bottom: 10px;
 }
 
 .login-card h1 {
-  font-size: 36px;
-  margin-bottom: 8px;
+  font-size: 42px;
+  margin-bottom: 10px;
 }
 
 .login-lede {
@@ -121,9 +125,9 @@ button { font-family: var(--font-body); cursor: pointer; }
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  border-top: 1px solid var(--line-strong);
-  padding-top: 26px;
+  gap: 20px;
+  border-top: 3px solid #D71920;
+  padding-top: 28px;
 }
 
 .login-form label {
@@ -138,16 +142,19 @@ button { font-family: var(--font-body); cursor: pointer; }
 .login-form input {
   font-family: var(--font-body);
   font-size: 15px;
-  padding: 12px 13px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
+  padding: 13px 14px;
+  border: 1px solid #C9C5BB;
+  background: #FBFAF7;
   color: var(--ink);
-  border-radius: 2px;
+  border-radius: 3px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .login-form input:focus {
   outline: none;
-  border-color: var(--steel);
+  border-color: #D71920;
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.12);
 }
 
 .password-field { position: relative; }
@@ -173,15 +180,16 @@ button { font-family: var(--font-body); cursor: pointer; }
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 15px;
-  padding: 13px 26px;
-  border-radius: 2px;
-  border: 1.5px solid var(--ink);
-  background: var(--ink);
+  width: 100%;
+  padding: 14px 26px;
+  border-radius: 3px;
+  border: 1.5px solid #D71920;
+  background: #D71920;
   color: var(--paper);
   transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
 }
 
-.btn:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.btn:hover { background: #B9151B; border-color: #B9151B; }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.55; cursor: default; transform: none; }
 
@@ -223,9 +231,9 @@ button { font-family: var(--font-body); cursor: pointer; }
 }
 /* Shared public-site header */
 .site-header {
-  background: #0B4D72;
+  background: #111111;
   border-bottom: 0;
-  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
 }
 
 .site-header::after {
@@ -233,56 +241,31 @@ button { font-family: var(--font-body); cursor: pointer; }
   display: block;
   height: 5px;
   width: 32%;
-  background: #55C2D8;
+  background: #D71920;
 }
 
 .header-inner {
   max-width: 1240px;
-  min-height: 148px;
-  padding: 38px 32px;
+  min-height: 112px;
+  padding: 26px 32px;
 }
 
 .wordmark {
-  color: #FFFFFF;
-  font-size: clamp(24px, 2.4vw, 34px);
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
-
-.brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.brand-tagline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-  color: #B8D7E3;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2.8px;
-  text-transform: uppercase;
-}
-
-.brand-tagline::before { content: ''; width: 22px; height: 2px; background: #55C2D8; }
-
-.wordmark::before {
-  content: '';
-  width: 9px;
-  height: 9px;
   display: block;
-  background: #55C2D8;
-  transform: rotate(45deg);
+  width: min(280px, 100%);
+}
+
+.wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (max-width: 640px) {
   .header-inner { min-height: 88px; padding: 20px; }
-  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
-  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
-  .brand-tagline::before { width: 14px; }
+  .wordmark { width: min(230px, 100%); }
+  .login-main { padding: 28px 16px 40px; }
+  .login-card { max-width: none; padding: 38px 28px 42px; }
 }
 </style>
 </head>
@@ -292,8 +275,9 @@ button { font-family: var(--font-body); cursor: pointer; }
   <div class="header-inner">
     <div class="brand-lockup">
       <div>
-        <a href="/" class="wordmark">Inshaa Minka</a>
-        <span class="brand-tagline">Building &amp; Construction</span>
+        <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+          <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+        </a>
       </div>
     </div>
   </div>

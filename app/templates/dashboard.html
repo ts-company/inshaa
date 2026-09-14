@@ -29,7 +29,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--paper);
+  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -105,35 +105,50 @@ button { font-family: var(--font-body); cursor: pointer; }
 .settings-btn {
   font-size: 14px;
   font-weight: 600;
-  color: var(--steel-dark);
-  background: none;
-  border: 1px solid var(--line-strong);
+  color: #FFFFFF;
+  background: transparent;
+  border: 0;
   padding: 7px 14px;
   transition: border-color 0.15s ease, color 0.15s ease;
 }
 
-.settings-btn:hover { border-color: var(--ink); color: var(--ink); }
+.settings-btn:hover { color: #D71920; }
 
 .logout-link {
   font-size: 14px;
   font-weight: 600;
-  color: var(--steel-dark);
+  color: #FFFFFF;
   text-decoration: none;
-  border-bottom: 1px solid transparent;
+  border-bottom: 0;
 }
 
-.logout-link:hover { color: var(--ink); border-bottom-color: var(--ink); }
+.logout-link:hover { color: #D71920; }
 
 /* ===== Layout ===== */
 main {
   flex: 1;
-  max-width: 1180px;
+  max-width: 1160px;
   width: 100%;
   margin: 0 auto;
-  padding: 56px 32px 96px;
+  padding: 72px 32px 104px;
 }
 
-.dash-head { margin-bottom: 44px; max-width: 640px; }
+.dash-head {
+  position: relative;
+  margin-bottom: 42px;
+  max-width: 680px;
+  padding-left: 24px;
+}
+
+.dash-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  background: #D71920;
+}
 
 .dash-kicker {
   font-size: 14px;
@@ -142,47 +157,50 @@ main {
   margin-bottom: 10px;
 }
 
-.dash-head h1 { font-size: 40px; margin-bottom: 10px; }
+.dash-head h1 { font-size: 48px; margin-bottom: 10px; letter-spacing: 0.3px; }
 
 .dash-head p { color: var(--steel-dark); font-size: 16.5px; }
 
 /* ===== Action grid ===== */
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-  border-top: 1px solid var(--line-strong);
-  padding-top: 32px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
 }
 
 .action-card {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 26px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
+  min-height: 220px;
+  padding: 30px;
+  border: 1px solid rgba(185, 178, 161, 0.6);
+  background: rgba(255, 255, 255, 0.92);
   text-decoration: none;
   color: var(--ink);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  box-shadow: 0 14px 32px rgba(28, 31, 34, 0.08);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .action-card:hover {
-  border-color: var(--ink);
-  background: var(--concrete);
+  border-color: #D71920;
+  background: var(--white);
+  box-shadow: 0 18px 38px rgba(28, 31, 34, 0.14);
+  transform: translateY(-4px);
 }
 
 .action-icon {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--steel);
-  border: 1px solid var(--line-strong);
+  color: #D71920;
+  border: 1px solid rgba(215, 25, 32, 0.3);
+  background: rgba(215, 25, 32, 0.06);
 }
 
-.action-card h2 { font-size: 22px; font-weight: 600; }
+.action-card h2 { font-size: 25px; font-weight: 600; }
 
 .action-card p { font-size: 14.5px; color: var(--steel-dark); }
 
@@ -190,18 +208,40 @@ main {
   margin-top: auto;
   font-size: 14px;
   font-weight: 600;
-  color: var(--steel-dark);
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+  color: #FFFFFF;
+  min-width: 104px;
+  padding: 10px 15px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #D71920;
+  border: 1px solid #D71920;
+  border-radius: 2px;
+  box-shadow: 0 7px 16px rgba(215, 25, 32, 0.2);
+  letter-spacing: 0.3px;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.action-card:hover .action-go { color: var(--ink); }
+.action-card:hover .action-go {
+  background: #B9151B;
+  border-color: #B9151B;
+  box-shadow: 0 10px 20px rgba(185, 21, 27, 0.28);
+  transform: translateX(4px);
+}
+
+.action-card:focus-visible .action-go {
+  box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.2), 0 7px 16px rgba(215, 25, 32, 0.2);
+}
 
 /* ===== Empty state ===== */
 .empty-state {
-  border-top: 1px solid var(--line-strong);
-  padding-top: 40px;
-  max-width: 480px;
+  max-width: 560px;
+  padding: 32px;
+  border: 1px solid rgba(185, 178, 161, 0.6);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 32px rgba(28, 31, 34, 0.08);
 }
 
 .empty-state h2 { font-size: 24px; margin-bottom: 10px; }
@@ -222,7 +262,9 @@ main {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(20, 22, 24, 0.6);
+  background: rgba(12, 14, 16, 0.68);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -234,9 +276,22 @@ main {
 .modal {
   width: 100%;
   max-width: 420px;
-  background: var(--paper);
-  border: 1px solid var(--line-strong);
-  padding: 28px;
+  position: relative;
+  overflow: hidden;
+  background: #FFFFFF;
+  border: 0;
+  padding: 38px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.3);
+}
+
+.modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: #D71920;
 }
 
 .modal-head {
@@ -246,34 +301,61 @@ main {
   margin-bottom: 22px;
 }
 
-.modal-head h2 { font-size: 22px; }
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  color: var(--steel-dark);
+.modal-head h2 {
+  font-size: 28px;
+  letter-spacing: 0.2px;
 }
 
-.modal-close:hover { color: var(--ink); }
+.modal-close {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F1EC;
+  border: 0;
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--steel-dark);
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #D71920;
+  color: #FFFFFF;
+  transform: rotate(90deg);
+}
 
 .modal-form { display: flex; flex-direction: column; gap: 16px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; }
 
-.field span { font-size: 13.5px; font-weight: 600; color: var(--steel-dark); }
+.field span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--steel-dark);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
 
 .field input {
   font-family: var(--font-body);
   font-size: 15px;
-  padding: 10px 12px;
-  border: 1px solid var(--line-strong);
-  background: var(--white);
+  padding: 13px 14px;
+  border: 1px solid #C9C5BB;
+  border-radius: 3px;
+  background: #FBFAF7;
   color: var(--ink);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
-.field input:focus { border-color: var(--steel); }
+.field input:focus {
+  outline: none;
+  border-color: #D71920;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(215, 25, 32, 0.12);
+}
 
 .modal-msg { font-size: 13.5px; min-height: 18px; }
 .modal-msg.is-error { color: #A2402C; }
@@ -284,24 +366,26 @@ main {
 .btn-secondary {
   font-size: 14px;
   font-weight: 600;
-  padding: 10px 18px;
-  border: 1px solid var(--line-strong);
-  background: none;
+  padding: 11px 20px;
+  border: 1px solid #C9C5BB;
+  border-radius: 3px;
+  background: #FFFFFF;
   color: var(--steel-dark);
 }
 
-.btn-secondary:hover { border-color: var(--ink); color: var(--ink); }
+.btn-secondary:hover { border-color: var(--ink); color: var(--ink); background: #F3F1EC; }
 
 .modal-actions .btn-primary {
   font-size: 14px;
   font-weight: 600;
-  padding: 10px 18px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
+  padding: 11px 20px;
+  border: 1px solid #D71920;
+  border-radius: 3px;
+  background: #D71920;
+  color: #FFFFFF;
 }
 
-.modal-actions .btn-primary:hover { background: var(--steel-dark); border-color: var(--steel-dark); }
+.modal-actions .btn-primary:hover { background: #B9151B; border-color: #B9151B; }
 .modal-actions .btn-primary:disabled { opacity: 0.6; cursor: default; }
 
 /* ===== Responsive ===== */
@@ -311,13 +395,16 @@ main {
   .user-greeting { display: none; }
   main { padding: 40px 20px 72px; }
   .dash-head h1 { font-size: 32px; }
+  .dash-head { margin-bottom: 32px; padding-left: 18px; }
+  .action-grid { grid-template-columns: 1fr; gap: 16px; }
+  .action-card { min-height: 190px; padding: 24px; }
 }
 
 /* Shared public-site header */
 .site-header {
-  background: #0B4D72;
+  background: #111111;
   border-bottom: 0;
-  box-shadow: 0 10px 28px rgba(11, 77, 114, 0.22);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
 }
 
 .site-header::after {
@@ -325,56 +412,29 @@ main {
   display: block;
   height: 5px;
   width: 32%;
-  background: #55C2D8;
+  background: #D71920;
 }
 
 .header-inner {
   max-width: 1240px;
-  min-height: 148px;
-  padding: 38px 32px;
+  min-height: 112px;
+  padding: 26px 32px;
 }
 
 .wordmark {
-  color: #FFFFFF;
-  font-size: clamp(24px, 2.4vw, 34px);
-  letter-spacing: 1px;
-  white-space: nowrap;
-}
-
-.brand-lockup {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.brand-tagline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-  color: #B8D7E3;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 2.8px;
-  text-transform: uppercase;
-}
-
-.brand-tagline::before { content: ''; width: 22px; height: 2px; background: #55C2D8; }
-
-.wordmark::before {
-  content: '';
-  width: 9px;
-  height: 9px;
   display: block;
-  background: #55C2D8;
-  transform: rotate(45deg);
+  width: min(280px, 100%);
+}
+
+.wordmark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (max-width: 640px) {
   .header-inner { min-height: 88px; padding: 20px; }
-  .wordmark { font-size: 24px; letter-spacing: 0.6px; }
-  .brand-tagline { font-size: 8px; letter-spacing: 1.5px; gap: 5px; }
-  .brand-tagline::before { width: 14px; }
+  .wordmark { width: min(230px, 100%); }
 }
 </style>
 </head>
@@ -384,9 +444,14 @@ main {
   <div class="header-inner">
     <div class="brand-lockup">
       <div>
-        <a href="/" class="wordmark">Inshaa Minka</a>
-        <span class="brand-tagline">Building &amp; Construction</span>
+        <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+          <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+        </a>
       </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="settings-btn" id="settings-btn">Account</button>
+      <a class="logout-link" href="/system/logout">Logout</a>
     </div>
   </div>
 </header>
@@ -410,7 +475,7 @@ main {
         </svg>
       </span>
       <h2>Manage public website</h2>
-      <span class="action-go">Open →</span>
+      <span class="action-go">Open</span>
     </a>
     {% endif %}
 
@@ -425,7 +490,7 @@ main {
         </svg>
       </span>
       <h2>Manage users</h2>
-      <span class="action-go">Open →</span>
+      <span class="action-go">Open</span>
     </a>
     {% endif %}
 
@@ -433,14 +498,12 @@ main {
     <a class="action-card" href="/system/extracts/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
-          <circle cx="9.5" cy="8.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M4 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="17" cy="7.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M14.8 12c2.6 0.2 4.4 1.9 4.7 4.4" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M6 3.5h8l4 4V20.5H6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M14 3.5v4h4M9 11h6M9 14.5h6M9 18h3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </span>
       <h2>Manage extracts</h2>
-      <span class="action-go">Open →</span>
+      <span class="action-go">Open</span>
     </a>
     {% endif %}
 
@@ -455,7 +518,7 @@ main {
         </svg>
       </span>
       <h2>Manage reviewings</h2>
-      <span class="action-go">Open →</span>
+      <span class="action-go">Open</span>
     </a>
     {% endif %}
 
@@ -483,12 +546,12 @@ main {
     <form id="settings-form" class="modal-form">
       <label class="field">
         <span>Username</span>
-        <input type="text" name="username" id="settings-username" placeholder="Leave blank to keep current">
+        <input type="text" name="username" id="settings-username">
       </label>
 
       <label class="field">
         <span>New password</span>
-        <input type="password" name="password" id="settings-password" placeholder="Leave blank to keep current" autocomplete="new-password">
+        <input type="password" name="password" id="settings-password" autocomplete="new-password">
       </label>
 
       <p class="modal-msg" id="settings-msg" role="status"></p>
