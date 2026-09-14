@@ -35,7 +35,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--paper);
+      background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
       color: var(--ink);
       font-family: var(--font-body);
       font-size: 16px;
@@ -89,6 +89,9 @@
       height: 5px;
       width: 32%;
       background: #D71920;
+      direction: ltr;
+      margin-right: auto;
+      margin-left: 0;
     }
 
     .header-inner {
@@ -98,6 +101,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      direction: ltr;
       margin: 0 auto;
     }
 
@@ -147,18 +151,28 @@
     }
 
     .back-link {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       font-size: 14px;
       font-weight: 600;
-      color: var(--steel-dark);
+      color: #FFFFFF;
+      background: #D71920;
+      border: 1px solid #D71920;
+      border-radius: 3px;
+      padding: 10px 16px;
+      direction: ltr;
       text-decoration: none;
       margin-bottom: 24px;
-      border-bottom: 1px solid transparent;
+      box-shadow: 0 6px 14px rgba(215, 25, 32, 0.18);
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
     }
 
     .back-link:hover {
-      color: var(--ink);
-      border-bottom-color: var(--ink);
+      color: #FFFFFF;
+      background: #B9151B;
+      border-color: #B9151B;
+      transform: translateY(-1px);
     }
 
     .page-head {
@@ -335,6 +349,39 @@
 
     .line-delete:hover {
       opacity: 0.7;
+    }
+
+    .line-delete {
+      background: none !important;
+      border-color: transparent !important;
+      color: #111111 !important;
+    }
+
+    .line-delete:hover {
+      background: none !important;
+      border-color: transparent !important;
+      color: #111111 !important;
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: #111111;
+      font-weight: 700;
+    }
+
+    .btn,
+    button {
+      background: #D71920 !important;
+      border-color: #D71920 !important;
+      color: #FFFFFF !important;
+    }
+
+    .btn:hover,
+    button:hover {
+      background: #B9151B !important;
+      border-color: #B9151B !important;
+      color: #FFFFFF !important;
     }
 
     /* ===== Layout: categories full width, summary + history below ===== */
@@ -994,7 +1041,7 @@
   </header>
 
   <main>
-    <a href="/system/extracts/" class="back-link">← Back to extracts</a>
+    <a href="/system/extracts/" class="back-link">Back to extracts</a>
 
     <div class="page-head">
       <div>

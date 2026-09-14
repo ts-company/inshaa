@@ -30,7 +30,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--paper);
+  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -46,7 +46,7 @@ h1, h2, h3 {
   font-weight: 600;
   line-height: 1.05;
   margin: 0;
-  color: var(--ink);
+  color: #111111;
 }
 
 p { margin: 0; }
@@ -75,6 +75,9 @@ button { font-family: var(--font-body); cursor: pointer; }
   height: 5px;
   width: 32%;
   background: #D71920;
+  direction: ltr;
+  margin-right: auto;
+  margin-left: 0;
 }
 
 .header-inner {
@@ -84,6 +87,7 @@ button { font-family: var(--font-body); cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  direction: ltr;
   margin: 0 auto;
 }
 
@@ -137,6 +141,13 @@ main {
 
 .page-head h1 { font-size: 38px; margin-bottom: 10px; }
 .page-head p { color: var(--steel-dark); font-size: 16px; }
+
+main * { color: #111111; }
+
+h1, h2, h3 { font-weight: 700; }
+
+.btn { color: var(--paper); }
+.btn-outline { color: #111111; }
 
 /* ===== Tabs ===== */
 .tabs-nav {
@@ -441,6 +452,30 @@ main {
 .extract-search input:focus { outline: none; border-color: var(--steel); }
 
 .extract-search .btn { align-self: end; white-space: nowrap; }
+.extract-search .btn {
+  background: #D71920;
+  border-color: #D71920;
+  color: #FFFFFF;
+}
+
+.extract-search .btn:hover {
+  background: #B9151B;
+  border-color: #B9151B;
+}
+
+.extract-search .btn-outline {
+  background: none;
+  border-color: var(--ink);
+  color: #111111;
+  text-decoration: none;
+}
+
+.extract-search .btn-outline:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
 
 .extracts-table {
   width: 100%;
@@ -470,11 +505,14 @@ main {
 
 .extract-project { font-weight: 500; }
 .extract-project-link {
-  color: inherit;
+  color: #D71920;
   text-decoration: none;
 }
 
-.extract-project-link:hover { text-decoration: underline; }
+.extract-project-link:hover {
+  color: #B9151B;
+  text-decoration: underline;
+}
 
 .extract-contractor { color: var(--steel-dark); }
 .extract-total { font-weight: 600; }
@@ -539,7 +577,6 @@ main {
 
 <main>
   <div class="page-head">
-    <p class="page-kicker">Manage extracts</p>
     <h1>Extracts</h1>
     <p>Search extracts already on file, or add a new one with its categories, taxes and deductions.</p>
   </div>
