@@ -370,20 +370,6 @@
       font-weight: 700;
     }
 
-    .btn,
-    button {
-      background: #D71920 !important;
-      border-color: #D71920 !important;
-      color: #FFFFFF !important;
-    }
-
-    .btn:hover,
-    button:hover {
-      background: #B9151B !important;
-      border-color: #B9151B !important;
-      color: #FFFFFF !important;
-    }
-
     /* ===== Layout: categories full width, summary + history below ===== */
     .categories-column {
       width: 100%;
@@ -394,14 +380,27 @@
       grid-template-columns: 1fr 1fr;
       gap: 48px;
       align-items: start;
+      direction: ltr;
       margin-top: 48px;
       padding-top: 40px;
       border-top: 1px solid var(--line-strong);
     }
 
     .below-categories-row .summary-panel:only-child {
-      grid-column: 1 / -1;
+      grid-column: 1;
       max-width: 560px;
+    }
+
+    .below-categories-row .summary-panel {
+      grid-column: 1;
+      grid-row: 1;
+      direction: rtl;
+    }
+
+    .below-categories-row .history-panel {
+      grid-column: 2;
+      grid-row: 1;
+      direction: rtl;
     }
 
     /* ---- Categories / items ---- */
@@ -530,7 +529,7 @@
     }
 
     .items-table thead th {
-      text-align: left;
+      text-align: right;
       font-size: 13px;
       font-weight: 600;
       color: var(--steel-dark);
@@ -679,6 +678,7 @@
       border-top: 1px solid var(--line);
       color: var(--ink);
       text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease, padding 0.15s ease;
     }
 
     .history-link:first-child {
@@ -687,6 +687,9 @@
 
     .history-link:hover {
       color: var(--steel-dark);
+      background: rgba(62, 84, 104, 0.06);
+      padding-right: 10px;
+      padding-left: 10px;
     }
 
     .history-link-user {
@@ -746,6 +749,15 @@
       gap: 4px;
     }
 
+    .summary-line-removable .tax-amount,
+    .summary-line-removable .tax-rate {
+      white-space: nowrap;
+    }
+
+    .summary-line-removable .tax-rate {
+      margin-left: 28px;
+    }
+
     .summary-divider {
       border: none;
       border-top: 1px solid var(--line);
@@ -784,8 +796,9 @@
     .approval-control {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: flex-start;
       gap: 10px;
+      width: 100%;
       margin-top: 32px;
       padding-top: 20px;
       border-top: 1px solid var(--line-strong);
@@ -817,6 +830,16 @@
 
     .modal-overlay.is-open {
       display: flex;
+    }
+
+    .is-history button,
+    .is-history .btn,
+    .is-history .approval-control input {
+      display: none !important;
+    }
+
+    .is-history .approval-control {
+      display: none !important;
     }
 
     .modal {
@@ -970,6 +993,16 @@
         grid-template-columns: 1fr;
       }
 
+      .below-categories-row .summary-panel {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .below-categories-row .history-panel {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
       .below-categories-row .summary-panel:only-child {
         max-width: none;
       }
@@ -1026,7 +1059,7 @@
   </style>
 </head>
 
-<body data-extract-id="{{ extract.id }}">
+<body data-extract-id="{{ extract.id }}"{% if history %} class="is-history"{% endif %}>
 
   <header class="site-header">
     <div class="header-inner">
@@ -1041,42 +1074,42 @@
   </header>
 
   <main>
-    <a href="/system/extracts/" class="back-link">Back to extracts</a>
+    <a href="/system/extracts/" class="back-link">الرجوع</a>
 
     <div class="page-head">
       <div>
 
         <div class="project-details">
           <div class="project-detail">
-            <span class="project-detail-label">Project name</span>
+            <span class="project-detail-label">اسم المشروع</span>
             <h1 class="project-detail-value">{{ extract.project_name }}</h1>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">Unit number</span>
+            <span class="project-detail-label">رقم الوحدة</span>
             <span class="project-detail-value">{{ extract.unit_number }}</span>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">Job title</span>
+            <span class="project-detail-label">اسم العمل</span>
             <span class="project-detail-value">{{ extract.job_title }}</span>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">Contractor</span>
+            <span class="project-detail-label">اسم المقاول</span>
             <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
           </div>
           {% if history %}
           <div class="project-detail">
-            <span class="project-detail-label">Updated by</span>
+            <span class="project-detail-label">تم التحديث بواسطة</span>
             <span class="project-detail-value">{{ extract.updated_by }}</span>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">Updated at</span>
+            <span class="project-detail-label">تم التحديث في</span>
             <span class="project-detail-value">{{ extract.updated_at }}</span>
           </div>
           {% endif %}
         </div>
       </div>
 
-      <button type="button" class="btn btn-primary" id="btn-open-add-category">+ Add category</button>
+      <button type="button" class="btn btn-primary" id="btn-open-add-category">اضافة بند رئيسي</button>
     </div>
 
     <div class="categories-column">
@@ -1087,9 +1120,9 @@
           <h2>{{ cat.title }}</h2>
           <div class="category-head-actions">
             <button type="button" class="btn btn-ghost btn-open-add-item" data-cat-id="{{ cat.id }}"
-              data-cat-title="{{ cat.title }}">+ Add item</button>
+              data-cat-title="{{ cat.title }}">اضافة بند فرعي</button>
             <button type="button" class="btn-text btn-delete-category" data-cat-id="{{ cat.id }}"
-              data-cat-title="{{ cat.title }}">Delete category</button>
+              data-cat-title="{{ cat.title }}">حذف البند</button>
           </div>
         </div>
 
@@ -1097,12 +1130,12 @@
         <table class="items-table">
           <thead>
             <tr>
-              <th>Item</th>
-              <th>Unit</th>
-              <th class="is-numeric">Amount</th>
-              <th>Currency</th>
-              <th class="is-numeric">Completion</th>
-              <th class="is-numeric">Total</th>
+              <th>بند فرعي</th>
+              <th>نوع الوحدة</th>
+              <th class="is-numeric">الكمية</th>
+              <th>الفئة</th>
+              <th class="is-numeric">نسبنة الانجاز</th>
+              <th class="is-numeric">الاجمالي</th>
               <th class="is-actions"></th>
             </tr>
           </thead>
@@ -1124,32 +1157,32 @@
               <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
                 data-edit-value="{{ item.completion_perc * 100 }}" data-edit-step="0.01" data-edit-min="1"
                 data-edit-max="100">
-                <span class="editable-value">{{ item.completion_perc * 100 }}</span>
+                <span class="editable-value">{{ item.completion_perc }}%</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
               </td>
               <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
               <td class="is-actions">
                 <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}"
-                  data-item-title="{{ item.title }}">Delete</button>
+                  data-item-title="{{ item.title }}">حذف</button>
               </td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
         {% else %}
-        <p class="empty-items">No items in this category.</p>
+        <p class="empty-items">لا توجد عناصر في هذا البند</p>
         {% endif %}
       </div>
       {% endfor %}
       {% else %}
-      <p class="empty-categories">No categories added to this extract yet.</p>
+      <p class="empty-categories">لا توجد بنود رئيسية في هذا المستخلص</p>
       {% endif %}
     </div>
 
     <div class="below-categories-row">
       {% if not history %}
       <aside class="history-panel" id="extract-history-panel">
-        <h2>Previous versions</h2>
+        <h2>النسخ السابقة</h2>
         <div class="history-list" id="extract-history-list">
           <p class="history-state">Loading history...</p>
         </div>
@@ -1159,69 +1192,70 @@
       <aside class="summary-panel">
         <div class="summary-block">
           <div class="summary-line is-subtotal">
-            <span>Subtotal</span>
+            <span>الاجمالي</span>
             <span>{{ "{:,.2f}".format(extract.sub_total) }} EGP</span>
           </div>
         </div>
 
         <div class="summary-block">
           <div class="summary-block-head">
-            <h3>Taxes</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-tax">+ Add</button>
+            <h3>الضرائب</h3>
+            <button type="button" class="btn-ghost-mini" id="btn-open-add-tax">اضافة ضريبة</button>
           </div>
           {% if extract.taxes %}
           {% for tax in extract.taxes %}
           <div class="summary-line summary-line-removable">
             <span>{{ tax.title }}</span>
             <span>
-              {{ tax.rate * 100 }} · {{ "{:,.2f}".format(tax.amount) }} EGP
+              <span class="tax-rate">{{ tax.rate }}%</span>
+              <span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span>
               <button type="button" class="line-delete" data-tax-id="{{ tax.id }}" data-tax-title="{{ tax.title }}"
                 title="Remove tax">&times;</button>
             </span>
           </div>
           {% endfor %}
           {% else %}
-          <p class="summary-empty">No taxes recorded.</p>
+          <p class="summary-empty">لا توجد ضرائب</p>
           {% endif %}
           <div class="summary-line is-subtotal">
-            <span>Total taxes</span>
+            <span>مجموع الضرائب</span>
             <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
           </div>
           <div class="summary-line is-subtotal">
-            <span>Subtotal + taxes</span>
+            <span>الاجمالي + الضرائب</span>
             <span>{{ "{:,.2f}".format(extract.sub_total + extract.total_taxes) }} EGP</span>
           </div>
         </div>
 
         <div class="summary-block">
           <div class="summary-block-head">
-            <h3>Deductions</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-deduction">+ Add</button>
+            <h3>الخصومات</h3>
+            <button type="button" class="btn-ghost-mini" id="btn-open-add-deduction">اضافة خصم</button>
           </div>
           {% if extract.deductions %}
           {% for ded in extract.deductions %}
           <div class="summary-line summary-line-removable">
             <span>{{ ded.title }}</span>
             <span>
-              {{ "{:,.2f}".format(ded.amount) }} EGP
+              EGP {{ "{:,.2f}".format(ded.amount) }}
               <button type="button" class="line-delete" data-ded-id="{{ ded.id }}" data-ded-title="{{ ded.title }}"
                 title="Remove deduction">&times;</button>
             </span>
           </div>
           {% endfor %}
           {% else %}
-          <p class="summary-empty">No deductions recorded.</p>
+          <p class="summary-empty">لا توجد خصومات</p>
           {% endif %}
           <div class="summary-line is-subtotal">
-            <span>Total deductions</span>
+            <span>مجموع الخصومات</span>
             <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
           </div>
         </div>
 
         <div class="summary-block">
           <div class="summary-block-head">
-            <h3>Previously paid</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-payment">+ Add</button>
+            <h3>ما سبق صرفه</h3>
+            <button type="button" class="btn-ghost-mini" id="btn-open-add-payment">اضافة دفع</button>
           </div>
           {% if extract.previously_paid %}
           {% for pp in extract.previously_paid %}
@@ -1235,33 +1269,33 @@
           </div>
           {% endfor %}
           {% else %}
-          <p class="summary-empty">No previous payments recorded.</p>
+          <p class="summary-empty">لا توجد مدفوعات سابقة</p>
           {% endif %}
           <div class="summary-line is-subtotal">
-            <span>Total payments</span>
+            <span>مجموع ما سبق صرفه</span>
             <span>{{ "{:,.2f}".format(extract.total_payments) }} EGP</span>
           </div>
         </div>
 
         <div class="summary-line is-subtotal">
-          <span>Total deductions + payments</span>
+          <span>مجموع الخصومات و ما سبق صرفه</span>
           <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments) }} EGP</span>
         </div>
 
         <div class="summary-line is-grand-total">
-          <span>Total</span>
+          <span>صافي المستخلص</span>
           <span>{{ "{:,.2f}".format(extract.total) }} EGP</span>
         </div>
       </aside>
     </div>
 
     <label class="approval-control" for="extract-approved">
-      <span>Approved</span>
       {% if "approve extracts" in permissions %}
       <input type="checkbox" id="extract-approved"{% if extract.approved %} checked{% endif %}
         aria-label="Approve extract">
       {% else %}
       <strong class="approval-status">{% if extract.approved %}Yes{% else %}No{% endif %}</strong>
+      <span>Approved</span>
       {% if extract.approved %}
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}">Generate PDF</a>
       {% endif %}
@@ -1277,7 +1311,7 @@
   <div class="inline-category-editor" id="modal-add-category">
     <div class="modal">
       <div class="modal-head">
-        <h2>Add category</h2>
+        <h2>اضافة بند رئيسي</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-category">&times;</button>
       </div>
 
@@ -1285,20 +1319,20 @@
 
       <form id="form-add-category">
         <div class="field">
-          <label for="cat-title">Category title</label>
+          <label for="cat-title">عنوان الند</label>
           <input type="text" id="cat-title" name="title" required>
         </div>
 
         <div class="items-section-head">
-          <h3>Items (optional)</h3>
-          <button type="button" class="btn btn-ghost" id="btn-add-item-row">+ Add item</button>
+          <h3>البنود الفرعية</h3>
+          <button type="button" class="btn btn-ghost" id="btn-add-item-row">اضافة بند فرعي</button>
         </div>
 
         <div class="item-rows" id="category-item-rows"></div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-category">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save category</button>
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-category">الغاء</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
@@ -1308,7 +1342,7 @@
   <div class="modal-overlay" id="modal-add-item">
     <div class="modal">
       <div class="modal-head">
-        <h2 id="add-item-heading">Add item</h2>
+        <h2 id="add-item-heading">اضافة بند فرعي</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-item">&times;</button>
       </div>
 
@@ -1316,29 +1350,29 @@
 
       <form id="form-add-item">
         <div class="field">
-          <label for="item-title">Item title</label>
+          <label for="item-title">عنوان البند الفرعي</label>
           <input type="text" id="item-title" name="title" required>
         </div>
         <div class="field">
-          <label for="item-unit-type">Unit type</label>
+          <label for="item-unit-type">نوع الوحدة</label>
           <input type="text" id="item-unit-type" name="unit_type" placeholder="e.g. m2, ton, unit" required>
         </div>
         <div class="field">
-          <label for="item-amount">Amount</label>
+          <label for="item-amount">الكمية</label>
           <input type="number" id="item-amount" name="amount" step="0.01" min="0" required>
         </div>
         <div class="field">
-          <label for="item-currency">Currency rate</label>
+          <label for="item-currency">الفئة</label>
           <input type="number" id="item-currency" name="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-            <label for="item-completion">Completion (%)</label>
+            <label for="item-completion">نسبة الانجاز</label>
             <input type="number" id="item-completion" name="completion_perc" step="0.01" min="1" max="100" required>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-item">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save item</button>
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-item">الغاء</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
@@ -1348,7 +1382,7 @@
   <div class="modal-overlay" id="modal-add-tax">
     <div class="modal is-narrow">
       <div class="modal-head">
-        <h2>Add tax</h2>
+        <h2>اضافة ضريبة</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-tax">&times;</button>
       </div>
 
@@ -1356,18 +1390,17 @@
 
       <form id="form-add-tax">
         <div class="field">
-          <label for="tax-title">Tax title</label>
+          <label for="tax-title">اسم الضريبة</label>
           <input type="text" id="tax-title" name="title" placeholder="e.g. VAT" required>
         </div>
         <div class="field">
-          <label for="tax-rate">Rate (1-100)</label>
+          <label for="tax-rate">النسبة</label>
           <input type="number" id="tax-rate" name="rate" step="0.01" min="1" max="100" required>
-          <p class="field-hint">Enter the rate as a percentage from 1 to 100.</p>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-tax">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save tax</button>
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-tax">الغاء</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
@@ -1377,7 +1410,7 @@
   <div class="modal-overlay" id="modal-add-deduction">
     <div class="modal is-narrow">
       <div class="modal-head">
-        <h2>Add deduction</h2>
+        <h2>اضافة خصم</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-deduction">&times;</button>
       </div>
 
@@ -1385,17 +1418,17 @@
 
       <form id="form-add-deduction">
         <div class="field">
-          <label for="ded-title">Deduction title</label>
+          <label for="ded-title">اسم الخصم</label>
           <input type="text" id="ded-title" name="title" placeholder="e.g. Retention" required>
         </div>
         <div class="field">
-          <label for="ded-amount">Amount (EGP)</label>
+          <label for="ded-amount">الكمية بالجنية</label>
           <input type="number" id="ded-amount" name="amount" step="any" min="0" required>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-deduction">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save deduction</button>
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-deduction">الغاء</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
@@ -1405,7 +1438,7 @@
   <div class="modal-overlay" id="modal-add-payment">
     <div class="modal is-narrow">
       <div class="modal-head">
-        <h2>Add payment</h2>
+        <h2>اضافة دفع</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-payment">&times;</button>
       </div>
 
@@ -1413,17 +1446,17 @@
 
       <form id="form-add-payment">
         <div class="field">
-          <label for="payment-details">Details</label>
+          <label for="payment-details">تفاصيل</label>
           <input type="text" id="payment-details" name="details" required>
         </div>
         <div class="field">
-          <label for="payment-amount">Amount (EGP)</label>
+          <label for="payment-amount">الكمية بالجنية</label>
           <input type="number" id="payment-amount" name="amount" step="any" required>
         </div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-payment">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save payment</button>
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-payment">الغاء</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
@@ -1432,26 +1465,26 @@
   <!-- ===== Item row template (used by the Add Category form) ===== -->
   <template id="item-row-template">
     <div class="item-row">
-      <button type="button" class="btn-text item-row-remove" data-remove-row>Remove</button>
+      <button type="button" class="btn-text item-row-remove" data-remove-row>حذف</button>
       <div class="field-row">
         <div class="field">
-          <label>Title</label>
+          <label>بند فرعي</label>
           <input type="text" data-field="title" required>
         </div>
         <div class="field">
-          <label>Unit type</label>
+          <label>نوع الوحدة</label>
           <input type="text" data-field="unit_type" required>
         </div>
         <div class="field">
-          <label>Amount</label>
+          <label>الكمية</label>
           <input type="number" data-field="amount" step="0.01" min="0" required>
         </div>
         <div class="field">
-          <label>Currency rate</label>
+          <label>الفئة</label>
           <input type="number" data-field="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-            <label>Completion (%)</label>
+            <label>نسبة الانجاز</label>
             <input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required>
         </div>
       </div>
@@ -1481,7 +1514,7 @@
             if (!histories.length) {
               const emptyState = document.createElement('p');
               emptyState.className = 'history-state';
-              emptyState.textContent = 'No previous versions.';
+              emptyState.textContent = 'لا توجد نسخ سابقة.';
               historyList.appendChild(emptyState);
               return;
             }
@@ -1508,7 +1541,7 @@
             historyList.innerHTML = '';
             const errorState = document.createElement('p');
             errorState.className = 'history-state';
-            errorState.textContent = 'Could not load previous versions.';
+            errorState.textContent = 'لا يمكن تحميل النسخ السابقة.';
             historyList.appendChild(errorState);
           });
       }
@@ -1620,7 +1653,7 @@
         saveButton.textContent = 'Save';
         const cancelButton = document.createElement('button');
         cancelButton.type = 'button';
-        cancelButton.textContent = 'Cancel';
+        cancelButton.textContent = 'الغاء';
 
         actions.appendChild(saveButton);
         actions.appendChild(cancelButton);
@@ -1758,12 +1791,12 @@
         const row = document.createElement('div');
         row.className = 'inline-add-item-row';
         row.innerHTML =
-          '<div class="field"><label>Title</label><input type="text" data-field="title" required></div>' +
-          '<div class="field"><label>Unit type</label><input type="text" data-field="unit_type" required></div>' +
-          '<div class="field"><label>Amount</label><input type="number" data-field="amount" step="0.01" min="0" required></div>' +
-          '<div class="field"><label>Currency rate</label><input type="number" data-field="currency" step="0.01" min="0" required></div>' +
-          '<div class="field"><label>Completion (%)</label><input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required></div>' +
-          '<div class="inline-add-item-actions"><button type="button" class="inline-add-item-remove" data-inline-remove>Remove</button></div>';
+          '<div class="field"><label>بند فرعي</label><input type="text" data-field="title" required></div>' +
+          '<div class="field"><label>نوع الوحدة</label><input type="text" data-field="unit_type" required></div>' +
+          '<div class="field"><label>الكمية</label><input type="number" data-field="amount" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>الفئة</label><input type="number" data-field="currency" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>نسبة الانجاز</label><input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required></div>' +
+          '<div class="inline-add-item-actions"><button type="button" class="inline-add-item-remove" data-inline-remove>حذف</button></div>';
 
         editor.querySelector('[data-inline-rows]').appendChild(row);
         row.querySelector('[data-field="title"]').focus();
@@ -1788,7 +1821,7 @@
         editor.innerHTML =
           '<div data-inline-rows></div>' +
           '<div class="inline-add-item-editor-actions">' +
-          '<button type="button" class="btn btn-secondary" data-inline-cancel>Cancel</button>' +
+          '<button type="button" class="btn btn-secondary" data-inline-cancel>الغاء</button>' +
           '<button type="button" class="btn btn-primary" data-inline-save>Save</button>' +
           '</div>';
 

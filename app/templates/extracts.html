@@ -483,7 +483,7 @@ h1, h2, h3 { font-weight: 700; }
 }
 
 .extracts-table thead th {
-  text-align: left;
+  text-align: right;
   font-size: 13px;
   font-weight: 600;
   color: var(--steel-dark);
@@ -503,16 +503,17 @@ h1, h2, h3 { font-weight: 700; }
 
 .extracts-table tbody tr:last-child td { border-bottom: none; }
 
-.extract-project { font-weight: 500; }
-.extract-project-link {
-  color: #D71920;
-  text-decoration: none;
+.extracts-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.extract-project-link:hover {
-  color: #B9151B;
-  text-decoration: underline;
+.extracts-table tbody tr:hover,
+.extracts-table tbody tr:focus-visible {
+  background: rgba(62, 84, 104, 0.06);
 }
+
+.extract-project { font-weight: inherit; }
 
 .extract-contractor { color: var(--steel-dark); }
 .extract-total { font-weight: 600; }
@@ -577,40 +578,39 @@ h1, h2, h3 { font-weight: 700; }
 
 <main>
   <div class="page-head">
-    <h1>Extracts</h1>
-    <p>Search extracts already on file, or add a new one with its categories, taxes and deductions.</p>
+    <h1>المستخلصات</h1>
   </div>
 
   <div class="tabs-nav" role="tablist">
-    <button type="button" class="tab-btn is-active" id="tab-btn-view" role="tab" aria-selected="true" aria-controls="tab-panel-view">View &amp; search</button>
-    <button type="button" class="tab-btn" id="tab-btn-add" role="tab" aria-selected="false" aria-controls="tab-panel-add">Add extract</button>
+    <button type="button" class="tab-btn is-active" id="tab-btn-view" role="tab" aria-selected="true" aria-controls="tab-panel-view">التفاصيل و البحث</button>
+    <button type="button" class="tab-btn" id="tab-btn-add" role="tab" aria-selected="false" aria-controls="tab-panel-add">اضافة مستخلص</button>
   </div>
 
   <section class="tab-panel is-active" id="tab-panel-view" role="tabpanel" aria-labelledby="tab-btn-view">
     <div class="extracts-section">
       <form class="extract-search" method="get" action="/system/extracts/">
         <label>
-          Extract ID
+          رقم المستخلص
           <input type="number" name="id" min="1" value="{{ request.query_params.get('id', '') }}">
         </label>
         <label>
-          Project name
+          اسم المشروع
           <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
         </label>
         <label>
-          Unit number
+          رقم الوحدة
           <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
         </label>
         <label>
-          Job title
+          اسم العمل
           <input type="text" name="job_title" value="{{ request.query_params.get('job_title', '') }}">
         </label>
         <label>
-          Contractor
+          اسم المقاول
           <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
         </label>
-        <button type="submit" class="btn btn-small">Search</button>
-        <a href="/system/extracts/" class="btn btn-outline btn-small">Clear</a>
+        <button type="submit" class="btn btn-small">بحث</button>
+        <a href="/system/extracts/" class="btn btn-outline btn-small">مسح</a>
       </form>
 
       {% if extracts %}
@@ -618,22 +618,22 @@ h1, h2, h3 { font-weight: 700; }
         <thead>
           <tr>
             <th>ID</th>
-            <th>Project</th>
-            <th>Unit number</th>
-            <th>Job title</th>
-            <th>Contractor</th>
-            <th class="is-numeric">Subtotal</th>
-            <th class="is-numeric">Taxes</th>
-            <th class="is-numeric">Deductions</th>
-            <th class="is-numeric">Payments</th>
-            <th class="is-numeric">Total</th>
+            <th>اسم المشروع</th>
+            <th>رقم الوحدة</th>
+            <th>اسم العمل</th>
+            <th>اسم المقاول</th>
+            <th class="is-numeric">المجموع</th>
+            <th class="is-numeric">اجمالي الضرائب</th>
+            <th class="is-numeric">اجمالي الخصومات</th>
+            <th class="is-numeric">ما سبق صرفه</th>
+            <th class="is-numeric">الصافي</th>
           </tr>
         </thead>
         <tbody>
           {% for e in extracts %}
-          <tr data-extract-id="{{ e.id }}">
+          <tr data-extract-id="{{ e.id }}" tabindex="0" role="link" aria-label="فتح المستخلص {{ e.project_name }}">
             <td>{{ e.id }}</td>
-            <td class="extract-project"><a class="extract-project-link" href="/system/extracts/details/{{ e.id }}">{{ e.project_name }}</a></td>
+            <td class="extract-project">{{ e.project_name }}</td>
             <td>{{ e.unit_number }}</td>
             <td>{{ e.job_title }}</td>
             <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
@@ -647,7 +647,7 @@ h1, h2, h3 { font-weight: 700; }
         </tbody>
       </table>
       {% else %}
-      <p class="empty-extracts">No extracts yet.</p>
+      <p class="empty-extracts">لا توجد مستخلصات</p>
       {% endif %}
     </div>
   </section>
@@ -656,51 +656,50 @@ h1, h2, h3 { font-weight: 700; }
     <form class="add-extract-form" id="add-extract-form" novalidate>
       <div class="field-row-4">
         <label>
-          Project name
+          اسم المشروع
           <input type="text" name="project_name" id="project-name" required>
         </label>
         <label>
-          Unit number
+          رقم الوحدة
           <input type="text" name="unit_number" id="unit-number" required>
         </label>
         <label>
-          <span>Contractor name <span class="field-optional">(optional)</span></span>
+          <span>اسم المقاول <span class="field-optional">(اختياري)</span></span>
           <input type="text" name="contractor_name" id="contractor-name">
         </label>
         <label>
-          Job title
+          اسم العمل
           <input type="text" name="job_title" id="job-title" required>
         </label>
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">Categories &amp; items <span class="field-optional">(optional)</span></span>
-        <p class="subgroup-sub-label">Each category groups a set of line items. An item's total is amount × currency rate × completion.</p>
+        <span class="subgroup-label">البنود الرئيسية و الفرعية<span class="field-optional"></span></span>
         <div class="category-list" id="categories-list"></div>
-        <button type="button" class="btn btn-outline btn-small" id="add-category-btn">+ Add category</button>
+        <button type="button" class="btn btn-outline btn-small" id="add-category-btn">اضافة بند</button>
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">Taxes — at least one required</span>
-        <p class="subgroup-sub-label">Enter the tax rate as a percentage from 0 to 100.</p>
+        <span class="subgroup-label">الضرائب — يلزم إدخال واحد على الأقل</span>
+        <p class="subgroup-sub-label">ادخل النسبة</p>
         <div class="entry-list" id="taxes-list"></div>
-        <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">+ Add tax</button>
+        <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">اضافة ضريبة</button>
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">Deductions — at least one required</span>
+        <span class="subgroup-label">الخصومات — يلزم إدخال واحد على الأقل</span>
         <div class="entry-list" id="deductions-list"></div>
-        <button type="button" class="btn btn-outline btn-small" id="add-deduction-btn">+ Add deduction</button>
+        <button type="button" class="btn btn-outline btn-small" id="add-deduction-btn">اضافة خصم</button>
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">Previously paid <span class="field-optional">(optional)</span></span>
+        <span class="subgroup-label">ما سبق صرفه <span class="field-optional">(اختياري)</span></span>
         <div class="entry-list" id="payments-list"></div>
-        <button type="button" class="btn btn-outline btn-small" id="add-payment-btn">+ Add payment</button>
+        <button type="button" class="btn btn-outline btn-small" id="add-payment-btn">اضافة دفع</button>
       </div>
 
       <div>
-        <button type="submit" class="btn" id="add-extract-btn">Add extract</button>
+        <button type="submit" class="btn" id="add-extract-btn">اضافة مستخلص</button>
         <p class="form-message" id="add-extract-message" role="alert" hidden></p>
       </div>
     </form>
@@ -713,6 +712,20 @@ h1, h2, h3 { font-weight: 700; }
 
 <script>
 const EXTRACTS_BASE = `/system/extracts`;
+
+document.querySelector('.extracts-table')?.addEventListener('click', (event) => {
+  const row = event.target.closest('tbody tr[data-extract-id]');
+  if (!row || event.target.closest('a, button, input, select, textarea')) return;
+  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;
+});
+
+document.querySelector('.extracts-table')?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const row = event.target.closest('tbody tr[data-extract-id]');
+  if (!row) return;
+  event.preventDefault();
+  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;
+});
 
 const tabButtons = {
   view: document.getElementById('tab-btn-view'),
@@ -777,7 +790,7 @@ function buildEntryRow(list, fieldAConfig, fieldBConfig) {
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'entry-row-remove';
-  remove.textContent = 'Remove';
+  remove.textContent = 'حذف';
   remove.addEventListener('click', () => row.remove());
 
   row.appendChild(fieldA);
@@ -804,20 +817,20 @@ const taxesList = document.getElementById('taxes-list');
 const deductionsList = document.getElementById('deductions-list');
 const paymentsList = document.getElementById('payments-list');
 
-buildEntryRow(taxesList, { placeholder: 'Title' }, { placeholder: 'Rate (%)', step: '0.01', min: '0', max: '100' });
-buildEntryRow(deductionsList, { placeholder: 'Title' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
-buildEntryRow(paymentsList, { placeholder: 'Details' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
+buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '0', max: '100' });
+buildEntryRow(deductionsList, { placeholder: 'اسم الخصم' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
+buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
 
 document.getElementById('add-tax-btn').addEventListener('click', () => {
-  buildEntryRow(taxesList, { placeholder: 'Title' }, { placeholder: 'Rate (%)', step: '0.01', min: '0', max: '100' });
+  buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '0', max: '100' });
 });
 
 document.getElementById('add-deduction-btn').addEventListener('click', () => {
-  buildEntryRow(deductionsList, { placeholder: 'Title' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
+  buildEntryRow(deductionsList, { placeholder: 'اسم الخصم' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
 });
 
 document.getElementById('add-payment-btn').addEventListener('click', () => {
-  buildEntryRow(paymentsList, { placeholder: 'Details' }, { placeholder: 'Amount EGP', step: '0.01', min: '0' });
+  buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
 });
 
 
@@ -829,35 +842,30 @@ function buildItemRow(itemList) {
 
   const title = document.createElement('input');
   title.type = 'text';
-  title.placeholder = 'Item title';
 
   const unitType = document.createElement('input');
   unitType.type = 'text';
-  unitType.placeholder = 'Unit type (e.g. sqm)';
 
   const amount = document.createElement('input');
   amount.type = 'number';
   amount.step = '0.01';
   amount.min = '0';
-  amount.placeholder = 'Amount';
 
   const currency = document.createElement('input');
   currency.type = 'number';
   currency.step = '0.0001';
   currency.min = '0';
-  currency.placeholder = 'Currency rate';
 
   const completion = document.createElement('input');
   completion.type = 'number';
   completion.step = '0.01';
   completion.min = '0';
   completion.max = '100';
-  completion.placeholder = 'Completion (%)';
 
   const remove = document.createElement('button');
   remove.type = 'button';
   remove.className = 'entry-row-remove';
-  remove.textContent = 'Remove';
+  remove.textContent = 'حذف';
   remove.addEventListener('click', () => row.remove());
 
   row.appendChild(title);
@@ -879,12 +887,12 @@ function buildCategoryBlock() {
 
   const titleInput = document.createElement('input');
   titleInput.type = 'text';
-  titleInput.placeholder = 'Category title';
+  titleInput.placeholder = 'بند رئيسي';
 
   const removeCategory = document.createElement('button');
   removeCategory.type = 'button';
   removeCategory.className = 'entry-row-remove';
-  removeCategory.textContent = 'Remove category';
+  removeCategory.textContent = 'حذف البند';
   removeCategory.addEventListener('click', () => block.remove());
 
   header.appendChild(titleInput);
@@ -892,7 +900,7 @@ function buildCategoryBlock() {
 
   const itemListHead = document.createElement('div');
   itemListHead.className = 'item-list-head';
-  itemListHead.innerHTML = '<span>Item</span><span>Unit type</span><span>Amount</span><span>Currency rate</span><span>Completion %</span><span></span>';
+  itemListHead.innerHTML = '<span>بند فرعي</span><span>نوع الوحدة</span><span>الكمية</span><span>الفئة</span><span>نسبة الانجاز</span><span></span>';
 
   const itemList = document.createElement('div');
   itemList.className = 'item-list';
@@ -900,7 +908,7 @@ function buildCategoryBlock() {
   const addItemBtn = document.createElement('button');
   addItemBtn.type = 'button';
   addItemBtn.className = 'btn btn-outline btn-small';
-  addItemBtn.textContent = '+ Add item';
+  addItemBtn.textContent = 'اضافة بند فرعي';
   addItemBtn.addEventListener('click', () => buildItemRow(itemList));
 
   block.appendChild(header);
@@ -975,15 +983,15 @@ addForm.addEventListener('submit', async (e) => {
   const payments = collectFlatEntries(paymentsList, 'details', 'amount');
 
   if (!projectName || !unitNumber || !jobTitle) {
-    showAddMessage('Add a project name, unit number and job title.', 'error');
+    showAddMessage('يجب إدخال اسم المشروع ورقم الوحدة وعنوان الوظيفة.', 'error');
     return;
   }
   if (taxes.length === 0) {
-    showAddMessage('Add at least one tax.', 'error');
+    showAddMessage('يجب إضافة ضريبة واحدة على الأقل.', 'error');
     return;
   }
   if (deductions.length === 0) {
-    showAddMessage('Add at least one deduction.', 'error');
+    showAddMessage('يجب إضافة خصم واحد على الأقل.', 'error');
     return;
   }
 
@@ -999,7 +1007,7 @@ addForm.addEventListener('submit', async (e) => {
   };
 
   addBtn.disabled = true;
-  addBtn.textContent = 'Adding…';
+  addBtn.textContent = 'إضافة…';
   addMessage.hidden = true;
 
   try {
@@ -1011,7 +1019,7 @@ addForm.addEventListener('submit', async (e) => {
     });
 
     if (res.status === 403) {
-      showAddMessage("You don't have permission to add extracts.", 'error');
+      showAddMessage("ليس لديك إذن لإضافة المستخلصات.", 'error');
       return;
     }
     if (!res.ok) {
@@ -1024,7 +1032,7 @@ addForm.addEventListener('submit', async (e) => {
     showAddMessage(`Couldn't reach the server (${err.message}).`, 'error');
   } finally {
     addBtn.disabled = false;
-    addBtn.textContent = 'Add extract';
+    addBtn.textContent = 'إضافة المستخلص';
   }
 });
 </script>

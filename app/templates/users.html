@@ -38,6 +38,7 @@ body {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.55;
+  text-align: right;
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
@@ -111,7 +112,12 @@ main {
   padding: 56px 32px 96px;
 }
 
-.page-head { margin-bottom: 30px; max-width: 720px; }
+.page-head {
+  margin-bottom: 30px;
+  margin-left: auto;
+  max-width: 720px;
+  text-align: right;
+}
 
 .page-kicker {
   font-size: 14px;
@@ -326,6 +332,7 @@ main {
   font-size: 15px;
   color: var(--ink);
   vertical-align: middle;
+  text-align: left;
 }
 
 .users-table tbody tr:last-child td { border-bottom: none; }
@@ -350,22 +357,9 @@ main {
 .user-identity {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 11px;
   min-width: 0;
-}
-
-.user-avatar {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 34px;
-  background: var(--steel-dark);
-  color: var(--white);
-  font-family: var(--font-head);
-  font-size: 19px;
-  border-radius: 50%;
 }
 
 .user-name-text {
@@ -379,7 +373,12 @@ main {
   text-transform: capitalize;
 }
 
-.status-cell { display: flex; align-items: center; gap: 8px; }
+.status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
 
 .status-dot {
   width: 8px;
@@ -686,48 +685,47 @@ main {
 
 <main>
   <div class="page-head">
-    <h1>Accounts</h1>
-    <p>Add new accounts, and activate, deactivate or remove existing ones.</p>
+    <h1>المستخدمون</h1>
   </div>
 
   <section class="page-overview" aria-label="User overview">
     <div class="overview-card">
-      <div class="overview-label">Total accounts</div>
+      <div class="overview-label">مجموع المستخدمين</div>
       <strong class="overview-value" id="total-users">0</strong>
     </div>
     <div class="overview-card is-active">
-      <div class="overview-label">Active now</div>
+      <div class="overview-label">نشط الآن</div>
       <strong class="overview-value" id="active-users">0</strong>
     </div>
     <div class="overview-card is-inactive">
-      <div class="overview-label">Inactive</div>
+      <div class="overview-label">غير نشط</div>
       <strong class="overview-value" id="inactive-users">0</strong>
     </div>
   </section>
 
   <section class="add-user">
-    <h2>Add a user</h2>
+    <h2>إضافة مستخدم</h2>
     <form class="add-user-form" id="add-user-form" novalidate>
       <label>
-        First name
+        الاسم الاول
         <input type="text" name="first_name" id="first_name" required>
       </label>
       <label>
-        Last name
+        الاسم الاخير
         <input type="text" name="last_name" id="last_name" required>
       </label>
       <label>
-        Username
+        اسم المستخدم
         <input type="text" name="username" id="username" autocomplete="off" required>
       </label>
       <label>
-        Password
+        كلمة المرور
         <input type="password" name="password" id="password" autocomplete="new-password" required>
       </label>
       <label>
-        Role
+        الدور
         <select name="role" id="role" required>
-          <option value="" disabled selected>Select a role</option>
+          <option value="" disabled selected>اختر</option>
           <option value="super_admin">Super Admin</option>
           <option value="eng_admin">Engineer Admin</option>
           <option value="acc_admin">Accountant Admin</option>
@@ -737,7 +735,7 @@ main {
         </select>
       </label>
       <div class="form-actions">
-        <button type="submit" class="btn" id="add-user-btn">Add user</button>
+        <button type="submit" class="btn" id="add-user-btn">إضافة مستخدم</button>
         <p class="form-message" id="add-user-message" role="alert" hidden></p>
       </div>
     </form>
@@ -746,15 +744,14 @@ main {
   <section class="users-section">
     <div class="users-toolbar">
       <div>
-        <h2>All users</h2>
-        <p class="users-toolbar-copy" id="users-count">Showing all accounts</p>
+        <h2>جميع المستخدمين</h2>
       </div>
       <div class="users-filters" role="search">
-        <input type="search" id="user-search" placeholder="Search by name or role" aria-label="Search users">
+        <input type="search" id="user-search" placeholder="ابحث بالاسم أو الدور" aria-label="Search users">
         <select id="status-filter" aria-label="Filter users by status">
-          <option value="all">All statuses</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
+          <option value="all">نشط و غير نشط</option>
+          <option value="active">نشط</option>
+          <option value="inactive">غير نشط</option>
         </select>
       </div>
     </div>
@@ -763,9 +760,9 @@ main {
     <table class="users-table" id="users-table">
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Role</th>
-          <th>Status</th>
+          <th>الاسم</th>
+          <th>الدور</th>
+          <th>الحالة</th>
           <th></th>
           <th class="permissions-menu"></th>
         </tr>
@@ -775,7 +772,6 @@ main {
         <tr data-user-id="{{ u.id }}" data-active="{{ 'true' if u.is_active else 'false' }}">
           <td class="user-name">
             <div class="user-identity">
-              <span class="user-avatar" aria-hidden="true">{{ u.name[0] }}</span>
               <span class="user-name-text">{{ u.name }}</span>
             </div>
           </td>
@@ -783,7 +779,7 @@ main {
           <td>
             <span class="status-cell">
               <span class="status-dot {{ 'is-active' if u.is_active else '' }}"></span>
-              <span class="status-text">{{ 'Active' if u.is_active else 'Inactive' }}</span>
+              <span class="status-text">{{ 'نشط' if u.is_active else 'غير نشط' }}</span>
             </span>
           </td>
           <td>
@@ -791,7 +787,7 @@ main {
               <button type="button" class="btn btn-outline btn-small" data-action="toggle">
                 {{ 'Deactivate' if u.is_active else 'Activate' }}
               </button>
-              <button type="button" class="btn btn-danger-outline btn-small" data-action="delete">Delete</button>
+              <button type="button" class="btn btn-danger-outline btn-small" data-action="delete">حذف</button>
             </div>
           </td>
           <td class="permissions-menu">
@@ -801,9 +797,9 @@ main {
         {% endfor %}
       </tbody>
     </table>
-    <p class="no-filter-results" id="no-filter-results" hidden>No users match your search.</p>
+    <p class="no-filter-results" id="no-filter-results" hidden>لا يوجد مستخدمين يطابق بحثك</p>
     {% else %}
-    <p class="empty-users">No other users yet.</p>
+    <p class="empty-users">لا يوجد مستخدمين.</p>
     {% endif %}
   </section>
 </main>
@@ -811,22 +807,22 @@ main {
 <div class="permission-modal-backdrop" id="permissions-modal" hidden>
   <div class="permission-modal-card" role="dialog" aria-modal="true" aria-labelledby="permissions-modal-title">
     <div class="permission-modal-head">
-      <h3 id="permissions-modal-title">Permissions</h3>
+      <h3 id="permissions-modal-title">الصلاحيات</h3>
       <button type="button" class="permission-close" id="permission-close" aria-label="Close permissions dialog">×</button>
     </div>
 
     <form class="permission-add-form" id="permission-add-form">
       <label>
-        Add permission
+        اضافة صلاحية
         <select id="permission-type" name="permission_type" required>
-          <option value="" disabled selected>Choose a permission</option>
+          <option value="" disabled selected>اختر</option>
           <option value="manage users">Manage Users</option>
           <option value="manage page">Manage Page</option>
           <option value="manage extracts">Manage Extracts</option>
           <option value="approve extracts">Approve Extracts</option>
         </select>
       </label>
-      <button type="submit" class="btn btn-small">Add</button>
+      <button type="submit" class="btn btn-small">اضافة</button>
     </form>
 
     <ul class="permission-list" id="permission-list"></ul>
@@ -937,9 +933,11 @@ function updateUserView() {
     if (isVisible) visibleCount += 1;
   });
 
-  usersCount.textContent = visibleCount === rows.length
-    ? `Showing all ${rows.length} account${rows.length === 1 ? '' : 's'}`
-    : `Showing ${visibleCount} of ${rows.length} accounts`;
+  if (usersCount) {
+    usersCount.textContent = visibleCount === rows.length
+      ? `Showing all ${rows.length} account${rows.length === 1 ? '' : 's'}`
+      : `Showing ${visibleCount} of ${rows.length} accounts`;
+  }
   if (noFilterResults) noFilterResults.hidden = visibleCount > 0;
 }
 
@@ -982,7 +980,7 @@ async function loadUserPermissions(userId) {
     ? items.map((perm) => `
         <li class="permission-item" data-perm-id="${perm.id}">
           <span class="permission-name">${perm.type}</span>
-          <button type="button" class="btn btn-danger-outline btn-small" data-perm-delete="${perm.id}">Delete</button>
+          <button type="button" class="btn btn-danger-outline btn-small" data-perm-delete="${perm.id}">حذف</button>
         </li>
       `).join('')
     : '<li class="permission-empty">No permissions assigned yet.</li>';
