@@ -56,7 +56,11 @@ async def home(request: Request, db: Session = Depends(get_db)):
         db.flush()
         db.add(Permission(user_id=new_admin.id, type="manage users"))
         db.add(Permission(user_id=new_admin.id, type="manage page"))
-        db.add(Permission(user_id=new_admin.id, type="manage extracts"))
+        db.add(Permission(user_id=new_admin.id, type="extracts history"))
+        db.add(Permission(user_id=new_admin.id, type="edit extracts"))
+        db.add(Permission(user_id=new_admin.id, type="add extracts"))
+        db.add(Permission(user_id=new_admin.id, type="delete extracts"))
+        db.add(Permission(user_id=new_admin.id, type="accounting"))
         db.commit()
 
     return templates.TemplateResponse("home.html", {"request": request})
