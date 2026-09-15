@@ -17,7 +17,7 @@ from app.models.extracts.history_category_item import ExtractCategoryItemHistory
 from app.models.extracts.taxes_history import ExtractTaxesHistory
 from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
-from app.schemas.exctract import AddExtract, AddExtractCategory, AddExtractCategoryItems, AddExtractTax, AddExtractDeduction, PreviouslyPaid, UpdateAmount, UpdateCompletion, UpdateCurrency
+from app.schemas.exctract import AddExtract, AddExtractCategory, AddExtractCategoryItems, AddExtractTax, AddExtractDeduction, PreviouslyPaid, UpdateAmount, UpdateCompletion, UpdateCurrency, AddExtractCategories
 from app.core.auth import validate_user
 from app.utils import generate_extract_pdf
 from app.database import get_db
@@ -208,7 +208,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "unit_type": item.unit_type,
             "amount": item.amount,
             "currency": item.currency,
-            "completion_perc": item.completion_perc,
+            "completion_perc": int(item.completion_perc * 100),
             "total": item.total
         })
 
@@ -234,7 +234,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
         {
             "id": t.id,
             "title": t.title,
-            "rate": t.rate,
+            "rate": int(t.rate*100),
             "amount": t.rate * extract.sub_total
         }
         for t in db.query(ExtractTaxesHistory).filter(ExtractTaxesHistory.extract_history_id == extract.id).all()
@@ -383,6 +383,128 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
+
+@router.patch("/edit_extract/{ext_id}")
+def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "edit extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+    old_cats_ids = [cat.id for cat in old_cats]
+    old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_items_by_cat = {}
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+
+    try:
+        history = ExtractHistory(
+            extract_id=extract.id,
+            updated_at=datetime.now(timezone.utc),
+            updated_by=user_id,
+            project_name=extract.project_name,
+            unit_number=extract.unit_number,
+            contractor_name=extract.contractor_name,
+            job_title=extract.job_title,
+            sub_total=extract.sub_total,
+            total_taxes=extract.total_taxes,
+            total_deductions=extract.total_deductions,
+            total_payments=extract.total_payments,
+            total=extract.total
+        )
+        db.add(history)
+        db.flush()
+        for old_cat in old_cats:
+            history_cat = ExtractCategoryHistory(
+                extract_history_id=history.id,
+                title=old_cat.title
+            )
+            db.add(history_cat)
+            db.flush()
+            for item in old_items_by_cat.get(old_cat.id, []):
+                db.add(ExtractCategoryItemHistory(
+                    extract_category_history_id=history_cat.id,
+                    title=item.title,
+                    unit_type=item.unit_type,
+                    amount=item.amount,
+                    currency=item.currency,
+                    completion_perc=item.completion_perc,
+                    total=item.total
+                ))
+
+        for t in old_taxes:
+            db.add(ExtractTaxesHistory(extract_history_id=history.id, title=t.title, rate=t.rate))
+        for d in old_deductions:
+            db.add(ExtractDeductionHistory(extract_history_id=history.id, title=d.title, amount=d.amount))
+        for p in old_payments:
+            db.add(ExtractPreviouslyPaidHistory(extract_history_id=history.id, details=p.details, amount=p.amount))
+
+        for old_cat in old_cats:
+            db.delete(old_cat)
+
+        items_total = Decimal("0")
+        for cat in payload.categories:
+            new_cat = ExtractCategory(extract_id=extract.id, title=cat.title)
+            db.add(new_cat)
+            db.flush()
+            for item in cat.items:
+                item_total = round(item.currency * item.amount * item.completion_perc, 2)
+                db.add(ExtractCategoryItem(
+                    category_id=new_cat.id,
+                    title=item.title,
+                    unit_type=item.unit_type,
+                    amount=item.amount,
+                    currency=item.currency,
+                    completion_perc=item.completion_perc,
+                    total=item_total
+                ))
+                items_total += item_total
+        extract.sub_total = items_total
+
+        total_rates = sum(
+            (t.rate for t in old_taxes),
+            Decimal("0"),
+        )
+        total_taxes = round(total_rates * extract.sub_total, 2)
+
+        total_deductions = sum(
+            (d.amount for d in old_deductions),
+            Decimal("0"),
+        )
+
+        total_payments = sum(
+            (p.amount for p in old_payments),
+            Decimal("0"),
+        )
+
+        extract.total_taxes = total_taxes
+        extract.total_deductions = total_deductions
+        extract.total_payments = total_payments
+        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.approved = False
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
 
 @router.delete("/del_extract/{ext_id}")
 def add_cat(request: Request, ext_id: int, db: Session = Depends(get_db)):
@@ -1891,9 +2013,8 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if user.role != "super_admin":
         permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
         permission_types = [p.type for p in permissions]
-        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
+        if "edit extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-        
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:

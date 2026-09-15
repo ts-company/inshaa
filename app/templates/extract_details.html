@@ -337,6 +337,53 @@
       text-decoration: underline;
     }
 
+    .edit-mode-only {
+      display: none;
+    }
+
+    .category-edit-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .edit-mode-buttons {
+      display: none;
+      gap: 10px;
+    }
+
+    .edit-save-error {
+      display: none;
+      max-width: 260px;
+      color: var(--error);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .edit-save-error.is-visible {
+      display: block;
+    }
+
+    .operation-error {
+      display: block;
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    body.is-edit-mode .edit-mode-buttons {
+      display: flex;
+    }
+
+    body.is-edit-mode .edit-mode-only {
+      display: inline-flex;
+    }
+
+    body.is-edit-mode .edit-mode-hidden {
+      display: none !important;
+    }
+
     .line-delete {
       background: none;
       border: none;
@@ -566,6 +613,7 @@
     }
 
     .inline-edit-trigger {
+      display: none;
       opacity: 0;
       background: none;
       border: 0;
@@ -576,6 +624,10 @@
       margin-left: 6px;
       padding: 2px;
       transition: opacity 0.15s ease, color 0.15s ease;
+    }
+
+    body.is-edit-mode .inline-edit-trigger {
+      display: inline-block;
     }
 
     .inline-edit-trigger::before {
@@ -589,6 +641,12 @@
     .inline-editor {
       align-items: center;
       display: inline-flex;
+      gap: 4px;
+    }
+
+    .editable-text {
+      display: inline-flex;
+      align-items: center;
       gap: 4px;
     }
 
@@ -943,9 +1001,9 @@
     }
 
     .item-row-remove {
-      position: absolute;
-      top: 8px;
-      right: 8px;
+      display: block;
+      position: static;
+      margin: 0 0 8px auto;
     }
 
     .items-section-head {
@@ -1109,7 +1167,15 @@
         </div>
       </div>
 
-      <button type="button" class="btn btn-primary" id="btn-open-add-category">اضافة بند رئيسي</button>
+      <div class="category-edit-actions">
+        <button type="button" class="btn btn-primary edit-mode-hidden" id="btn-enter-edit">تعديل</button>
+        <div class="edit-mode-buttons">
+          <button type="button" class="btn btn-primary" id="btn-save-edit">حفظ</button>
+          <button type="button" class="btn btn-secondary" id="btn-cancel-edit">الغاء</button>
+        </div>
+        <button type="button" class="btn btn-primary edit-mode-only" id="btn-open-add-category">اضافة بند رئيسي</button>
+        <p class="edit-save-error" id="edit-save-error" role="alert"></p>
+      </div>
     </div>
 
     <div class="categories-column">
@@ -1117,11 +1183,14 @@
       {% for cat in extract.categories %}
       <div class="category-block">
         <div class="category-head">
-          <h2>{{ cat.title }}</h2>
+          <h2 class="editable-cell" data-edit-field="category_title" data-edit-type="text">
+            <span class="editable-value">{{ cat.title }}</span>
+            <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit category title" title="Edit category title"></button>
+          </h2>
           <div class="category-head-actions">
-            <button type="button" class="btn btn-ghost btn-open-add-item" data-cat-id="{{ cat.id }}"
+            <button type="button" class="btn btn-ghost btn-open-add-item edit-mode-only" data-cat-id="{{ cat.id }}"
               data-cat-title="{{ cat.title }}">اضافة بند فرعي</button>
-            <button type="button" class="btn-text btn-delete-category" data-cat-id="{{ cat.id }}"
+            <button type="button" class="btn-text btn-delete-category edit-mode-only" data-cat-id="{{ cat.id }}"
               data-cat-title="{{ cat.title }}">حذف البند</button>
           </div>
         </div>
@@ -1142,8 +1211,14 @@
           <tbody>
             {% for item in cat["items"] %}
             <tr>
-              <td class="item-title">{{ item.title }}</td>
-              <td>{{ item.unit_type }}</td>
+              <td class="item-title editable-cell" data-edit-field="title" data-edit-type="text">
+                <span class="editable-value">{{ item.title }}</span>
+                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button>
+              </td>
+              <td class="editable-cell" data-edit-field="unit_type" data-edit-type="text">
+                <span class="editable-value">{{ item.unit_type }}</span>
+                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button>
+              </td>
               <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="amount"
                 data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
                 <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
@@ -1155,14 +1230,14 @@
                 <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
               </td>
               <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
-                data-edit-value="{{ item.completion_perc * 100 }}" data-edit-step="0.01" data-edit-min="1"
+                data-edit-value="{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}" data-edit-step="0.01" data-edit-min="1"
                 data-edit-max="100">
-                <span class="editable-value">{{ item.completion_perc }}%</span>
+                <span class="editable-value">{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}%</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
               </td>
               <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
               <td class="is-actions">
-                <button type="button" class="btn-text btn-delete-item" data-item-id="{{ item.id }}"
+                <button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-id="{{ item.id }}"
                   data-item-title="{{ item.title }}">حذف</button>
               </td>
             </tr>
@@ -1293,9 +1368,9 @@
       {% if "approve extracts" in permissions %}
       <input type="checkbox" id="extract-approved"{% if extract.approved %} checked{% endif %}
         aria-label="Approve extract">
+      <span>الموافقة عل المستخلص</span>
       {% else %}
-      <strong class="approval-status">{% if extract.approved %}Yes{% else %}No{% endif %}</strong>
-      <span>Approved</span>
+      <strong class="approval-status">{% if extract.approved %}موافق عليه{% else %}غير موفق عليه{% endif %}</strong>
       {% if extract.approved %}
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}">Generate PDF</a>
       {% endif %}
@@ -1307,11 +1382,10 @@
     <p>© 2026 Inshaa</p>
   </footer>
 
-  <!-- ===== Add Category modal ===== -->
+  <!-- ===== Add Category modal: edit-mode category draft ===== -->
   <div class="inline-category-editor" id="modal-add-category">
     <div class="modal">
       <div class="modal-head">
-        <h2>اضافة بند رئيسي</h2>
         <button type="button" class="modal-close" data-close-modal="modal-add-category">&times;</button>
       </div>
 
@@ -1319,7 +1393,7 @@
 
       <form id="form-add-category">
         <div class="field">
-          <label for="cat-title">عنوان الند</label>
+          <label for="cat-title">عنوان البند الرئيسي</label>
           <input type="text" id="cat-title" name="title" required>
         </div>
 
@@ -1331,8 +1405,7 @@
         <div class="item-rows" id="category-item-rows"></div>
 
         <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-category">الغاء</button>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="button" class="btn btn-primary" id="btn-stage-category">اضافة البند للتعديل</button>
         </div>
       </form>
     </div>
@@ -1495,6 +1568,8 @@
     (function () {
       const extractId = document.body.dataset.extractId;
       const API_BASE = '/system/extracts';
+      let editMode = false;
+      let editSnapshot = null;
 
       const historyList = document.getElementById('extract-history-list');
       const historyPanel = document.getElementById('extract-history-panel');
@@ -1582,6 +1657,177 @@
         el.classList.remove('is-visible');
       }
 
+      function showEditSaveError(message) {
+        const error = document.getElementById('edit-save-error');
+        error.textContent = message;
+        error.classList.add('is-visible');
+      }
+
+      function showOperationError(target, message) {
+        const existing = target.parentElement.querySelector('.operation-error');
+        if (existing) existing.remove();
+        const error = document.createElement('span');
+        error.className = 'operation-error';
+        error.textContent = message;
+        target.parentElement.appendChild(error);
+      }
+
+      function setEditMode(enabled) {
+        editMode = enabled;
+        document.body.classList.toggle('is-edit-mode', enabled);
+        document.getElementById('btn-save-edit').hidden = !enabled;
+        document.getElementById('btn-cancel-edit').hidden = !enabled;
+      }
+
+      function formatAmount(value) {
+        return Number(value).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+
+      function completionPercentage(value) {
+        const numericValue = Number(value);
+        return numericValue <= 1 ? numericValue * 100 : numericValue;
+      }
+
+      function completionFraction(percentage) {
+        return String(Number(percentage) / 100);
+      }
+
+      function decimalString(value) {
+        const text = String(value).trim();
+        const number = Number(text);
+        return text && Number.isFinite(number) ? text : null;
+      }
+
+      function createItemRow(item) {
+        const row = document.createElement('tr');
+        row.innerHTML =
+          '<td class="item-title editable-cell" data-edit-field="title" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button></td>' +
+          '<td class="editable-cell" data-edit-field="unit_type" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button></td>' +
+          '<td class="is-numeric editable-cell" data-edit-field="amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button></td>' +
+          '<td class="editable-cell" data-edit-field="currency" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button></td>' +
+          '<td class="is-numeric editable-cell" data-edit-field="completion" data-edit-step="0.01" data-edit-min="1" data-edit-max="100"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button></td>' +
+          '<td class="is-numeric item-total"></td>' +
+          '<td class="is-actions"><button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-title="">حذف</button></td>';
+
+        const cells = row.children;
+        cells[0].querySelector('.editable-value').textContent = item.title;
+        cells[1].querySelector('.editable-value').textContent = item.unit_type;
+        cells[2].dataset.editValue = item.amount;
+        cells[2].querySelector('.editable-value').textContent = formatAmount(item.amount);
+        cells[3].dataset.editValue = item.currency;
+        cells[3].querySelector('.editable-value').textContent = formatAmount(item.currency);
+        const itemCompletionPercentage = completionPercentage(item.completion_perc);
+        cells[4].dataset.editValue = itemCompletionPercentage;
+        cells[4].querySelector('.editable-value').textContent = itemCompletionPercentage + '%';
+        cells[5].textContent = formatAmount(item.total || item.amount * item.currency * (itemCompletionPercentage / 100));
+        cells[6].querySelector('.btn-delete-item').dataset.itemId = '';
+        cells[6].querySelector('.btn-delete-item').dataset.itemTitle = item.title;
+        return row;
+      }
+
+      function createCategoryBlock(title, items) {
+        const block = document.createElement('div');
+        block.className = 'category-block';
+        block.innerHTML =
+          '<div class="category-head"><h2 class="editable-cell" data-edit-field="category_title" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit category title" title="Edit category title"></button></h2><div class="category-head-actions">' +
+          '<button type="button" class="btn btn-ghost btn-open-add-item edit-mode-only" data-cat-id="" data-cat-title="">اضافة بند فرعي</button>' +
+          '<button type="button" class="btn-text btn-delete-category edit-mode-only" data-cat-id="" data-cat-title="">حذف البند</button>' +
+          '</div></div>' +
+          '<table class="items-table"><thead><tr><th>بند فرعي</th><th>نوع الوحدة</th><th class="is-numeric">الكمية</th><th>الفئة</th><th class="is-numeric">نسبنة الانجاز</th><th class="is-numeric">الاجمالي</th><th class="is-actions"></th></tr></thead><tbody></tbody></table>';
+        block.querySelector('h2 .editable-value').textContent = title;
+        block.querySelectorAll('[data-cat-title]').forEach(function (button) {
+          button.dataset.catTitle = title;
+        });
+        const body = block.querySelector('tbody');
+        items.forEach(function (item) { body.appendChild(createItemRow(item)); });
+        return block;
+      }
+
+      function readItemFields(row) {
+        const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
+        const completionPercentage = parseFloat(get('completion_perc').value);
+        return {
+          title: get('title').value.trim(),
+          unit_type: get('unit_type').value.trim(),
+          amount: decimalString(get('amount').value),
+          currency: decimalString(get('currency').value),
+          completion_perc: completionFraction(completionPercentage),
+        };
+      }
+
+      function validateItem(item) {
+        const completion = parseFloat(item.completion_perc);
+        return Boolean(item.title && item.unit_type &&
+          item.amount !== null && item.currency !== null &&
+          !Number.isNaN(completion) && completion >= 0.01 && completion <= 1);
+      }
+
+      function serializeCategories() {
+        const categories = Array.from(categoriesColumn.querySelectorAll(':scope > .category-block')).map(function (category) {
+          const items = Array.from(category.querySelectorAll('tbody tr')).map(function (row) {
+            const cells = row.children;
+            return {
+              title: cells[0].querySelector('.editable-value').textContent.trim(),
+              unit_type: cells[1].querySelector('.editable-value').textContent.trim(),
+              amount: decimalString(cells[2].dataset.editValue),
+              currency: decimalString(cells[3].dataset.editValue),
+              completion_perc: completionFraction(cells[4].dataset.editValue),
+            };
+          });
+          const draftEditor = category.querySelector('.inline-add-item-editor');
+          if (draftEditor) {
+            draftEditor.querySelectorAll('.inline-add-item-row').forEach(function (row) {
+              items.push(readItemFields(row));
+            });
+          }
+          return {
+            title: category.querySelector('.category-head h2 .editable-value').textContent.trim(),
+            items: items,
+          };
+        });
+
+        const categoryForm = document.getElementById('form-add-category');
+        const categoryTitle = document.getElementById('cat-title').value.trim();
+        if (categoryForm && categoryTitle && categoryForm.closest('.inline-category-editor').classList.contains('is-open')) {
+          categories.push({
+            title: categoryTitle,
+            items: Array.from(categoryForm.querySelectorAll('.item-row')).map(function (row) {
+              return readItemFields(row);
+            }),
+          });
+        }
+        return categories;
+      }
+
+      function refreshEmptyState(category) {
+        const body = category.querySelector('tbody');
+        const table = category.querySelector('.items-table');
+        let empty = category.querySelector('.empty-items');
+        if (body.children.length) {
+          table.hidden = false;
+          if (empty) empty.remove();
+        } else {
+          table.hidden = true;
+          if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'empty-items';
+            empty.textContent = 'لا توجد عناصر في هذا البند';
+            category.appendChild(empty);
+          }
+        }
+      }
+
+      function ensureItemsTable(category) {
+        if (category.querySelector('.items-table')) return category.querySelector('tbody');
+        const table = createCategoryBlock('', []).querySelector('.items-table');
+        category.querySelector('.empty-items')?.remove();
+        category.appendChild(table);
+        return table.querySelector('tbody');
+      }
+
       // ---------- shared: POST / DELETE helpers ----------
       function postJSON(url, body) {
         return fetch(url, {
@@ -1610,7 +1856,7 @@
           })
           .catch(function (err) {
             if (button) button.disabled = false;
-            alert('Could not delete. ' + err.message);
+            showOperationError(button || document.body, 'لا يمكن الحذف' + err.message);
           });
       }
 
@@ -1623,7 +1869,9 @@
         }).then(function (res) {
           return res.text().then(function (message) {
             if (!res.ok) {
-              throw new Error(message || 'Request failed with status ' + res.status);
+              const error = new Error(message || 'Request failed with status ' + res.status);
+              error.status = res.status;
+              throw error;
             }
             return message;
           });
@@ -1634,82 +1882,147 @@
         if (cell.querySelector('.inline-editor')) return;
 
         const field = cell.getAttribute('data-edit-field');
-        const itemId = cell.getAttribute('data-item-id');
-        const currentValue = cell.getAttribute('data-edit-value');
+        const isText = cell.getAttribute('data-edit-type') === 'text';
+        let currentValue = isText
+          ? cell.querySelector('.editable-value').textContent.trim()
+          : cell.getAttribute('data-edit-value');
+        const renderCell = function (newValue) {
+          const displayValue = document.createElement('span');
+          displayValue.className = 'editable-value';
+          displayValue.textContent = field === 'completion'
+            ? newValue + '%'
+            : isText ? newValue : formatAmount(newValue);
+          const trigger = document.createElement('button');
+          trigger.type = 'button';
+          trigger.className = 'inline-edit-trigger edit-mode-only';
+          trigger.setAttribute('aria-label', 'Edit ' + field);
+          trigger.title = 'Edit ' + field;
+          cell.innerHTML = '';
+          cell.appendChild(displayValue);
+          cell.appendChild(trigger);
+        };
         const input = document.createElement('input');
-        input.type = 'number';
+        input.type = isText ? 'text' : 'number';
         input.value = currentValue;
-        input.step = cell.getAttribute('data-edit-step');
-        input.min = cell.getAttribute('data-edit-min');
-        if (cell.hasAttribute('data-edit-max')) input.max = cell.getAttribute('data-edit-max');
+        if (!isText) {
+          input.step = cell.getAttribute('data-edit-step');
+          input.min = cell.getAttribute('data-edit-min');
+          if (cell.hasAttribute('data-edit-max')) input.max = cell.getAttribute('data-edit-max');
+        }
 
         const editor = document.createElement('span');
         editor.className = 'inline-editor';
-        const actions = document.createElement('span');
-        actions.className = 'inline-editor-actions';
-
-        const saveButton = document.createElement('button');
-        saveButton.type = 'button';
-        saveButton.textContent = 'Save';
-        const cancelButton = document.createElement('button');
-        cancelButton.type = 'button';
-        cancelButton.textContent = 'الغاء';
-
-        actions.appendChild(saveButton);
-        actions.appendChild(cancelButton);
         editor.appendChild(input);
-        editor.appendChild(actions);
         cell.innerHTML = '';
         cell.appendChild(editor);
         input.focus();
         input.select();
 
-        cancelButton.addEventListener('click', function () {
-          window.location.reload();
-        });
+        function restoreCell() {
+          renderCell(currentValue);
+        }
 
-        saveButton.addEventListener('click', function () {
-          const value = parseFloat(input.value);
+        function commitValue() {
+          if (!cell.querySelector('.inline-editor')) return;
+          const value = isText ? input.value.trim() : parseFloat(input.value);
           const min = parseFloat(input.min);
           const max = input.max ? parseFloat(input.max) : Infinity;
-          if (Number.isNaN(value) || value < min || value > max) {
-            alert('Please enter a valid value.');
-            input.focus();
+          if ((!isText && (Number.isNaN(value) || value < min || value > max)) || (isText && !value)) {
+            restoreCell();
             return;
           }
 
-          saveButton.disabled = true;
-          cancelButton.disabled = true;
-          const backendValue = field === 'completion' ? value / 100 : value;
-          patchJSON(API_BASE + '/edit_' + field + '/' + itemId, {
-            [field]: backendValue,
-          })
-            .then(function () {
-              window.location.reload();
-            })
-            .catch(function (err) {
-              saveButton.disabled = false;
-              cancelButton.disabled = false;
-              alert('Could not update item. ' + err.message);
+          currentValue = String(value);
+          if (!isText) cell.dataset.editValue = currentValue;
+          renderCell(currentValue);
+          const row = cell.closest('tr');
+          if (field === 'title' && row) {
+            row.querySelector('.btn-delete-item').dataset.itemTitle = currentValue;
+          }
+          if (field === 'category_title') {
+            cell.closest('.category-block').querySelectorAll('[data-cat-title]').forEach(function (button) {
+              button.dataset.catTitle = currentValue;
             });
+          }
+          if (row && !isText) {
+            const amount = parseFloat(row.children[2].dataset.editValue);
+            const currency = parseFloat(row.children[3].dataset.editValue);
+            const completion = parseFloat(row.children[4].dataset.editValue) / 100;
+            row.querySelector('.item-total').textContent = formatAmount(amount * currency * completion);
+          }
+        }
+
+        input.addEventListener('blur', function () {
+          commitValue();
         });
 
         input.addEventListener('keydown', function (event) {
-          if (event.key === 'Enter') saveButton.click();
-          if (event.key === 'Escape') cancelButton.click();
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            input.blur();
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            restoreCell();
+          }
         });
       }
 
-      document.querySelectorAll('.inline-edit-trigger').forEach(function (button) {
-        button.addEventListener('click', function () {
-          openInlineEditor(button.closest('.editable-cell'));
-        });
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('.inline-edit-trigger');
+        if (button && editMode) openInlineEditor(button.closest('.editable-cell'));
       });
 
       // ---------- Add Category ----------
       const rowsContainer = document.getElementById('category-item-rows');
       const rowTemplate = document.getElementById('item-row-template');
       const categoriesColumn = document.querySelector('.categories-column');
+      const categoryModal = document.getElementById('modal-add-category');
+
+      document.getElementById('btn-enter-edit').addEventListener('click', function () {
+        clearError('edit-save-error');
+        editSnapshot = categoriesColumn.innerHTML;
+        setEditMode(true);
+      });
+
+      document.getElementById('btn-cancel-edit').addEventListener('click', function () {
+        if (editSnapshot !== null) categoriesColumn.innerHTML = editSnapshot;
+        categoriesColumn.prepend(categoryModal);
+        categoryModal.classList.remove('is-open');
+        clearError('edit-save-error');
+        editSnapshot = null;
+        setEditMode(false);
+      });
+
+      document.getElementById('btn-save-edit').addEventListener('click', function () {
+        if (!editMode) return;
+        const saveButton = document.getElementById('btn-save-edit');
+        const categories = serializeCategories();
+        const hasInvalidCategory = categories.some(function (category) {
+          return !category.title || category.items.some(function (item) {
+            return !validateItem(item);
+          });
+        });
+        if (hasInvalidCategory) {
+          showEditSaveError('برجاء التأكد من اكتمال كل بند رئيسي وكل بند فرعي قبل الحفظ');
+          return;
+        }
+        saveButton.disabled = true;
+        patchJSON(API_BASE + '/edit_extract/' + extractId, {
+          categories: categories,
+        })
+          .then(function () {
+            editSnapshot = null;
+            setEditMode(false);
+            window.location.reload();
+          })
+          .catch(function (err) {
+            saveButton.disabled = false;
+            showEditSaveError(err.status === 403
+              ? 'غير مسموح بالتعديل'
+              : 'Could not save extract. ' + err.message);
+          });
+      });
 
       function addItemRow() {
         const node = rowTemplate.content.cloneNode(true);
@@ -1720,7 +2033,7 @@
         document.getElementById('form-add-category').reset();
         rowsContainer.innerHTML = '';
         clearError('add-category-error');
-        categoriesColumn.prepend(document.getElementById('modal-add-category'));
+        categoriesColumn.prepend(categoryModal);
         openModal('modal-add-category');
         document.getElementById('cat-title').focus();
       });
@@ -1733,57 +2046,32 @@
         }
       });
 
-      document.getElementById('form-add-category').addEventListener('submit', function (e) {
-        e.preventDefault();
+      document.getElementById('form-add-category').addEventListener('submit', function (event) {
+        event.preventDefault();
+      });
+
+      document.getElementById('btn-stage-category').addEventListener('click', function () {
         clearError('add-category-error');
-
         const title = document.getElementById('cat-title').value.trim();
-        if (!title) return;
-
-        const items = [];
-        let invalid = false;
-        rowsContainer.querySelectorAll('.item-row').forEach(function (row) {
-          const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
-          const completionPercentage = parseFloat(get('completion_perc').value);
-          const item = {
-            title: get('title').value.trim(),
-            unit_type: get('unit_type').value.trim(),
-            amount: parseFloat(get('amount').value),
-            currency: parseFloat(get('currency').value),
-            completion_perc: completionPercentage / 100,
-          };
-          if (!item.title || Number.isNaN(item.amount) || Number.isNaN(item.currency) ||
-            Number.isNaN(completionPercentage) || completionPercentage < 1 || completionPercentage > 100) {
-            invalid = true;
-          }
-          items.push(item);
-        });
-
-        if (invalid) {
-          showError('add-category-error', 'Please fill in all fields for every item row. Completion must be between 1 and 100.');
+        const items = Array.from(rowsContainer.querySelectorAll('.item-row')).map(readItemFields);
+        if (!title || !items.length || items.some(function (item) { return !validateItem(item); })) {
+          showError('add-category-error', 'برجاء إكمال اسم البند الرئيسي وجميع البنود الفرعية قبل إضافته للتعديل.');
           return;
         }
 
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-
-        postJSON(API_BASE + '/add_category/' + extractId, { title: title, items: items })
-          .then(function () {
-            window.location.reload();
-          })
-          .catch(function (err) {
-            submitBtn.disabled = false;
-            showError('add-category-error', 'Could not add category. ' + err.message);
-          });
+        categoriesColumn.querySelector('.empty-categories')?.remove();
+        categoriesColumn.appendChild(createCategoryBlock(title, items));
+        closeModal('modal-add-category');
+        document.getElementById('form-add-category').reset();
+        rowsContainer.innerHTML = '';
       });
 
       // ---------- Delete Category ----------
-      document.querySelectorAll('.btn-delete-category').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const catTitle = btn.getAttribute('data-cat-title');
-          if (!confirm('Delete category "' + catTitle + '" and all its items? This cannot be undone.')) return;
-          deleteResource(API_BASE + '/del_category/' + btn.getAttribute('data-cat-id'), btn);
-        });
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('.btn-delete-category');
+        if (!button || !editMode) return;
+        const category = button.closest('.category-block');
+        if (category) category.remove();
       });
 
       // ---------- Add Item (per existing category) ----------
@@ -1822,7 +2110,6 @@
           '<div data-inline-rows></div>' +
           '<div class="inline-add-item-editor-actions">' +
           '<button type="button" class="btn btn-secondary" data-inline-cancel>الغاء</button>' +
-          '<button type="button" class="btn btn-primary" data-inline-save>Save</button>' +
           '</div>';
 
         categoryBlock.querySelector('.category-head').after(editor);
@@ -1832,67 +2119,31 @@
           editor.remove();
         });
 
-        editor.querySelector('[data-inline-save]').addEventListener('click', function () {
-          const rows = Array.from(editor.querySelectorAll('.inline-add-item-row'));
-          const items = [];
-          let invalid = false;
-
-          rows.forEach(function (row) {
-            const get = function (field) { return row.querySelector('[data-field="' + field + '"]'); };
-            const completionPercentage = parseFloat(get('completion_perc').value);
-            const item = {
-              title: get('title').value.trim(),
-              unit_type: get('unit_type').value.trim(),
-              amount: parseFloat(get('amount').value),
-              currency: parseFloat(get('currency').value),
-              completion_perc: completionPercentage / 100,
-            };
-
-            if (!item.title || !item.unit_type || Number.isNaN(item.amount) ||
-              Number.isNaN(item.currency) || Number.isNaN(completionPercentage) ||
-              completionPercentage < 1 || completionPercentage > 100) {
-              invalid = true;
-            }
-            items.push(item);
-          });
-
-          if (invalid || !items.length) {
-            alert('Please fill in all item fields. Completion must be between 1 and 100.');
-            return;
-          }
-
-          const saveButton = editor.querySelector('[data-inline-save]');
-          const cancelButton = editor.querySelector('[data-inline-cancel]');
-          saveButton.disabled = true;
-          cancelButton.disabled = true;
-
-          postJSON(API_BASE + '/add_item/' + editor.getAttribute('data-category-id'), { items: items })
-            .then(function () {
-              window.location.reload();
-            })
-            .catch(function (err) {
-              saveButton.disabled = false;
-              cancelButton.disabled = false;
-              alert('Could not add items. ' + err.message);
-            });
-        });
-
         return editor;
       }
 
-      document.querySelectorAll('.btn-open-add-item').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          createInlineItemEditor(btn);
-        });
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('.btn-open-add-item');
+        if (button && editMode) createInlineItemEditor(button);
       });
 
       // ---------- Delete Item ----------
       document.querySelectorAll('.btn-delete-item').forEach(function (btn) {
+        btn.dataset.bound = 'true';
         btn.addEventListener('click', function () {
-          const itemTitle = btn.getAttribute('data-item-title');
-          if (!confirm('Delete item "' + itemTitle + '"? This cannot be undone.')) return;
-          deleteResource(API_BASE + '/del_item/' + btn.getAttribute('data-item-id'), btn);
+          if (!editMode) return;
+          const category = btn.closest('.category-block');
+          btn.closest('tr').remove();
+          refreshEmptyState(category);
         });
+      });
+
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('.btn-delete-item');
+        if (!button || button.dataset.bound || !editMode) return;
+        const category = button.closest('.category-block');
+        button.closest('tr').remove();
+        refreshEmptyState(category);
       });
 
       // ---------- Add Tax ----------
@@ -2037,7 +2288,7 @@
           patchJSON(API_BASE + '/' + approvalAction + '/' + extractId, {})
             .catch(function (err) {
               approvalCheckbox.checked = !approved;
-              alert('Could not update approval. ' + err.message);
+              showOperationError(approvalCheckbox, 'لا يمكن تحديث الموافقة. ' + err.message);
             })
             .finally(function () {
               approvalCheckbox.disabled = false;
