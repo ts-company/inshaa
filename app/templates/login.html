@@ -363,14 +363,18 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify({ username, password }),
     });
 
-    if (!res.ok){
-      if (res.status === 404) {
-      showMessage('Incorrect username or password.', 'error');
-      return;
-      }else {
-        showMessage(`Something went wrong (status ${res.status}). Try again.`, 'error');
-        return;
+    if (!res.ok) {
+      const status = Number(res.status);
+
+      if (status === 403) {
+        showMessage('You account is deactivated', 'error');
+      } else if (status === 404) {
+        showMessage('Incorrect username or password.', 'error');
+      } else {
+        showMessage(`Something went wrong (status ${status}). Try again.`, 'error');
       }
+
+      return;
     }
 
     showMessage('Signing in');

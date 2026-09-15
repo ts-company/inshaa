@@ -1106,6 +1106,17 @@
         text-align: left !important;
       }
 
+      .items-table tbody td[data-label]:not([data-label=""])::before {
+        content: attr(data-label);
+        display: inline-block;
+        min-width: 9rem;
+        margin-right: 8px;
+        color: var(--steel-dark);
+        font-size: 12px;
+        font-weight: 600;
+        text-align: right;
+      }
+
       .items-table td.is-actions {
         padding-top: 8px !important;
       }
@@ -1211,32 +1222,32 @@
           <tbody>
             {% for item in cat["items"] %}
             <tr>
-              <td class="item-title editable-cell" data-edit-field="title" data-edit-type="text">
+              <td class="item-title editable-cell" data-label="بند فرعي" data-edit-field="title" data-edit-type="text">
                 <span class="editable-value">{{ item.title }}</span>
                 <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button>
               </td>
-              <td class="editable-cell" data-edit-field="unit_type" data-edit-type="text">
+              <td class="editable-cell" data-label="نوع الوحدة" data-edit-field="unit_type" data-edit-type="text">
                 <span class="editable-value">{{ item.unit_type }}</span>
                 <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button>
               </td>
-              <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="amount"
+              <td class="is-numeric editable-cell" data-label="الكمية" data-item-id="{{ item.id }}" data-edit-field="amount"
                 data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
                 <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
               </td>
-              <td class="editable-cell" data-item-id="{{ item.id }}" data-edit-field="currency"
+              <td class="editable-cell" data-label="الفئة" data-item-id="{{ item.id }}" data-edit-field="currency"
                 data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
                 <span class="editable-value">{{ item.currency }}</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
               </td>
-              <td class="is-numeric editable-cell" data-item-id="{{ item.id }}" data-edit-field="completion"
+              <td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-item-id="{{ item.id }}" data-edit-field="completion"
                 data-edit-value="{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}" data-edit-step="0.01" data-edit-min="1"
                 data-edit-max="100">
                 <span class="editable-value">{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}%</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
               </td>
-              <td class="is-numeric item-total">{{ "{:,.2f}".format(item.total) }}</td>
-              <td class="is-actions">
+              <td class="is-numeric item-total" data-label="الاجمالي">{{ "{:,.2f}".format(item.total) }}</td>
+              <td class="is-actions" data-label="">
                 <button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-id="{{ item.id }}"
                   data-item-title="{{ item.title }}">حذف</button>
               </td>
@@ -1704,13 +1715,13 @@
       function createItemRow(item) {
         const row = document.createElement('tr');
         row.innerHTML =
-          '<td class="item-title editable-cell" data-edit-field="title" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button></td>' +
-          '<td class="editable-cell" data-edit-field="unit_type" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button></td>' +
-          '<td class="is-numeric editable-cell" data-edit-field="amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button></td>' +
-          '<td class="editable-cell" data-edit-field="currency" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button></td>' +
-          '<td class="is-numeric editable-cell" data-edit-field="completion" data-edit-step="0.01" data-edit-min="1" data-edit-max="100"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button></td>' +
-          '<td class="is-numeric item-total"></td>' +
-          '<td class="is-actions"><button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-title="">حذف</button></td>';
+          '<td class="item-title editable-cell" data-label="بند فرعي" data-edit-field="title" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button></td>' +
+          '<td class="editable-cell" data-label="نوع الوحدة" data-edit-field="unit_type" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button></td>' +
+          '<td class="is-numeric editable-cell" data-label="الكمية" data-edit-field="amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button></td>' +
+          '<td class="editable-cell" data-label="الفئة" data-edit-field="currency" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button></td>' +
+          '<td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-edit-field="completion" data-edit-step="0.01" data-edit-min="1" data-edit-max="100"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button></td>' +
+          '<td class="is-numeric item-total" data-label="الاجمالي"></td>' +
+          '<td class="is-actions" data-label=""><button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-title="">حذف</button></td>';
 
         const cells = row.children;
         cells[0].querySelector('.editable-value').textContent = item.title;

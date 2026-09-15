@@ -74,6 +74,10 @@ def add_user(request: Request, payload: UserCreate, db: Session = Depends(get_db
             db.add(Permission(user_id=new_user.id, type=type))
 
         db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

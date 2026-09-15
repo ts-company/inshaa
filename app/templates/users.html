@@ -886,6 +886,10 @@ addForm.addEventListener('submit', async (e) => {
       showAddMessage("You don't have permission to add users.", 'error');
       return;
     }
+    if (res.status === 409) {
+      showAddMessage("Username already exists.", 'error');
+      return;
+    }
     if (!res.ok) {
       showAddMessage(`Couldn't add the user (status ${res.status}).`, 'error');
       return;
