@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Body
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.exc import SQLAlchemyError
@@ -19,12 +19,13 @@ from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
 from app.schemas.exctract import AddExtract, AddExtractCategories, UpdateAccounting
 from app.core.auth import validate_user
-from app.utils import generate_extract_pdf
+from app.utils import generate_extract_pdf, generate_summary_pdf
 from app.database import get_db
 from app.config import BASE_DIR
 from decimal import Decimal
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+from typing import List
 
 router = APIRouter(prefix="/system/extracts")
 
@@ -41,7 +42,13 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
+        if "generate pdf" not in permission_types and\
+                "edit extracts" not in permission_types and\
+                "approve extracts" not in permission_types and\
+                "accounting" not in permission_types and\
+                "add extracts" not in permission_types and\
+                "delete extracts" not in permission_types and\
+                "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if user_role == "super_admin":
@@ -84,8 +91,8 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
     ]
     return templates.TemplateResponse("extracts.html", {"request": request, "extracts": extracts})
 
-@router.get("/print_summary")
-def get_extracts(request: Request, id: int = None, name: str = None, contractor: str = None, customer: str = None, unit: int = None, job_title: str = None, db: Session = Depends(get_db)):
+@router.post("/get_summary")
+def get_extracts(request: Request, ext_ids: List[int] = Body(...), db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -94,47 +101,45 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
+        if "generate pdf" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    if user_role == "super_admin":
-        query = db.query(Extract)
-    else:
-        query = db.query(Extract).filter(Extract.created_by == user_id)
+    extracts = db.query(Extract).filter(Extract.id.in_(ext_ids)).order_by(Extract.id).all()
+    try:
+        pdf_buffer = generate_summary_pdf(extracts)
+    except RuntimeError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    if id is not None:
-        query = query.filter(Extract.id == id)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=extracts_summary.pdf"}
+    )
 
-    if name:
-        query = query.filter(Extract.project_name.ilike(f"%{name}%"))
+@router.post("/weekly_summary")
+def get_extracts(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if contractor:
-        query = query.filter(Extract.contractor_name.ilike(f"%{contractor}%"))
+    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
+    if user.role != "super_admin":
+        if "generate pdf" not in permission_types:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    if customer:
-        query = query.filter(Extract.contractor_name.ilike(f"%{customer}%"))
+    extracts = db.query(Extract).filter(Extract.id.in_(ext_ids)).order_by(Extract.id).all()
+    try:
+        pdf_buffer = generate_summary_pdf(extracts)
+    except RuntimeError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    if unit:
-        query = query.filter(Extract.unit_number == unit)
-
-    if job_title:
-        query = query.filter(Extract.job_title.ilike(f"%{job_title}%"))
-
-    extracts = [
-        {
-            "id": e.id,
-            "project_name": e.project_name,
-            "unit_number": e.unit_number,
-            "contractor_name": e.contractor_name,
-            "job_title": e.job_title,
-            "sub_total": e.sub_total,
-            "total_taxes": e.total_taxes,
-            "total_deductions": e.total_deductions,
-            "total_payments": e.total_payments,
-            "total": e.total
-        }
-        for e in query.order_by(Extract.id.desc()).all()
-    ]
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=extracts_summary.pdf"}
+    )
 
 
 @router.get("/details/{ext_id}")
@@ -148,9 +153,14 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
     if user.role != "super_admin":
-        if "edit extracts" not in permission_types and "approve extracts" not in permission_types and "accounting" not in permission_types and "add extracts" not in permission_types and "delete extracts" not in permission_types and "extracts history" not in permission_types:
+        if "edit extracts" not in permission_types and\
+                "generate pdf" not in permission_types and\
+                "approve extracts" not in permission_types and\
+                "accounting" not in permission_types and\
+                "add extracts" not in permission_types and\
+                "delete extracts" not in permission_types and\
+                "extracts history" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
@@ -247,6 +257,8 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
+    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
+
     result = (db.query(ExtractHistory, User)
                .join(User, User.id == ExtractHistory.updated_by)
                .filter(ExtractHistory.id == history_id)
@@ -331,7 +343,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "deductions": deductions
         }
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": True})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": True, "permissions": permission_types})
 
 
 @router.get("/histories/{ext_id}")
@@ -788,7 +800,7 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.get("/generate_pdf/{ext_id}")
-def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
+def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -801,29 +813,45 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
         if "generate pdf" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    extract = db.query(Extract).filter(Extract.id == ext_id).first()
-    if not extract:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if is_history:
+        extract = db.query(ExtractHistory).filter(ExtractHistory.id == ext_id).first()
+        if not extract:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
-    category_ids = [c.id for c in categories]
-    items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(category_ids)).all()
+        categories = db.query(ExtractCategoryHistory).filter(ExtractCategoryHistory.extract_history_id == extract.id).all()
+        category_ids = [c.id for c in categories]
+        items = db.query(ExtractCategoryItemHistory).filter(ExtractCategoryItemHistory.extract_category_history_id.in_(category_ids)).all()
 
-    taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
-    deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
-    payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+        taxes = db.query(ExtractTaxesHistory).filter(ExtractTaxesHistory.extract_history_id == extract.id).all()
+        deductions = db.query(ExtractDeductionHistory).filter(ExtractDeductionHistory.extract_history_id == extract.id).all()
+        payments = db.query(ExtractPreviouslyPaidHistory).filter(ExtractPreviouslyPaidHistory.extract_history_id == extract.id).all()
+        items_by_cat = {}
+        for item in items:
+            items_by_cat.setdefault(item.extract_category_history_id, []).append(item)
 
-    items_by_cat = {}
-    for item in items:
-        items_by_cat.setdefault(item.category_id, []).append(item)
+    else:
+        extract = db.query(Extract).filter(Extract.id == ext_id).first()
+        if not extract:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+        category_ids = [c.id for c in categories]
+        items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(category_ids)).all()
+
+        taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+        deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+        payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+        items_by_cat = {}
+        for item in items:
+            items_by_cat.setdefault(item.category_id, []).append(item)
 
     try:
-        pdf_buffer = generate_extract_pdf(extract, categories, items_by_cat, taxes, deductions, payments)
+        pdf_buffer = generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, deductions, payments)
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=extract_{extract.id}.pdf"}
+        headers={"Content-Disposition": f"attachment; filename=invoice_{extract.id}.pdf"}
     )

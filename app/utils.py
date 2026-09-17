@@ -7,13 +7,13 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_RIGHT, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Image as RLImage
+from reportlab.lib.pagesizes import letter, landscape
 from io import BytesIO
 from app.config import BASE_DIR
 
@@ -118,7 +118,7 @@ def ar(text) -> str:
         return text
     return get_display(arabic_reshaper.reshape(text))
 
-def generate_extract_pdf(extract, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
+def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -158,7 +158,7 @@ def generate_extract_pdf(extract, categories, items_by_cat, taxes, dedutions, pa
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
 
-    header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style)
+    header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style) if not is_history else Paragraph(f"{extract.id} {ar('نسخة سابقة')}", title_style)
 
     header_table = Table(
         [[logo, header_text]],
@@ -238,6 +238,77 @@ def generate_extract_pdf(extract, categories, items_by_cat, taxes, dedutions, pa
     ]))
     story.append(totals_table)
     story.append(Paragraph(f"{ar('مدير المشروع')}", normal_style))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+def generate_summary_pdf(extracts) -> BytesIO:
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        topMargin=1.5 * cm,
+        bottomMargin=1.5 * cm,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    title_style = ParagraphStyle(
+        "title_ar", parent=styles["Title"], fontName="Arabic-Bold", alignment=TA_RIGHT
+    )
+    cell_style = ParagraphStyle(
+        "cell_ar", parent=styles["Normal"], fontName="Arabic", fontSize=9,
+        leading=13, alignment=TA_RIGHT, wordWrap="RTL"
+    )
+    header_style = ParagraphStyle(
+        "cell_header_ar", parent=cell_style, fontName="Arabic-Bold", textColor=colors.white
+    )
+
+    # --- Logo + title on the same line ---
+    logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
+    logo = RLImage(logo_path, width=6 * cm, height=2 * cm)
+    header_text = Paragraph(ar("ملخص"), title_style)
+
+    header_table = Table([[logo, header_text]], colWidths=[4 * cm, 12 * cm])
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ALIGN", (0, 0), (0, 0), "CENTER"),
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+    ]))
+    story.append(header_table)
+    story.append(Spacer(1, 16))
+
+    # --- Header row ---
+    headers = ["الصافي", "الاجمالي", "اسم المقاول", "اسم المشروع", "رقم المستخلص"]
+    table_data = [[Paragraph(ar(h), header_style) for h in headers]]
+
+    # --- One row per extract ---
+    for extract in extracts:
+        table_data.append([
+            Paragraph(f"{extract.total}", cell_style),
+            Paragraph(f"{extract.sub_total}", cell_style),
+            Paragraph(ar(extract.contractor_name or "-"), cell_style),
+            Paragraph(ar(extract.project_name), cell_style),
+            Paragraph(f"{extract.id}", cell_style),
+        ])
+
+    table = Table(
+        table_data,
+        colWidths=[3 * cm, 3 * cm, 4 * cm, 4 * cm, 2.5 * cm],
+        repeatRows=1,
+        hAlign="CENTER"
+    )
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f2f2f2")]),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    story.append(table)
 
     doc.build(story)
     buffer.seek(0)

@@ -984,14 +984,18 @@
       display: flex;
     }
 
-    .is-history button,
+.is-history button,
     .is-history .btn,
     .is-history .approval-control input {
       display: none !important;
     }
 
     .is-history .approval-control {
-      display: none !important;
+      display: flex !important;
+    }
+
+    .is-history .approval-control .btn {
+      display: inline-flex !important;
     }
 
     .modal {
@@ -1475,7 +1479,7 @@
 
     <label class="approval-control" for="extract-approved">
       {% if "generate pdf" in permissions %}
-      <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}">Generate PDF</a>
+      <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?is_history={{ history }}">Generate PDF</a>
       {% endif %}
     </label>
   </main>

@@ -501,6 +501,15 @@ h1, h2, h3 { font-weight: 700; }
   text-decoration: none;
 }
 
+.extracts-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.extracts-actions .form-message { margin: 0; }
+
 .extracts-table {
   width: 100%;
   border-collapse: collapse;
@@ -591,6 +600,7 @@ h1, h2, h3 { font-weight: 700; }
   .item-row, .item-list-head { grid-template-columns: 1fr; }
   .item-list-head { display: none; }
   .extract-search { grid-template-columns: 1fr 1fr; }
+  .extracts-actions { flex-wrap: wrap; }
   .extracts-table thead { display: none; }
   .extracts-table, .extracts-table tbody, .extracts-table tr, .extracts-table td {
     display: block;
@@ -655,9 +665,18 @@ h1, h2, h3 { font-weight: 700; }
           اسم المقاول
           <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
         </label>
+        <label>
+          اسم العميل
+          <input type="text" name="customer" value="{{ request.query_params.get('customer', '') }}">
+        </label>
         <button type="submit" class="btn btn-small">بحث</button>
         <a href="/system/extracts/" class="btn btn-outline btn-small">مسح</a>
       </form>
+
+      <div class="extracts-actions">
+        <button type="button" class="btn btn-outline btn-small" id="export-pdf-btn" {% if not extracts %}disabled{% endif %}>تحميل ملخص</button>
+        <p class="form-message" id="export-pdf-message" role="alert" hidden></p>
+      </div>
 
       {% if extracts %}
       <table class="extracts-table">
@@ -668,6 +687,7 @@ h1, h2, h3 { font-weight: 700; }
             <th>رقم الوحدة</th>
             <th>نوع العمل</th>
             <th>اسم المقاول</th>
+            <th>اسم العميل</th>
             <th class="is-numeric">المجموع</th>
             <th class="is-numeric">اجمالي الضرائب</th>
             <th class="is-numeric">اجمالي الخصومات</th>
@@ -684,6 +704,7 @@ h1, h2, h3 { font-weight: 700; }
             <td>{{ e.unit_number }}</td>
             <td>{{ e.job_title }}</td>
             <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
+            <td class="extract-contractor">{{ e.customer_name if e.customer_name else "—" }}</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>
@@ -803,6 +824,66 @@ document.querySelector('.extracts-table')?.addEventListener('keydown', (event) =
   if (!row) return;
   event.preventDefault();
   window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;
+});
+
+/* ==========================================================
+   PDF summary export — sends the ids of the extracts currently
+   rendered in the table (i.e. the current search results).
+   ========================================================== */
+const exportPdfBtn = document.getElementById('export-pdf-btn');
+const exportPdfMessage = document.getElementById('export-pdf-message');
+
+function showExportMessage(text, type) {
+  if (!exportPdfMessage) {
+    window.alert(text);
+    return;
+  }
+  exportPdfMessage.textContent = text;
+  exportPdfMessage.className = `form-message is-${type}`;
+  exportPdfMessage.hidden = false;
+}
+
+exportPdfBtn?.addEventListener('click', async () => {
+  const extractIds = Array.from(document.querySelectorAll('.extracts-table tbody tr[data-extract-id]'))
+    .map((row) => Number(row.dataset.extractId));
+
+  if (extractIds.length === 0) return;
+
+  if (exportPdfMessage) exportPdfMessage.hidden = true;
+  exportPdfBtn.disabled = true;
+  const originalLabel = exportPdfBtn.textContent;
+  exportPdfBtn.textContent = 'جارٍ التحميل…';
+
+  try {
+    const response = await fetch(`${EXTRACTS_BASE}/get_summary`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify( extractIds ),
+    });
+
+    if (response.status === 403) {
+      throw new Error('ليس لديك إذن لتحميل هذا الملخص.');
+    }
+    if (!response.ok) {
+      throw new Error(`تعذر إنشاء الملف (status ${response.status}).`);
+    }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = 'extracts_summary.pdf';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    showExportMessage(error.message, 'error');
+  } finally {
+    exportPdfBtn.disabled = false;
+    exportPdfBtn.textContent = originalLabel;
+  }
 });
 
 const tabButtons = {

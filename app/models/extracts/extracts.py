@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, Boolean, ForeignKey, DateTime
 from app.database import Base
 
 class Extract(Base):
@@ -6,6 +6,7 @@ class Extract(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, nullable=False)
     project_name = Column(String(500), nullable=False)
     unit_number = Column(Integer, nullable=False)
     contractor_name = Column(String(500), nullable=False)
