@@ -760,6 +760,11 @@
       font-size: 13px;
     }
 
+    .history-link-subtotal {
+      color: var(--steel-dark);
+      font-size: 13px;
+    }
+
     .history-state {
       color: var(--steel-dark);
       font-size: 13.5px;
@@ -774,6 +779,95 @@
 
     .summary-block-head h3 {
       margin-bottom: 0;
+    }
+
+    .accounting-edit-actions {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .accounting-edit-actions .btn {
+      padding: 7px 12px;
+      font-size: 12.5px;
+    }
+
+    #btn-save-accounting-edit,
+    #btn-cancel-accounting-edit {
+      display: none;
+    }
+
+    body.is-accounting-edit-mode #btn-enter-accounting-edit {
+      display: none;
+    }
+
+    body.is-accounting-edit-mode #btn-save-accounting-edit,
+    body.is-accounting-edit-mode #btn-cancel-accounting-edit {
+      display: inline-flex;
+    }
+
+    .accounting-editor {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    body.is-accounting-edit-mode .accounting-editor {
+      display: flex;
+    }
+
+    body.is-accounting-edit-mode .accounting-display {
+      display: none;
+    }
+
+    .accounting-editor-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 130px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .accounting-editor-row input,
+    .accounting-editor-row select {
+      width: 100%;
+      min-width: 0;
+      padding: 7px 8px;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      color: var(--ink);
+      font: 14px var(--font-body);
+    }
+
+    .accounting-editor-row button {
+      background: none;
+      border: 0;
+      color: var(--error);
+      font: 600 12.5px var(--font-body);
+      cursor: pointer;
+      padding: 5px;
+      white-space: nowrap;
+    }
+
+    .accounting-add-row {
+      display: none;
+      margin-top: 8px;
+    }
+
+    body.is-accounting-edit-mode .accounting-add-row {
+      display: inline-flex;
+    }
+
+    .accounting-save-error {
+      display: none;
+      color: var(--error);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    .accounting-save-error.is-visible {
+      display: block;
     }
 
     .summary-block h3 {
@@ -1158,12 +1252,16 @@
             <span class="project-detail-value">{{ extract.unit_number }}</span>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">اسم العمل</span>
+            <span class="project-detail-label">نوع العمل</span>
             <span class="project-detail-value">{{ extract.job_title }}</span>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">اسم المقاول</span>
             <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
+          </div>
+          <div class="project-detail">
+            <span class="project-detail-label">اسم العميل</span>
+            <span class="project-detail-value">{{ extract.customer_name if extract.customer_name else "—" }}</span>
           </div>
           {% if history %}
           <div class="project-detail">
@@ -1276,6 +1374,12 @@
       {% endif %}
 
       <aside class="summary-panel">
+        <div class="accounting-edit-actions">
+          <button type="button" class="btn btn-primary" id="btn-enter-accounting-edit">تعديل الحسابات</button>
+          <button type="button" class="btn btn-primary" id="btn-save-accounting-edit">حفظ</button>
+          <button type="button" class="btn btn-secondary" id="btn-cancel-accounting-edit">الغاء</button>
+        </div>
+        <p class="accounting-save-error" id="accounting-save-error" role="alert"></p>
         <div class="summary-block">
           <div class="summary-line is-subtotal">
             <span>الاجمالي</span>
@@ -1286,23 +1390,19 @@
         <div class="summary-block">
           <div class="summary-block-head">
             <h3>الضرائب</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-tax">اضافة ضريبة</button>
           </div>
-          {% if extract.taxes %}
-          {% for tax in extract.taxes %}
-          <div class="summary-line summary-line-removable">
-            <span>{{ tax.title }}</span>
-            <span>
-              <span class="tax-rate">{{ tax.rate }}%</span>
-              <span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span>
-              <button type="button" class="line-delete" data-tax-id="{{ tax.id }}" data-tax-title="{{ tax.title }}"
-                title="Remove tax">&times;</button>
-            </span>
+          <div class="accounting-display" id="taxes-display">
+            {% if extract.taxes %}
+            {% for tax in extract.taxes %}
+            <div class="summary-line summary-line-removable" data-accounting-title="{{ tax.title }}" data-accounting-rate="{{ tax.rate / 100 }}">
+              <span>{{ tax.title }}</span>
+              <span><span class="tax-rate">{{ tax.rate }}%</span><span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span></span>
+            </div>
+            {% endfor %}
+            {% else %}<p class="summary-empty">لا توجد ضرائب</p>{% endif %}
           </div>
-          {% endfor %}
-          {% else %}
-          <p class="summary-empty">لا توجد ضرائب</p>
-          {% endif %}
+          <div class="accounting-editor" id="taxes-editor"></div>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="tax">اضافة ضريبة</button>
           <div class="summary-line is-subtotal">
             <span>مجموع الضرائب</span>
             <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
@@ -1316,22 +1416,26 @@
         <div class="summary-block">
           <div class="summary-block-head">
             <h3>الخصومات</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-deduction">اضافة خصم</button>
           </div>
-          {% if extract.deductions %}
-          {% for ded in extract.deductions %}
-          <div class="summary-line summary-line-removable">
-            <span>{{ ded.title }}</span>
-            <span>
-              EGP {{ "{:,.2f}".format(ded.amount) }}
-              <button type="button" class="line-delete" data-ded-id="{{ ded.id }}" data-ded-title="{{ ded.title }}"
-                title="Remove deduction">&times;</button>
-            </span>
+          <div class="accounting-display" id="deductions-display">
+            {% if extract.deductions %}
+            {% for ded in extract.deductions %}
+            <div class="summary-line summary-line-removable" data-accounting-title="{{ ded.title }}" data-accounting-rate="{% if ded.rate is not none %}{{ ded.rate }}{% endif %}" data-accounting-amount="{% if ded.amount is not none %}{{ ded.amount }}{% endif %}">
+              <span>{{ ded.title }}</span>
+              <span>
+                {% if ded.rate is not none %}
+                <span class="tax-rate">{{ (ded.rate * 100)|round(2) }}%</span>
+                <span class="tax-amount">EGP {{ "{:,.2f}".format(ded.rate * extract.sub_total) }}</span>
+                {% else %}
+                EGP {{ "{:,.2f}".format(ded.amount) }}
+                {% endif %}
+              </span>
+            </div>
+            {% endfor %}
+            {% else %}<p class="summary-empty">لا توجد خصومات</p>{% endif %}
           </div>
-          {% endfor %}
-          {% else %}
-          <p class="summary-empty">لا توجد خصومات</p>
-          {% endif %}
+          <div class="accounting-editor" id="deductions-editor"></div>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="deduction">اضافة خصم</button>
           <div class="summary-line is-subtotal">
             <span>مجموع الخصومات</span>
             <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
@@ -1341,22 +1445,16 @@
         <div class="summary-block">
           <div class="summary-block-head">
             <h3>ما سبق صرفه</h3>
-            <button type="button" class="btn-ghost-mini" id="btn-open-add-payment">اضافة دفع</button>
           </div>
-          {% if extract.previously_paid %}
-          {% for pp in extract.previously_paid %}
-          <div class="summary-line summary-line-removable">
-            <span>{{ pp.details }}</span>
-            <span>
-              {{ "{:,.2f}".format(pp.amount) }} EGP
-              <button type="button" class="line-delete" data-payment-id="{{ pp.id }}"
-                data-payment-amount="{{ pp.amount }}" title="Remove payment">&times;</button>
-            </span>
+          <div class="accounting-display" id="payments-display">
+            {% if extract.previously_paid %}
+            {% for pp in extract.previously_paid %}
+            <div class="summary-line summary-line-removable" data-accounting-details="{{ pp.details }}" data-accounting-amount="{{ pp.amount }}"><span>{{ pp.details }}</span><span>{{ "{:,.2f}".format(pp.amount) }} EGP</span></div>
+            {% endfor %}
+            {% else %}<p class="summary-empty">لا توجد مدفوعات سابقة</p>{% endif %}
           </div>
-          {% endfor %}
-          {% else %}
-          <p class="summary-empty">لا توجد مدفوعات سابقة</p>
-          {% endif %}
+          <div class="accounting-editor" id="payments-editor"></div>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="payment">اضافة دفع</button>
           <div class="summary-line is-subtotal">
             <span>مجموع ما سبق صرفه</span>
             <span>{{ "{:,.2f}".format(extract.total_payments) }} EGP</span>
@@ -1376,15 +1474,8 @@
     </div>
 
     <label class="approval-control" for="extract-approved">
-      {% if "approve extracts" in permissions %}
-      <input type="checkbox" id="extract-approved"{% if extract.approved %} checked{% endif %}
-        aria-label="Approve extract">
-      <span>الموافقة عل المستخلص</span>
-      {% else %}
-      <strong class="approval-status">{% if extract.approved %}موافق عليه{% else %}غير موفق عليه{% endif %}</strong>
-      {% if extract.approved %}
+      {% if "generate pdf" in permissions %}
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}">Generate PDF</a>
-      {% endif %}
       {% endif %}
     </label>
   </main>
@@ -1581,6 +1672,7 @@
       const API_BASE = '/system/extracts';
       let editMode = false;
       let editSnapshot = null;
+      let accountingEditMode = false;
 
       const historyList = document.getElementById('extract-history-list');
       const historyPanel = document.getElementById('extract-history-panel');
@@ -1618,8 +1710,13 @@
               date.className = 'history-link-date';
               date.textContent = historyItem.updated_at;
 
+              const subtotal = document.createElement('span');
+              subtotal.className = 'history-link-subtotal';
+              subtotal.textContent = 'الإجمالي: ' + formatAmount(historyItem.sub_total) + ' EGP';
+
               link.appendChild(user);
               link.appendChild(date);
+              link.appendChild(subtotal);
               historyList.appendChild(link);
             });
           })
@@ -1837,38 +1934,6 @@
         category.querySelector('.empty-items')?.remove();
         category.appendChild(table);
         return table.querySelector('tbody');
-      }
-
-      // ---------- shared: POST / DELETE helpers ----------
-      function postJSON(url, body) {
-        return fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(body),
-        }).then(function (res) {
-          if (!res.ok) throw new Error('Request failed with status ' + res.status);
-          return res.json();
-        });
-      }
-
-      function deleteResource(url, button) {
-        if (button) button.disabled = true;
-        return fetch(url, {
-          method: 'DELETE',
-          credentials: 'include',
-        })
-          .then(function (res) {
-            if (!res.ok) throw new Error('Request failed with status ' + res.status);
-            return res.json();
-          })
-          .then(function () {
-            window.location.reload();
-          })
-          .catch(function (err) {
-            if (button) button.disabled = false;
-            showOperationError(button || document.body, 'لا يمكن الحذف' + err.message);
-          });
       }
 
       function patchJSON(url, body) {
@@ -2157,135 +2222,189 @@
         refreshEmptyState(category);
       });
 
-      // ---------- Add Tax ----------
-      document.getElementById('btn-open-add-tax').addEventListener('click', function () {
-        document.getElementById('form-add-tax').reset();
-        clearError('add-tax-error');
-        openModal('modal-add-tax');
+      // ---------- Accounting edit mode ----------
+      const accountingState = {
+        taxes: Array.from(document.querySelectorAll('#taxes-display [data-accounting-title]')).map(function (row) {
+          return { title: row.dataset.accountingTitle, rate: Number(row.dataset.accountingRate) };
+        }),
+        deductions: Array.from(document.querySelectorAll('#deductions-display [data-accounting-title]')).map(function (row) {
+          return {
+            title: row.dataset.accountingTitle,
+            rate: row.dataset.accountingRate === '' ? null : Number(row.dataset.accountingRate),
+            amount: row.dataset.accountingAmount === '' ? null : Number(row.dataset.accountingAmount),
+          };
+        }),
+        payments: Array.from(document.querySelectorAll('#payments-display [data-accounting-details]')).map(function (row) {
+          return { details: row.dataset.accountingDetails, amount: Number(row.dataset.accountingAmount) };
+        }),
+      };
+
+      const accountingEditors = {
+        tax: document.getElementById('taxes-editor'),
+        deduction: document.getElementById('deductions-editor'),
+        payment: document.getElementById('payments-editor'),
+      };
+
+      function accountingError(message) {
+        const error = document.getElementById('accounting-save-error');
+        error.textContent = message;
+        error.classList.toggle('is-visible', Boolean(message));
+      }
+
+      function addAccountingRow(kind) {
+        if (kind === 'tax') accountingState.taxes.push({ title: '', rate: 0 });
+        if (kind === 'deduction') accountingState.deductions.push({ title: '', rate: null, amount: 0 });
+        if (kind === 'payment') accountingState.payments.push({ details: '', amount: 0 });
+        renderAccountingEditors();
+      }
+
+      function createAccountingInput(value, type, placeholder, step, min) {
+        const input = document.createElement('input');
+        input.type = type;
+        input.value = value ?? '';
+        input.placeholder = placeholder;
+        if (step) input.step = step;
+        if (min !== undefined) input.min = min;
+        return input;
+      }
+
+      function rateAsPercentage(rate) {
+        return Number((Number(rate) * 100).toFixed(2));
+      }
+
+      function percentageAsRate(percentage) {
+        return Number((Number(percentage) / 100).toFixed(4));
+      }
+
+      function renderAccountingEditors() {
+        Object.values(accountingEditors).forEach(function (editor) { editor.innerHTML = ''; });
+
+        accountingState.taxes.forEach(function (tax, index) {
+          const row = document.createElement('div');
+          row.className = 'accounting-editor-row';
+          const title = createAccountingInput(tax.title, 'text', 'اسم الضريبة');
+          const rate = createAccountingInput(rateAsPercentage(tax.rate), 'number', 'النسبة', '0.01', '-100');
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = 'حذف';
+          remove.addEventListener('click', function () { accountingState.taxes.splice(index, 1); renderAccountingEditors(); });
+          [title, rate, remove].forEach(function (element) { row.appendChild(element); });
+          accountingEditors.tax.appendChild(row);
+          title.addEventListener('input', function () { tax.title = title.value; });
+          rate.addEventListener('input', function () { tax.rate = percentageAsRate(rate.value); });
+        });
+
+        accountingState.deductions.forEach(function (deduction, index) {
+          const row = document.createElement('div');
+          row.className = 'accounting-editor-row';
+          const title = createAccountingInput(deduction.title, 'text', 'اسم الخصم');
+          const kind = document.createElement('select');
+          kind.innerHTML = '<option value="amount">قيمة بالجنية</option><option value="rate">نسبة مئوية</option>';
+          kind.value = deduction.rate !== null ? 'rate' : 'amount';
+          const value = createAccountingInput(kind.value === 'rate' ? rateAsPercentage(deduction.rate) : deduction.amount, 'number', kind.value === 'rate' ? 'النسبة' : 'القيمة', '0.01', kind.value === 'rate' ? '-100' : '0');
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = 'حذف';
+          remove.addEventListener('click', function () { accountingState.deductions.splice(index, 1); renderAccountingEditors(); });
+          const valueCell = document.createElement('div');
+          valueCell.appendChild(value);
+          row.appendChild(title);
+          row.appendChild(kind);
+          row.appendChild(valueCell);
+          row.appendChild(remove);
+          accountingEditors.deduction.appendChild(row);
+          title.addEventListener('input', function () { deduction.title = title.value; });
+          value.addEventListener('input', function () {
+            if (kind.value === 'rate') deduction.rate = percentageAsRate(value.value);
+            else deduction.amount = Number(value.value);
+          });
+          kind.addEventListener('change', function () {
+            if (kind.value === 'rate') {
+              deduction.amount = null;
+              deduction.rate = percentageAsRate(value.value || 0);
+              value.min = '-100';
+              value.max = '100';
+              value.placeholder = 'النسبة';
+            } else {
+              deduction.rate = null;
+              deduction.amount = Number(value.value || 0);
+              value.min = '0';
+              value.removeAttribute('max');
+              value.placeholder = 'القيمة';
+            }
+          });
+        });
+
+        accountingState.payments.forEach(function (payment, index) {
+          const row = document.createElement('div');
+          row.className = 'accounting-editor-row';
+          const details = createAccountingInput(payment.details, 'text', 'تفاصيل الدفع');
+          const amount = createAccountingInput(payment.amount, 'number', 'الكمية', '0.01', '0');
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = 'حذف';
+          remove.addEventListener('click', function () { accountingState.payments.splice(index, 1); renderAccountingEditors(); });
+          [details, amount, remove].forEach(function (element) { row.appendChild(element); });
+          accountingEditors.payment.appendChild(row);
+          details.addEventListener('input', function () { payment.details = details.value; });
+          amount.addEventListener('input', function () { payment.amount = Number(amount.value); });
+        });
+      }
+
+      function validateAccounting() {
+        if (accountingState.taxes.some(function (tax) { return !tax.title.trim() || !Number.isFinite(Number(tax.rate)) || tax.rate < -1 || tax.rate > 1; })) {
+          return 'برجاء إدخال أسماء ونسب ضرائب صحيحة.';
+        }
+        if (accountingState.deductions.some(function (deduction) {
+          return !deduction.title.trim() || (deduction.rate === null
+            ? !Number.isFinite(Number(deduction.amount)) || deduction.amount < 0
+            : !Number.isFinite(Number(deduction.rate)) || deduction.rate < -1 || deduction.rate > 1);
+        })) return 'برجاء إدخال بيانات خصومات صحيحة.';
+        if (accountingState.payments.some(function (payment) { return !payment.details.trim() || !Number.isFinite(Number(payment.amount)) || payment.amount < 0; })) {
+          return 'برجاء إدخال تفاصيل ومدفوعات صحيحة.';
+        }
+        return '';
+      }
+
+      document.querySelectorAll('[data-accounting-add]').forEach(function (button) {
+        button.addEventListener('click', function () { addAccountingRow(button.dataset.accountingAdd); });
       });
 
-      document.getElementById('form-add-tax').addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearError('add-tax-error');
+      document.getElementById('btn-enter-accounting-edit').addEventListener('click', function () {
+        accountingEditMode = true;
+        document.body.classList.add('is-accounting-edit-mode');
+        accountingError('');
+        renderAccountingEditors();
+      });
 
-        const payload = {
-          title: document.getElementById('tax-title').value.trim(),
-          rate: parseFloat(document.getElementById('tax-rate').value),
-        };
+      document.getElementById('btn-cancel-accounting-edit').addEventListener('click', function () {
+        window.location.reload();
+      });
 
-        if (!payload.title || Number.isNaN(payload.rate) || payload.rate < 1 || payload.rate > 100) {
-          showError('add-tax-error', 'Please fill in all fields. Rate must be between 1 and 100.');
+      document.getElementById('btn-save-accounting-edit').addEventListener('click', function () {
+        if (!accountingEditMode) return;
+        const error = validateAccounting();
+        if (error) {
+          accountingError(error);
           return;
         }
-
-        payload.rate /= 100;
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-
-        postJSON(API_BASE + '/add_tax/' + extractId, payload)
-          .then(function () {
-            window.location.reload();
-          })
+        const saveButton = document.getElementById('btn-save-accounting-edit');
+        saveButton.disabled = true;
+        accountingError('');
+        patchJSON(API_BASE + '/edit_accounting/' + extractId, {
+          taxes: accountingState.taxes.map(function (tax) { return { title: tax.title.trim(), rate: tax.rate }; }),
+          deductions: accountingState.deductions.map(function (deduction) {
+            return deduction.rate !== null
+              ? { title: deduction.title.trim(), rate: deduction.rate, amount: null }
+              : { title: deduction.title.trim(), rate: null, amount: deduction.amount };
+          }),
+          payments: accountingState.payments.map(function (payment) { return { details: payment.details.trim(), amount: payment.amount }; }),
+        })
+          .then(function () { window.location.reload(); })
           .catch(function (err) {
-            submitBtn.disabled = false;
-            showError('add-tax-error', 'Could not add tax. ' + err.message);
+            saveButton.disabled = false;
+            accountingError(err.status === 403 ? 'غير مسموح بتعديل الحسابات.' : 'تعذر حفظ الحسابات. ' + err.message);
           });
-      });
-
-      // ---------- Delete Tax ----------
-      document.querySelectorAll('.line-delete[data-tax-id]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const taxTitle = btn.getAttribute('data-tax-title');
-          if (!confirm('Remove tax "' + taxTitle + '"?')) return;
-          deleteResource(API_BASE + '/del_tax/' + btn.getAttribute('data-tax-id'), btn);
-        });
-      });
-
-      // ---------- Add Deduction ----------
-      document.getElementById('btn-open-add-deduction').addEventListener('click', function () {
-        document.getElementById('form-add-deduction').reset();
-        clearError('add-deduction-error');
-        openModal('modal-add-deduction');
-      });
-
-      document.getElementById('form-add-deduction').addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearError('add-deduction-error');
-
-        const payload = {
-          title: document.getElementById('ded-title').value.trim(),
-          amount: parseFloat(document.getElementById('ded-amount').value),
-        };
-
-        if (!payload.title || Number.isNaN(payload.amount)) {
-          showError('add-deduction-error', 'Please fill in all fields.');
-          return;
-        }
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-
-        postJSON(API_BASE + '/add_ded/' + extractId, payload)
-          .then(function () {
-            window.location.reload();
-          })
-          .catch(function (err) {
-            submitBtn.disabled = false;
-            showError('add-deduction-error', 'Could not add deduction. ' + err.message);
-          });
-      });
-
-      // ---------- Delete Deduction ----------
-      document.querySelectorAll('.line-delete[data-ded-id]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const dedTitle = btn.getAttribute('data-ded-title');
-          if (!confirm('Remove deduction "' + dedTitle + '"?')) return;
-          deleteResource(API_BASE + '/del_ded/' + btn.getAttribute('data-ded-id'), btn);
-        });
-      });
-
-      // ---------- Add Previously Paid ----------
-      document.getElementById('btn-open-add-payment').addEventListener('click', function () {
-        document.getElementById('form-add-payment').reset();
-        clearError('add-payment-error');
-        openModal('modal-add-payment');
-      });
-
-      document.getElementById('form-add-payment').addEventListener('submit', function (e) {
-        e.preventDefault();
-        clearError('add-payment-error');
-
-        const payload = {
-          details: document.getElementById('payment-details').value.trim(),
-          amount: parseFloat(document.getElementById('payment-amount').value),
-        };
-
-        if (!payload.details || Number.isNaN(payload.amount)) {
-          showError('add-payment-error', 'Please enter payment details and a valid amount.');
-          return;
-        }
-
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-
-        postJSON(API_BASE + '/add_payment/' + extractId, payload)
-          .then(function () {
-            window.location.reload();
-          })
-          .catch(function (err) {
-            submitBtn.disabled = false;
-            showError('add-payment-error', 'Could not add payment. ' + err.message);
-          });
-      });
-
-      // ---------- Delete Previously Paid ----------
-      document.querySelectorAll('.line-delete[data-payment-id]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          const paymentAmount = btn.getAttribute('data-payment-amount');
-          if (!confirm('Remove payment of ' + paymentAmount + ' EGP?')) return;
-          deleteResource(API_BASE + '/del_payment/' + btn.getAttribute('data-payment-id'), btn);
-        });
       });
 
       // ---------- Approve extract ----------

@@ -7,4 +7,5 @@ class ExtractDeductionHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     extract_history_id = Column(Integer, ForeignKey("extract_histories.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(100), nullable=False)
-    amount = Column(Numeric(12, 2), nullable=False)
+    rate = Column(Numeric(5, 4), nullable=True)
+    amount = Column(Numeric(12, 2), nullable=True)

@@ -1,10 +1,10 @@
-from pydantic import BaseModel, conlist, Field
+from pydantic import BaseModel, Field
 from decimal import Decimal
 from typing import List
 
 class PreviouslyPaid(BaseModel):
     details: str
-    amount: Decimal
+    amount: Decimal = Field(..., max_digits=12, decimal_places=2)
 
 class AddExtractTax(BaseModel):
     title: str
@@ -12,7 +12,8 @@ class AddExtractTax(BaseModel):
 
 class AddExtractDeduction(BaseModel):
     title: str
-    amount: Decimal
+    rate: Decimal = Field(None, max_digits=5, decimal_places=4)
+    amount: Decimal = Field(None, max_digits=12, decimal_places=2)
 
 class AddExtractCategoryItem(BaseModel):
     title: str
@@ -34,11 +35,12 @@ class AddExtractCategories(BaseModel):
 class AddExtract(BaseModel):
     project_name: str
     unit_number: int
-    contractor_name: str = None
+    contractor_name: str
+    customer_name: str = None
     job_title: str
     categories: List[AddExtractCategory]
-    taxes: conlist(AddExtractTax, min_items=1)
-    deductions: conlist(AddExtractDeduction, min_items=1)
+    taxes: List[AddExtractTax]
+    deductions: List[AddExtractDeduction]
     payments: List[PreviouslyPaid]
 
 
@@ -49,4 +51,9 @@ class UpdateCurrency(BaseModel):
     currency: Decimal
 
 class UpdateCompletion(BaseModel):
-    completion: Decimal
+    completion: Decimal = Field(..., max_digits=5, decimal_places=4)
+
+class UpdateAccounting(BaseModel):
+    taxes: List[AddExtractTax]
+    deductions: List[AddExtractDeduction]
+    payments: List[PreviouslyPaid]

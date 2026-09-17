@@ -203,6 +203,12 @@ h1, h2, h3 { font-weight: 700; }
   gap: 20px;
 }
 
+.field-row-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
 .field-row-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -219,7 +225,8 @@ h1, h2, h3 { font-weight: 700; }
 }
 
 .add-extract-form input[type="text"],
-.add-extract-form input[type="number"] {
+.add-extract-form input[type="number"],
+.add-extract-form select {
   font-family: var(--font-body);
   font-size: 18px;
   padding: 15px 16px;
@@ -229,7 +236,8 @@ h1, h2, h3 { font-weight: 700; }
   border-radius: 3px;
 }
 
-.add-extract-form input:focus { outline: none; border-color: var(--steel); }
+.add-extract-form input:focus,
+.add-extract-form select:focus { outline: none; border-color: var(--steel); }
 
 .field-optional {
   font-weight: 400;
@@ -281,8 +289,13 @@ h1, h2, h3 { font-weight: 700; }
   align-items: center;
 }
 
+.deduction-entry-row {
+  grid-template-columns: 1fr 150px 180px auto;
+}
+
 .entry-row input[type="text"],
-.entry-row input[type="number"] {
+.entry-row input[type="number"],
+.entry-row select {
   font-family: var(--font-body);
   font-size: 16px;
   padding: 12px 14px;
@@ -293,7 +306,18 @@ h1, h2, h3 { font-weight: 700; }
   width: 100%;
 }
 
-.entry-row input:focus { outline: none; border-color: var(--steel); }
+.entry-row select {
+  min-height: 49px;
+  cursor: pointer;
+}
+
+.entry-row select option {
+  background: var(--white);
+  color: var(--ink);
+}
+
+.entry-row input:focus,
+.entry-row select:focus { outline: none; border-color: var(--steel); }
 
 .entry-row-remove {
   background: none;
@@ -557,12 +581,13 @@ h1, h2, h3 { font-weight: 700; }
 
 /* ===== Responsive ===== */
 @media (max-width: 1000px) {
-  .field-row-4 { grid-template-columns: 1fr 1fr; }
+  .field-row-4, .field-row-5 { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 760px) {
-  .field-row, .field-row-3, .field-row-4 { grid-template-columns: 1fr; }
+  .field-row, .field-row-3, .field-row-4, .field-row-5 { grid-template-columns: 1fr; }
   .entry-row { grid-template-columns: 1fr 100px auto; }
+  .deduction-entry-row { grid-template-columns: 1fr 1fr; }
   .item-row, .item-list-head { grid-template-columns: 1fr; }
   .item-list-head { display: none; }
   .extract-search { grid-template-columns: 1fr 1fr; }
@@ -623,7 +648,7 @@ h1, h2, h3 { font-weight: 700; }
           <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
         </label>
         <label>
-          اسم العمل
+          نوع العمل
           <input type="text" name="job_title" value="{{ request.query_params.get('job_title', '') }}">
         </label>
         <label>
@@ -641,7 +666,7 @@ h1, h2, h3 { font-weight: 700; }
             <th>ID</th>
             <th>اسم المشروع</th>
             <th>رقم الوحدة</th>
-            <th>اسم العمل</th>
+            <th>نوع العمل</th>
             <th>اسم المقاول</th>
             <th class="is-numeric">المجموع</th>
             <th class="is-numeric">اجمالي الضرائب</th>
@@ -680,7 +705,7 @@ h1, h2, h3 { font-weight: 700; }
 
   <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
-      <div class="field-row-4">
+      <div class="field-row-5">
         <label>
           اسم المشروع
           <input type="text" name="project_name" id="project-name" required>
@@ -690,12 +715,16 @@ h1, h2, h3 { font-weight: 700; }
           <input type="text" name="unit_number" id="unit-number" required>
         </label>
         <label>
-          <span>اسم المقاول <span class="field-optional">(اختياري)</span></span>
-          <input type="text" name="contractor_name" id="contractor-name">
+          اسم المقاول
+          <input type="text" name="contractor_name" id="contractor-name" required>
         </label>
         <label>
-          اسم العمل
+          نوع العمل
           <input type="text" name="job_title" id="job-title" required>
+        </label>
+        <label>
+          <span>اسم العميل <span class="field-optional">(اختياري)</span></span>
+          <input type="text" name="customer_name" id="customer-name">
         </label>
       </div>
 
@@ -706,13 +735,13 @@ h1, h2, h3 { font-weight: 700; }
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">الضرائب — يلزم إدخال واحد على الأقل</span>
+        <span class="subgroup-label">الضرائب <span class="field-optional">(اختياري)</span></span>
         <div class="entry-list" id="taxes-list"></div>
         <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">اضافة ضريبة</button>
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">الخصومات — يلزم إدخال واحد على الأقل</span>
+        <span class="subgroup-label">الخصومات <span class="field-optional">(اختياري)</span></span>
         <div class="entry-list" id="deductions-list"></div>
         <button type="button" class="btn btn-outline btn-small" id="add-deduction-btn">اضافة خصم</button>
       </div>
@@ -862,24 +891,110 @@ function collectFlatEntries(list, keyA, keyB, numericB = true) {
   return entries;
 }
 
+function buildDeductionRow(list) {
+  const row = document.createElement('div');
+  row.className = 'entry-row deduction-entry-row';
+
+  const title = document.createElement('input');
+  title.type = 'text';
+  title.placeholder = 'اسم الخصم';
+
+  const type = document.createElement('select');
+  type.innerHTML = '<option value="amount">قيمة بالجنية</option><option value="rate">نسبة مئوية</option>';
+
+  const value = document.createElement('input');
+  value.type = 'number';
+  value.step = '1';
+  value.min = '0';
+  value.placeholder = 'الكمية';
+
+  const updateValueField = () => {
+    const isRate = type.value === 'rate';
+    value.placeholder = isRate ? 'النسبة' : 'الكمية';
+    if (isRate) {
+      value.min = '-100';
+      value.max = '100';
+    } else {
+      value.min = '0';
+      value.removeAttribute('max');
+    }
+  };
+  type.addEventListener('change', updateValueField);
+  updateValueField();
+
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'entry-row-remove';
+  remove.textContent = 'حذف';
+  remove.addEventListener('click', () => row.remove());
+
+  row.appendChild(title);
+  row.appendChild(type);
+  row.appendChild(value);
+  row.appendChild(remove);
+  list.appendChild(row);
+  return row;
+}
+
+function collectDeductions(list) {
+  return Array.from(list.querySelectorAll('.deduction-entry-row')).reduce((entries, row) => {
+    const [title, value] = row.querySelectorAll('input');
+    const type = row.querySelector('select').value;
+    const titleValue = title.value.trim();
+    const valueRaw = value.value.trim();
+    if (!titleValue || valueRaw === '') return entries;
+
+    const numericValue = Number(valueRaw);
+    if (type === 'rate') {
+      if (numericValue < -100 || numericValue > 100) return entries;
+      entries.push({ title: titleValue, rate: numericValue / 100, amount: null });
+    } else {
+      if (numericValue < 0) return entries;
+      entries.push({ title: titleValue, rate: null, amount: numericValue });
+    }
+    return entries;
+  }, []);
+}
+
+function hasInvalidRateEntry(list) {
+  return Array.from(list.querySelectorAll('.entry-row')).some((row) => {
+    const title = row.querySelector('input[type="text"]')?.value.trim();
+    const value = row.querySelector('input[type="number"]')?.value.trim();
+    if (!title || value === '') return false;
+    const numericValue = Number(value);
+    return !Number.isFinite(numericValue) || numericValue < -100 || numericValue > 100;
+  });
+}
+
+function hasInvalidDeductionRateEntry(list) {
+  return Array.from(list.querySelectorAll('.deduction-entry-row')).some((row) => {
+    if (row.querySelector('select').value !== 'rate') return false;
+    const title = row.querySelector('input[type="text"]').value.trim();
+    const value = row.querySelector('input[type="number"]').value.trim();
+    if (!title || value === '') return false;
+    const numericValue = Number(value);
+    return !Number.isFinite(numericValue) || numericValue < -100 || numericValue > 100;
+  });
+}
+
 const taxesList = document.getElementById('taxes-list');
 const deductionsList = document.getElementById('deductions-list');
 const paymentsList = document.getElementById('payments-list');
 
-buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '0', max: '100' });
-buildEntryRow(deductionsList, { placeholder: 'اسم الخصم' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
-buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
+buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
+buildDeductionRow(deductionsList);
+buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
 
 document.getElementById('add-tax-btn').addEventListener('click', () => {
-  buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '0', max: '100' });
+  buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
 });
 
 document.getElementById('add-deduction-btn').addEventListener('click', () => {
-  buildEntryRow(deductionsList, { placeholder: 'اسم الخصم' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
+  buildDeductionRow(deductionsList);
 });
 
 document.getElementById('add-payment-btn').addEventListener('click', () => {
-  buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '0.01', min: '0' });
+  buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
 });
 
 
@@ -897,17 +1012,17 @@ function buildItemRow(itemList) {
 
   const amount = document.createElement('input');
   amount.type = 'number';
-  amount.step = '0.01';
+  amount.step = '1';
   amount.min = '0';
 
   const currency = document.createElement('input');
   currency.type = 'number';
-  currency.step = '0.0001';
+  currency.step = '1';
   currency.min = '0';
 
   const completion = document.createElement('input');
   completion.type = 'number';
-  completion.step = '0.01';
+  completion.step = '1';
   completion.min = '0';
   completion.max = '100';
 
@@ -1020,34 +1135,32 @@ addForm.addEventListener('submit', async (e) => {
 
   const projectName = document.getElementById('project-name').value.trim();
   const unitNumber = document.getElementById('unit-number').value.trim();
-  const jobTitle = document.getElementById('job-title').value.trim();
   const contractorName = document.getElementById('contractor-name').value.trim();
+  const customerName = document.getElementById('customer-name').value.trim();
+  const jobTitle = document.getElementById('job-title').value.trim();
 
   const categories = collectCategories();
   const taxes = collectFlatEntries(taxesList, 'title', 'rate').map((tax) => ({
     ...tax,
     rate: tax.rate / 100,
   }));
-  const deductions = collectFlatEntries(deductionsList, 'title', 'amount');
+  const deductions = collectDeductions(deductionsList);
   const payments = collectFlatEntries(paymentsList, 'details', 'amount');
 
-  if (!projectName || !unitNumber || !jobTitle) {
-    showAddMessage('يجب إدخال اسم المشروع ورقم الوحدة وعنوان الوظيفة.', 'error');
+  if (!projectName || !unitNumber || !contractorName || !jobTitle) {
+    showAddMessage('يجب إدخال اسم المشروع ورقم الوحدة واسم المقاول وعنوان الوظيفة.', 'error');
     return;
   }
-  if (taxes.length === 0) {
-    showAddMessage('يجب إضافة ضريبة واحدة على الأقل.', 'error');
-    return;
-  }
-  if (deductions.length === 0) {
-    showAddMessage('يجب إضافة خصم واحد على الأقل.', 'error');
+  if (hasInvalidRateEntry(taxesList) || hasInvalidDeductionRateEntry(deductionsList)) {
+    showAddMessage('يجب إدخال نسب الضرائب والخصومات بين -100 و100.', 'error');
     return;
   }
 
   const payload = {
     project_name: projectName,
     unit_number: unitNumber,
-    contractor_name: contractorName || null,
+    contractor_name: contractorName,
+    customer_name: customerName || null,
     job_title: jobTitle,
     categories,
     taxes,
