@@ -13,7 +13,7 @@ from reportlab.lib.enums import TA_RIGHT, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Image as RLImage
-from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.pagesizes import letter
 from io import BytesIO
 from app.config import BASE_DIR
 
@@ -243,7 +243,7 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
     buffer.seek(0)
     return buffer
 
-def generate_summary_pdf(extracts) -> BytesIO:
+def generate_summary_pdf(extracts, week_time = None) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -265,10 +265,9 @@ def generate_summary_pdf(extracts) -> BytesIO:
         "cell_header_ar", parent=cell_style, fontName="Arabic-Bold", textColor=colors.white
     )
 
-    # --- Logo + title on the same line ---
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=6 * cm, height=2 * cm)
-    header_text = Paragraph(ar("ملخص"), title_style)
+    header_text = Paragraph(ar("ملخص"), title_style) if not week_time else Paragraph(ar(f" ملخص {week_time}"), title_style)
 
     header_table = Table([[logo, header_text]], colWidths=[4 * cm, 12 * cm])
     header_table.setStyle(TableStyle([
@@ -279,11 +278,9 @@ def generate_summary_pdf(extracts) -> BytesIO:
     story.append(header_table)
     story.append(Spacer(1, 16))
 
-    # --- Header row ---
     headers = ["الصافي", "الاجمالي", "اسم المقاول", "اسم المشروع", "رقم المستخلص"]
     table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
-    # --- One row per extract ---
     for extract in extracts:
         table_data.append([
             Paragraph(f"{extract.total}", cell_style),

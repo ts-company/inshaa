@@ -1708,7 +1708,7 @@
 
               const user = document.createElement('span');
               user.className = 'history-link-user';
-              user.textContent = historyItem.updated_by;
+              user.textContent = historyItem.updated_by || 'غير معروف';
 
               const date = document.createElement('span');
               date.className = 'history-link-date';

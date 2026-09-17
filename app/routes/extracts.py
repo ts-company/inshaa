@@ -23,7 +23,7 @@ from app.utils import generate_extract_pdf, generate_summary_pdf
 from app.database import get_db
 from app.config import BASE_DIR
 from decimal import Decimal
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from typing import List
 
@@ -129,9 +129,14 @@ def get_extracts(request: Request, db: Session = Depends(get_db)):
         if "generate pdf" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    extracts = db.query(Extract).filter(Extract.id.in_(ext_ids)).order_by(Extract.id).all()
+    now = datetime.now(timezone.utc)
+    days_since_sunday = now.isoweekday() % 7
+    start_of_week = (now - timedelta(days=days_since_sunday)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    extracts = db.query(Extract).filter(Extract.created_at >= start_of_week).all()
+
     try:
-        pdf_buffer = generate_summary_pdf(extracts)
+        pdf_buffer = generate_summary_pdf(extracts, now.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),)
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -260,13 +265,14 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
 
     result = (db.query(ExtractHistory, User)
-               .join(User, User.id == ExtractHistory.updated_by)
+               .outerjoin(User, User.id == ExtractHistory.updated_by)
                .filter(ExtractHistory.id == history_id)
                .first())
 
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     extract, updated_by = result
+    updated_by_name = f"{updated_by.first_name} {updated_by.last_name}" if updated_by is not None else "غير معروف"
 
     categories = db.query(ExtractCategoryHistory).filter(ExtractCategoryHistory.extract_history_id == extract.id).all()
     categories_ids = [row.id for row in categories]
@@ -329,7 +335,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "unit_number": extract.unit_number,
             "contractor_name": extract.contractor_name,
             "customer_name": extract.customer_name,
-            "updated_by": f"{updated_by.first_name} {updated_by.last_name}",
+            "updated_by": updated_by_name,
             "updated_at": extract.updated_at.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),
             "job_title": extract.job_title,
             "sub_total": extract.sub_total,
@@ -365,7 +371,7 @@ def get_histories(request: Request, ext_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     results = (db.query(ExtractHistory, User)
-               .join(User, User.id == ExtractHistory.updated_by)
+               .outerjoin(User, User.id == ExtractHistory.updated_by)
                .filter(ExtractHistory.extract_id == extract.id)
                .order_by(ExtractHistory.id.desc())
                .all())
@@ -373,13 +379,12 @@ def get_histories(request: Request, ext_id: int, db: Session = Depends(get_db)):
     return [
         {
             "id": h.id,
-            "updated_by": f"{u.first_name} {u.last_name}",
+            "updated_by": f"{u.first_name} {u.last_name}" if u is not None else None,
             "updated_at": h.updated_at.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),
             "sub_total": h.sub_total
         }
         for h, u in results
     ]
-
 
 @router.post("/add_extract")
 def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(get_db)):
@@ -399,6 +404,7 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
     try:
         new_extract = Extract(
             created_by=user_id,
+            created_at=datetime.now(timezone.utc),
             project_name=payload.project_name,
             unit_number=payload.unit_number,
             contractor_name=payload.contractor_name,
@@ -421,12 +427,16 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             db.add(new_cat)
             db.flush()
             for item in cat.items:
-                item_total = round(item.amount * item.currency * item.completion_perc, 2)
+                if (item.prev_amount + item.current_amount) > item.total_amount:
+                    raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+                item_total = round(item.total_amount * item.currency * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,
                     unit_type=item.unit_type,
-                    amount=item.amount,
+                    prev_amount=item.prev_amount,
+                    current_amount=item.current_amount,
+                    total_amount=item.total_amount,
                     currency=item.currency,
                     completion_perc=item.completion_perc,
                     total=item_total
@@ -529,15 +539,17 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             db.add(history_cat)
             db.flush()
             db.delete(old_cat)
-            for item in old_items_by_cat.get(old_cat.id, []):
+            for old_item in old_items_by_cat.get(old_cat.id, []):
                 db.add(ExtractCategoryItemHistory(
                     extract_category_history_id=history_cat.id,
-                    title=item.title,
-                    unit_type=item.unit_type,
-                    amount=item.amount,
-                    currency=item.currency,
-                    completion_perc=item.completion_perc,
-                    total=item.total
+                    title=old_item.title,
+                    unit_type=old_item.unit_type,
+                    prev_amount=old_item.prev_amount,
+                    current_amount=old_item.current_amount,
+                    total_amount=old_item.total_amount,
+                    currency=old_item.currency,
+                    completion_perc=old_item.completion_perc,
+                    total=old_item.total
                 ))
 
         for t in old_taxes:
@@ -556,12 +568,16 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             db.add(new_cat)
             db.flush()
             for item in cat.items:
-                item_total = round(item.currency * item.amount * item.completion_perc, 2)
+                if (item.prev_amount + item.current_amount) > item.total_amount:
+                    raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+                item_total = round(item.currency * item.total_amount * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,
                     unit_type=item.unit_type,
-                    amount=item.amount,
+                    prev_amount=item.prev_amount,
+                    current_amount=item.current_amount,
+                    total_amount=item.total_amount,
                     currency=item.currency,
                     completion_perc=item.completion_perc,
                     total=item_total
@@ -599,7 +615,6 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
-
 
 @router.delete("/del_extract/{ext_id}")
 def add_cat(request: Request, ext_id: int, db: Session = Depends(get_db)):
@@ -687,7 +702,9 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
                 extract_category_history_id=history_cat.id,
                 title=old_item.title,
                 unit_type=old_item.unit_type,
-                amount=old_item.amount,
+                prev_amount=old_item.prev_amount,
+                current_amount=old_item.current_amount,
+                total_amount=old_item.total_amount,
                 currency=old_item.currency,
                 completion_perc=old_item.completion_perc,
                 total=old_item.total

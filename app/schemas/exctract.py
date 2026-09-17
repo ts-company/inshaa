@@ -18,7 +18,9 @@ class AddExtractDeduction(BaseModel):
 class AddExtractCategoryItem(BaseModel):
     title: str
     unit_type: str
-    amount: Decimal
+    prev_amount: Decimal
+    current_amount: Decimal
+    total_amount: Decimal
     currency: Decimal
     completion_perc: Decimal = Field(..., max_digits=5, decimal_places=4)
 

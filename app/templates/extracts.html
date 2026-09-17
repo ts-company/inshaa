@@ -675,6 +675,7 @@ h1, h2, h3 { font-weight: 700; }
 
       <div class="extracts-actions">
         <button type="button" class="btn btn-outline btn-small" id="export-pdf-btn" {% if not extracts %}disabled{% endif %}>تحميل ملخص</button>
+        <button type="button" class="btn btn-outline btn-small" id="weekly-summary-btn">تحميل ملخص أسبوعي</button>
         <p class="form-message" id="export-pdf-message" role="alert" hidden></p>
       </div>
 
@@ -831,6 +832,7 @@ document.querySelector('.extracts-table')?.addEventListener('keydown', (event) =
    rendered in the table (i.e. the current search results).
    ========================================================== */
 const exportPdfBtn = document.getElementById('export-pdf-btn');
+const weeklySummaryBtn = document.getElementById('weekly-summary-btn');
 const exportPdfMessage = document.getElementById('export-pdf-message');
 
 function showExportMessage(text, type) {
@@ -841,6 +843,25 @@ function showExportMessage(text, type) {
   exportPdfMessage.textContent = text;
   exportPdfMessage.className = `form-message is-${type}`;
   exportPdfMessage.hidden = false;
+}
+
+async function downloadPdfResponse(response, fallbackFilename) {
+  if (response.status === 403) {
+    throw new Error('ليس لديك إذن لتحميل هذا الملخص.');
+  }
+  if (!response.ok) {
+    throw new Error(`تعذر إنشاء الملف (status ${response.status}).`);
+  }
+
+  const blob = await response.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = fallbackFilename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(blobUrl);
 }
 
 exportPdfBtn?.addEventListener('click', async () => {
@@ -859,30 +880,36 @@ exportPdfBtn?.addEventListener('click', async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify( extractIds ),
+      body: JSON.stringify(extractIds),
     });
 
-    if (response.status === 403) {
-      throw new Error('ليس لديك إذن لتحميل هذا الملخص.');
-    }
-    if (!response.ok) {
-      throw new Error(`تعذر إنشاء الملف (status ${response.status}).`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = 'extracts_summary.pdf';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(blobUrl);
+    await downloadPdfResponse(response, 'extracts_summary.pdf');
   } catch (error) {
     showExportMessage(error.message, 'error');
   } finally {
     exportPdfBtn.disabled = false;
     exportPdfBtn.textContent = originalLabel;
+  }
+});
+
+weeklySummaryBtn?.addEventListener('click', async () => {
+  if (exportPdfMessage) exportPdfMessage.hidden = true;
+  weeklySummaryBtn.disabled = true;
+  const originalLabel = weeklySummaryBtn.textContent;
+  weeklySummaryBtn.textContent = 'جارٍ التحميل…';
+
+  try {
+    const response = await fetch(`${EXTRACTS_BASE}/weekly_summary`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    await downloadPdfResponse(response, 'weekly_summary.pdf');
+  } catch (error) {
+    showExportMessage(error.message, 'error');
+  } finally {
+    weeklySummaryBtn.disabled = false;
+    weeklySummaryBtn.textContent = originalLabel;
   }
 });
 
