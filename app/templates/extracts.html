@@ -369,7 +369,7 @@ h1, h2, h3 { font-weight: 700; }
 
 .item-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr auto;
+  grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto;
   gap: 10px;
   align-items: center;
 }
@@ -395,7 +395,7 @@ h1, h2, h3 { font-weight: 700; }
 
 .item-list-head {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 0.8fr 0.8fr 0.9fr auto;
+  grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto;
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
@@ -1118,10 +1118,20 @@ function buildItemRow(itemList) {
   const unitType = document.createElement('input');
   unitType.type = 'text';
 
-  const amount = document.createElement('input');
-  amount.type = 'number';
-  amount.step = '1';
-  amount.min = '0';
+  const prevAmount = document.createElement('input');
+  prevAmount.type = 'number';
+  prevAmount.step = '0.01';
+  prevAmount.min = '0';
+
+  const currentAmount = document.createElement('input');
+  currentAmount.type = 'number';
+  currentAmount.step = '0.01';
+  currentAmount.min = '0';
+
+  const totalAmount = document.createElement('input');
+  totalAmount.type = 'number';
+  totalAmount.step = '0.01';
+  totalAmount.min = '0';
 
   const currency = document.createElement('input');
   currency.type = 'number';
@@ -1142,7 +1152,9 @@ function buildItemRow(itemList) {
 
   row.appendChild(title);
   row.appendChild(unitType);
-  row.appendChild(amount);
+  row.appendChild(prevAmount);
+  row.appendChild(currentAmount);
+  row.appendChild(totalAmount);
   row.appendChild(currency);
   row.appendChild(completion);
   row.appendChild(remove);
@@ -1172,7 +1184,7 @@ function buildCategoryBlock() {
 
   const itemListHead = document.createElement('div');
   itemListHead.className = 'item-list-head';
-  itemListHead.innerHTML = '<span>بند فرعي</span><span>نوع الوحدة</span><span>الكمية</span><span>الفئة</span><span>نسبة الانجاز</span><span></span>';
+  itemListHead.innerHTML = '<span>بند فرعي</span><span>نوع الوحدة</span><span>الكمية السابقة</span><span>الكمية الحالية</span><span>اجمالي الكمية</span><span>الفئة</span><span>نسبة الانجاز</span><span></span>';
 
   const itemList = document.createElement('div');
   itemList.className = 'item-list';
@@ -1205,14 +1217,16 @@ function collectCategories() {
 
     const items = [];
     itemRows.forEach((row) => {
-      const [title, unitType, amount, currency, completion] = row.querySelectorAll('input');
+      const [title, unitType, prevAmount, currentAmount, totalAmount, currency, completion] = row.querySelectorAll('input');
       const titleVal = title.value.trim();
-      const amountVal = amount.value.trim();
-      if (!titleVal || amountVal === '') return;
+      const totalAmountVal = totalAmount.value.trim();
+      if (!titleVal || totalAmountVal === '') return;
       items.push({
         title: titleVal,
         unit_type: unitType.value.trim(),
-        amount: Number(amountVal),
+        prev_amount: prevAmount.value.trim() === '' ? 0 : Number(prevAmount.value),
+        current_amount: currentAmount.value.trim() === '' ? 0 : Number(currentAmount.value),
+        total_amount: Number(totalAmountVal),
         currency: currency.value.trim() === '' ? 1 : Number(currency.value),
         completion_perc: completion.value.trim() === '' ? 1 : Number(completion.value) / 100,
       });

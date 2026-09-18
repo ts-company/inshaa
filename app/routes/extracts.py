@@ -181,7 +181,9 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "id": item.id,
             "title": item.title,
             "unit_type": item.unit_type,
-            "amount": item.amount,
+            "prev_amount": item.prev_amount,
+            "current_amount": item.current_amount,
+            "total_amount": item.total_amount,
             "currency": item.currency,
             "completion_perc": int(item.completion_perc * 100),
             "total": item.total
@@ -284,7 +286,9 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "id": item.id,
             "title": item.title,
             "unit_type": item.unit_type,
-            "amount": item.amount,
+            "prev_amount": item.prev_amount,
+            "current_amount": item.current_amount,
+            "total_amount": item.total_amount,
             "currency": item.currency,
             "completion_perc": int(item.completion_perc * 100),
             "total": item.total
@@ -429,7 +433,7 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             for item in cat.items:
                 if (item.prev_amount + item.current_amount) > item.total_amount:
                     raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
-                item_total = round(item.total_amount * item.currency * item.completion_perc, 2)
+                item_total = round(item.current_amount * item.currency * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,
@@ -570,7 +574,7 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             for item in cat.items:
                 if (item.prev_amount + item.current_amount) > item.total_amount:
                     raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
-                item_total = round(item.currency * item.total_amount * item.completion_perc, 2)
+                item_total = round(item.currency * item.current_amount * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,

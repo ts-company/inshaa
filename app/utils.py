@@ -186,7 +186,7 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
 
         story.append(Paragraph(ar(cat.title), heading_style))
 
-        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
+        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "اجمالي الكمية", "الكمية الحالية", "الكمية السابقة", "الوحدة", "بند فرعي"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
         for item in items:
@@ -194,14 +194,16 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
                 Paragraph(f"{item.total}", cell_style),
                 Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
                 Paragraph(ar(int(item.currency)), cell_style),
-                Paragraph(f"{int(item.amount)}", cell_style),
+                Paragraph(f"{int(item.total_amount)}", cell_style),
+                Paragraph(f"{int(item.current_amount)}", cell_style),
+                Paragraph(f"{int(item.prev_amount)}", cell_style),
                 Paragraph(ar(item.unit_type), cell_style),
                 Paragraph(ar(item.title), cell_style),
             ])
 
         table = Table(
             table_data,
-            colWidths=[2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm],
+            colWidths=[2.5 * cm, 2.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm, 4 * cm],
             repeatRows=1,
             hAlign="CENTER"
         )
@@ -278,13 +280,15 @@ def generate_summary_pdf(extracts, week_time = None) -> BytesIO:
     story.append(header_table)
     story.append(Spacer(1, 16))
 
-    headers = ["الصافي", "الاجمالي", "اسم المقاول", "اسم المشروع", "رقم المستخلص"]
+    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "اسم المقاول", "اسم المشروع", "ID"]
     table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
     for extract in extracts:
         table_data.append([
             Paragraph(f"{extract.total}", cell_style),
             Paragraph(f"{extract.sub_total}", cell_style),
+            Paragraph(f"{extract.unit_number}", cell_style),
+            Paragraph(f"{extract.job_title}", cell_style),
             Paragraph(ar(extract.contractor_name or "-"), cell_style),
             Paragraph(ar(extract.project_name), cell_style),
             Paragraph(f"{extract.id}", cell_style),
@@ -292,7 +296,7 @@ def generate_summary_pdf(extracts, week_time = None) -> BytesIO:
 
     table = Table(
         table_data,
-        colWidths=[3 * cm, 3 * cm, 4 * cm, 4 * cm, 2.5 * cm],
+        colWidths=[2.5 * cm, 2.5 * cm, 2 * cm, 3 * cm, 3 * cm, 3 * cm, 1.5 * cm],
         repeatRows=1,
         hAlign="CENTER"
     )

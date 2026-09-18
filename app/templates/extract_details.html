@@ -1314,9 +1314,11 @@
             <tr>
               <th>بند فرعي</th>
               <th>نوع الوحدة</th>
-              <th class="is-numeric">الكمية</th>
+              <th class="is-numeric">الكمية السابقة</th>
+              <th class="is-numeric">الكمية الحالية</th>
+              <th class="is-numeric">اجمالي الكمية</th>
               <th>الفئة</th>
-              <th class="is-numeric">نسبنة الانجاز</th>
+              <th class="is-numeric">نسبة الانجاز</th>
               <th class="is-numeric">الاجمالي</th>
               <th class="is-actions"></th>
             </tr>
@@ -1332,10 +1334,20 @@
                 <span class="editable-value">{{ item.unit_type }}</span>
                 <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button>
               </td>
-              <td class="is-numeric editable-cell" data-label="الكمية" data-item-id="{{ item.id }}" data-edit-field="amount"
-                data-edit-value="{{ item.amount }}" data-edit-step="0.01" data-edit-min="0">
-                <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
-                <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
+              <td class="is-numeric editable-cell" data-label="الكمية السابقة" data-item-id="{{ item.id }}" data-edit-field="prev_amount"
+                data-edit-value="{{ item.prev_amount }}" data-edit-step="0.01" data-edit-min="0">
+                <span class="editable-value">{{ "{:,.2f}".format(item.prev_amount) }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit previous amount" title="Edit previous amount"></button>
+              </td>
+              <td class="is-numeric editable-cell" data-label="الكمية الحالية" data-item-id="{{ item.id }}" data-edit-field="current_amount"
+                data-edit-value="{{ item.current_amount }}" data-edit-step="0.01" data-edit-min="0">
+                <span class="editable-value">{{ "{:,.2f}".format(item.current_amount) }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit current amount" title="Edit current amount"></button>
+              </td>
+              <td class="is-numeric editable-cell" data-label="اجمالي الكمية" data-item-id="{{ item.id }}" data-edit-field="total_amount"
+                data-edit-value="{{ item.total_amount }}" data-edit-step="0.01" data-edit-min="0">
+                <span class="editable-value">{{ "{:,.2f}".format(item.total_amount) }}</span>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit total amount" title="Edit total amount"></button>
               </td>
               <td class="editable-cell" data-label="الفئة" data-item-id="{{ item.id }}" data-edit-field="currency"
                 data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
@@ -1537,8 +1549,16 @@
           <input type="text" id="item-unit-type" name="unit_type" placeholder="e.g. m2, ton, unit" required>
         </div>
         <div class="field">
-          <label for="item-amount">الكمية</label>
-          <input type="number" id="item-amount" name="amount" step="0.01" min="0" required>
+          <label for="item-prev-amount">الكمية السابقة</label>
+          <input type="number" id="item-prev-amount" name="prev_amount" step="0.01" min="0" required>
+        </div>
+        <div class="field">
+          <label for="item-current-amount">الكمية الحالية</label>
+          <input type="number" id="item-current-amount" name="current_amount" step="0.01" min="0" required>
+        </div>
+        <div class="field">
+          <label for="item-total-amount">اجمالي الكمية</label>
+          <input type="number" id="item-total-amount" name="total_amount" step="0.01" min="0" required>
         </div>
         <div class="field">
           <label for="item-currency">الفئة</label>
@@ -1655,8 +1675,16 @@
           <input type="text" data-field="unit_type" required>
         </div>
         <div class="field">
-          <label>الكمية</label>
-          <input type="number" data-field="amount" step="0.01" min="0" required>
+          <label>المبلغ السابق</label>
+          <input type="number" data-field="prev_amount" step="0.01" min="0" required>
+        </div>
+        <div class="field">
+          <label>المبلغ الحالي</label>
+          <input type="number" data-field="current_amount" step="0.01" min="0" required>
+        </div>
+        <div class="field">
+          <label>المجموع</label>
+          <input type="number" data-field="total_amount" step="0.01" min="0" required>
         </div>
         <div class="field">
           <label>الفئة</label>
@@ -1818,25 +1846,31 @@
         row.innerHTML =
           '<td class="item-title editable-cell" data-label="بند فرعي" data-edit-field="title" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button></td>' +
           '<td class="editable-cell" data-label="نوع الوحدة" data-edit-field="unit_type" data-edit-type="text"><span class="editable-value"></span><button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button></td>' +
-          '<td class="is-numeric editable-cell" data-label="الكمية" data-edit-field="amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button></td>' +
+          '<td class="is-numeric editable-cell" data-label="السابق" data-edit-field="prev_amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit previous amount" title="Edit previous amount"></button></td>' +
+          '<td class="is-numeric editable-cell" data-label="الحالي" data-edit-field="current_amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit current amount" title="Edit current amount"></button></td>' +
+          '<td class="is-numeric editable-cell" data-label="الاجمالي" data-edit-field="total_amount" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit total amount" title="Edit total amount"></button></td>' +
           '<td class="editable-cell" data-label="الفئة" data-edit-field="currency" data-edit-step="0.01" data-edit-min="0"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button></td>' +
-          '<td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-edit-field="completion" data-edit-step="0.01" data-edit-min="1" data-edit-max="100"><span class="editable-value"></span><button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button></td>' +
-          '<td class="is-numeric item-total" data-label="الاجمالي"></td>' +
+          '<td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-edit-field="completion" data-edit-step]="0.01" data-edit-min]="1" data-edit-max]="100"><span class="editable-value"></span><button type]="button" class]="inline-edit-trigger" aria-label]="Edit completion" title]="Edit completion"></button></td>' +
+          '<td class="is-numeric item-total" data-label]="الاجمالي"></td>' +
           '<td class="is-actions" data-label=""><button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-title="">حذف</button></td>';
 
         const cells = row.children;
         cells[0].querySelector('.editable-value').textContent = item.title;
         cells[1].querySelector('.editable-value').textContent = item.unit_type;
-        cells[2].dataset.editValue = item.amount;
-        cells[2].querySelector('.editable-value').textContent = formatAmount(item.amount);
-        cells[3].dataset.editValue = item.currency;
-        cells[3].querySelector('.editable-value').textContent = formatAmount(item.currency);
+        cells[2].dataset.editValue = item.prev_amount;
+        cells[2].querySelector('.editable-value').textContent = formatAmount(item.prev_amount);
+        cells[3].dataset.editValue = item.current_amount;
+        cells[3].querySelector('.editable-value').textContent = formatAmount(item.current_amount);
+        cells[4].dataset.editValue = item.total_amount;
+        cells[4].querySelector('.editable-value').textContent = formatAmount(item.total_amount);
+        cells[5].dataset.editValue = item.currency;
+        cells[5].querySelector('.editable-value').textContent = formatAmount(item.currency);
         const itemCompletionPercentage = completionPercentage(item.completion_perc);
-        cells[4].dataset.editValue = itemCompletionPercentage;
-        cells[4].querySelector('.editable-value').textContent = itemCompletionPercentage + '%';
-        cells[5].textContent = formatAmount(item.total || item.amount * item.currency * (itemCompletionPercentage / 100));
-        cells[6].querySelector('.btn-delete-item').dataset.itemId = '';
-        cells[6].querySelector('.btn-delete-item').dataset.itemTitle = item.title;
+        cells[6].dataset.editValue = itemCompletionPercentage;
+        cells[6].querySelector('.editable-value').textContent = itemCompletionPercentage + '%';
+        cells[7].textContent = formatAmount(item.total);
+        cells[8].querySelector('.btn-delete-item').dataset.itemId = '';
+        cells[8].querySelector('.btn-delete-item').dataset.itemTitle = item.title;
         return row;
       }
 
@@ -1848,7 +1882,7 @@
           '<button type="button" class="btn btn-ghost btn-open-add-item edit-mode-only" data-cat-id="" data-cat-title="">اضافة بند فرعي</button>' +
           '<button type="button" class="btn-text btn-delete-category edit-mode-only" data-cat-id="" data-cat-title="">حذف البند</button>' +
           '</div></div>' +
-          '<table class="items-table"><thead><tr><th>بند فرعي</th><th>نوع الوحدة</th><th class="is-numeric">الكمية</th><th>الفئة</th><th class="is-numeric">نسبنة الانجاز</th><th class="is-numeric">الاجمالي</th><th class="is-actions"></th></tr></thead><tbody></tbody></table>';
+          '<table class="items-table"><thead><tr><th>بند فرعي</th><th>نوع الوحدة</th><th class="is-numeric">السابق</th><th class="is-numeric">الحالي</th><th class="is-numeric">الاجمالي</th><th>الفئة</th><th class="is-numeric">نسبة الانجاز</th><th class="is-numeric">الاجمالي</th><th class="is-actions"></th></tr></thead><tbody></tbody></table>';
         block.querySelector('h2 .editable-value').textContent = title;
         block.querySelectorAll('[data-cat-title]').forEach(function (button) {
           button.dataset.catTitle = title;
@@ -1864,7 +1898,9 @@
         return {
           title: get('title').value.trim(),
           unit_type: get('unit_type').value.trim(),
-          amount: decimalString(get('amount').value),
+          prev_amount: decimalString(get('prev_amount').value),
+          current_amount: decimalString(get('current_amount').value),
+          total_amount: decimalString(get('total_amount').value),
           currency: decimalString(get('currency').value),
           completion_perc: completionFraction(completionPercentage),
         };
@@ -1873,8 +1909,9 @@
       function validateItem(item) {
         const completion = parseFloat(item.completion_perc);
         return Boolean(item.title && item.unit_type &&
-          item.amount !== null && item.currency !== null &&
-          !Number.isNaN(completion) && completion >= 0.01 && completion <= 1);
+          item.prev_amount !== null && item.current_amount !== null && item.total_amount !== null && item.currency !== null &&
+          !Number.isNaN(completion) && completion >= 0.01 && completion <= 1 &&
+          Number(item.prev_amount) + Number(item.current_amount) <= Number(item.total_amount));
       }
 
       function serializeCategories() {
@@ -1884,9 +1921,11 @@
             return {
               title: cells[0].querySelector('.editable-value').textContent.trim(),
               unit_type: cells[1].querySelector('.editable-value').textContent.trim(),
-              amount: decimalString(cells[2].dataset.editValue),
-              currency: decimalString(cells[3].dataset.editValue),
-              completion_perc: completionFraction(cells[4].dataset.editValue),
+              prev_amount: decimalString(cells[2].dataset.editValue),
+              current_amount: decimalString(cells[3].dataset.editValue),
+              total_amount: decimalString(cells[4].dataset.editValue),
+              currency: decimalString(cells[5].dataset.editValue),
+              completion_perc: completionFraction(cells[6].dataset.editValue),
             };
           });
           const draftEditor = category.querySelector('.inline-add-item-editor');
@@ -2025,10 +2064,18 @@
             });
           }
           if (row && !isText) {
-            const amount = parseFloat(row.children[2].dataset.editValue);
-            const currency = parseFloat(row.children[3].dataset.editValue);
-            const completion = parseFloat(row.children[4].dataset.editValue) / 100;
-            row.querySelector('.item-total').textContent = formatAmount(amount * currency * completion);
+            const prevAmount = parseFloat(row.children[2].dataset.editValue || 0);
+            const currentAmount = parseFloat(row.children[3].dataset.editValue || 0);
+            const totalAmount = parseFloat(row.children[4].dataset.editValue || 0);
+            const currency = parseFloat(row.children[5].dataset.editValue || 0);
+            const completion = parseFloat(row.children[6].dataset.editValue || 0) / 100;
+            const total = Number.isFinite(currency) && Number.isFinite(totalAmount) ? currency * totalAmount * completion : 0;
+            row.querySelector('.item-total').textContent = formatAmount(total);
+            row.children[2].dataset.editValue = prevAmount;
+            row.children[3].dataset.editValue = currentAmount;
+            row.children[4].dataset.editValue = totalAmount;
+            row.children[5].dataset.editValue = currency;
+            row.children[6].dataset.editValue = parseFloat(row.children[6].dataset.editValue || 0);
           }
         }
 
@@ -2161,7 +2208,9 @@
         row.innerHTML =
           '<div class="field"><label>بند فرعي</label><input type="text" data-field="title" required></div>' +
           '<div class="field"><label>نوع الوحدة</label><input type="text" data-field="unit_type" required></div>' +
-          '<div class="field"><label>الكمية</label><input type="number" data-field="amount" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>السابق</label><input type="number" data-field="prev_amount" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>الحالي</label><input type="number" data-field="current_amount" step="0.01" min="0" required></div>' +
+          '<div class="field"><label>الاجمالي</label><input type="number" data-field="total_amount" step="0.01" min="0" required></div>' +
           '<div class="field"><label>الفئة</label><input type="number" data-field="currency" step="0.01" min="0" required></div>' +
           '<div class="field"><label>نسبة الانجاز</label><input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required></div>' +
           '<div class="inline-add-item-actions"><button type="button" class="inline-add-item-remove" data-inline-remove>حذف</button></div>';
