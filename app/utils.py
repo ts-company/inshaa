@@ -245,7 +245,7 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
     buffer.seek(0)
     return buffer
 
-def generate_summary_pdf(extracts, week_time = None) -> BytesIO:
+def generate_summary_pdf(extracts) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -269,7 +269,7 @@ def generate_summary_pdf(extracts, week_time = None) -> BytesIO:
 
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=6 * cm, height=2 * cm)
-    header_text = Paragraph(ar("ملخص"), title_style) if not week_time else Paragraph(ar(f" ملخص {week_time}"), title_style)
+    header_text = Paragraph(ar("ملخص"), title_style)
 
     header_table = Table([[logo, header_text]], colWidths=[4 * cm, 12 * cm])
     header_table.setStyle(TableStyle([

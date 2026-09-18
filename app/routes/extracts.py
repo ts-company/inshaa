@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request, Body
+from fastapi import APIRouter, Depends, status, HTTPException, Request, Body, Query
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.users_model import User
@@ -23,16 +24,25 @@ from app.utils import generate_extract_pdf, generate_summary_pdf
 from app.database import get_db
 from app.config import BASE_DIR
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(prefix="/system/extracts")
 
 templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 @router.get("/")
-def get_extracts(request: Request, id: int = None, name: str = None, contractor: str = None, customer: str = None, unit: int = None, job_title: str = None, db: Session = Depends(get_db)):
+def get_extracts(
+    request: Request,
+    id: Optional[List[int]] = Query(None),
+    name: Optional[List[str]] = Query(None),
+    contractor: Optional[List[str]] = Query(None),
+    customer: Optional[List[str]] = Query(None),
+    unit: Optional[List[int]] = Query(None),
+    job_title: Optional[List[str]] = Query(None),
+    db: Session = Depends(get_db)
+):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -56,23 +66,23 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
     else:
         query = db.query(Extract).filter(Extract.created_by == user_id)
 
-    if id is not None:
-        query = query.filter(Extract.id == id)
+    if id:
+        query = query.filter(Extract.id.in_(id))
 
     if name:
-        query = query.filter(Extract.project_name.ilike(f"%{name}%"))
+        query = query.filter(or_(*[Extract.project_name.ilike(f"%{n}%") for n in name]))
 
     if contractor:
-        query = query.filter(Extract.contractor_name.ilike(f"%{contractor}%"))
+        query = query.filter(or_(*[Extract.contractor_name.ilike(f"%{c}%") for c in contractor]))
 
     if customer:
-        query = query.filter(Extract.contractor_name.ilike(f"%{customer}%"))
+        query = query.filter(or_(*[Extract.contractor_name.ilike(f"%{c}%") for c in customer]))
 
     if unit:
-        query = query.filter(Extract.unit_number == unit)
+        query = query.filter(Extract.unit_number.in_(unit))
 
     if job_title:
-        query = query.filter(Extract.job_title.ilike(f"%{job_title}%"))
+        query = query.filter(or_(*[Extract.job_title.ilike(f"%{j}%") for j in job_title]))
 
     extracts = [
         {
@@ -90,6 +100,7 @@ def get_extracts(request: Request, id: int = None, name: str = None, contractor:
         for e in query.order_by(Extract.id.desc()).all()
     ]
     return templates.TemplateResponse("extracts.html", {"request": request, "extracts": extracts})
+
 
 @router.post("/get_summary")
 def get_extracts(request: Request, ext_ids: List[int] = Body(...), db: Session = Depends(get_db)):
@@ -115,37 +126,6 @@ def get_extracts(request: Request, ext_ids: List[int] = Body(...), db: Session =
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=extracts_summary.pdf"}
     )
-
-@router.post("/weekly_summary")
-def get_extracts(request: Request, db: Session = Depends(get_db)):
-    token = request.cookies.get("access_token")
-    user_id, user_role = validate_user(token)
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
-    if user.role != "super_admin":
-        if "generate pdf" not in permission_types:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
-    now = datetime.now(timezone.utc)
-    days_since_sunday = now.isoweekday() % 7
-    start_of_week = (now - timedelta(days=days_since_sunday)).replace(hour=0, minute=0, second=0, microsecond=0)
-
-    extracts = db.query(Extract).filter(Extract.created_at >= start_of_week).all()
-
-    try:
-        pdf_buffer = generate_summary_pdf(extracts, now.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),)
-    except RuntimeError:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    return StreamingResponse(
-        pdf_buffer,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=extracts_summary.pdf"}
-    )
-
 
 @router.get("/details/{ext_id}")
 def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):

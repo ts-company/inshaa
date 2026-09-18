@@ -445,24 +445,49 @@ h1, h2, h3 { font-weight: 700; }
 
 .extract-search {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) auto auto;
-  gap: 12px;
-  align-items: end;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 16px 18px;
+  align-items: start;
   margin-bottom: 28px;
   padding: 0 0 24px;
   border-bottom: 1px solid var(--line);
 }
 
-.extract-search label {
+.search-filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.search-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.search-filter-header label,
+.search-filter-header span {
+  display: block;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--steel-dark);
 }
 
-.extract-search input {
+.search-values {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-row-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-row-input input {
   width: 100%;
   font-family: var(--font-body);
   font-size: 14px;
@@ -473,7 +498,29 @@ h1, h2, h3 { font-weight: 700; }
   border-radius: 2px;
 }
 
-.extract-search input:focus { outline: none; border-color: var(--steel); }
+.search-row-input input:focus { outline: none; border-color: var(--steel); }
+
+.search-row-add-btn,
+.search-row-remove-btn {
+  border: 1px solid var(--line-strong);
+  background: var(--white);
+  color: var(--steel-dark);
+  border-radius: 3px;
+  font: 600 12px var(--font-body);
+  cursor: pointer;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+
+.search-row-remove-btn {
+  border-color: rgba(162, 64, 44, 0.35);
+  color: var(--error);
+}
+
+.search-row-add-btn:hover,
+.search-row-remove-btn:hover {
+  border-color: var(--steel);
+}
 
 .extract-search .btn { align-self: end; white-space: nowrap; }
 .extract-search .btn {
@@ -645,37 +692,148 @@ h1, h2, h3 { font-weight: 700; }
   <section class="tab-panel is-active" id="tab-panel-view" role="tabpanel" aria-labelledby="tab-btn-view">
     <div class="extracts-section">
       <form class="extract-search" method="get" action="/system/extracts/">
-        <label>
-          رقم المستخلص
-          <input type="number" name="id" min="1" value="{{ request.query_params.get('id', '') }}">
-        </label>
-        <label>
-          اسم المشروع
-          <input type="text" name="name" value="{{ request.query_params.get('name', '') }}">
-        </label>
-        <label>
-          رقم الوحدة
-          <input type="number" name="unit" min="1" value="{{ request.query_params.get('unit', '') }}">
-        </label>
-        <label>
-          نوع العمل
-          <input type="text" name="job_title" value="{{ request.query_params.get('job_title', '') }}">
-        </label>
-        <label>
-          اسم المقاول
-          <input type="text" name="contractor" value="{{ request.query_params.get('contractor', '') }}">
-        </label>
-        <label>
-          اسم العميل
-          <input type="text" name="customer" value="{{ request.query_params.get('customer', '') }}">
-        </label>
-        <button type="submit" class="btn btn-small">بحث</button>
-        <a href="/system/extracts/" class="btn btn-outline btn-small">مسح</a>
+        <div class="search-filter-group" data-filter-name="id">
+          <div class="search-filter-header">
+            <label>رقم المستخلص</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="id">
+            {% set ids = request.query_params.getlist('id') %}
+            {% if ids %}
+              {% for value in ids %}
+              <div class="search-row-input">
+                <input type="number" name="id" min="1" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة رقم المستخلص">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="number" name="id" min="1">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="name">
+          <div class="search-filter-header">
+            <label>اسم المشروع</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="name">
+            {% set names = request.query_params.getlist('name') %}
+            {% if names %}
+              {% for value in names %}
+              <div class="search-row-input">
+                <input type="text" name="name" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة اسم المشروع">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="name">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="unit">
+          <div class="search-filter-header">
+            <label>رقم الوحدة</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="unit">
+            {% set units = request.query_params.getlist('unit') %}
+            {% if units %}
+              {% for value in units %}
+              <div class="search-row-input">
+                <input type="number" name="unit" min="1" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة رقم الوحدة">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="number" name="unit" min="1">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="job_title">
+          <div class="search-filter-header">
+            <label>نوع العمل</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="job_title">
+            {% set job_titles = request.query_params.getlist('job_title') %}
+            {% if job_titles %}
+              {% for value in job_titles %}
+              <div class="search-row-input">
+                <input type="text" name="job_title" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة نوع العمل">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="job_title">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="contractor">
+          <div class="search-filter-header">
+            <label>اسم المقاول</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="contractor">
+            {% set contractors = request.query_params.getlist('contractor') %}
+            {% if contractors %}
+              {% for value in contractors %}
+              <div class="search-row-input">
+                <input type="text" name="contractor" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة اسم المقاول">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="contractor">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="customer">
+          <div class="search-filter-header">
+            <label>اسم العميل</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="customer">
+            {% set customers = request.query_params.getlist('customer') %}
+            {% if customers %}
+              {% for value in customers %}
+              <div class="search-row-input">
+                <input type="text" name="customer" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة اسم العميل">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="customer">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" style="grid-column: 1 / -1; align-items: flex-start;">
+          <div class="search-filter-header" style="width: 100%; justify-content: flex-end;">
+            <button type="submit" class="btn btn-small">بحث</button>
+            <a href="/system/extracts/" class="btn btn-outline btn-small">مسح</a>
+          </div>
+        </div>
       </form>
 
       <div class="extracts-actions">
         <button type="button" class="btn btn-outline btn-small" id="export-pdf-btn" {% if not extracts %}disabled{% endif %}>تحميل ملخص</button>
-        <button type="button" class="btn btn-outline btn-small" id="weekly-summary-btn">تحميل ملخص أسبوعي</button>
         <p class="form-message" id="export-pdf-message" role="alert" hidden></p>
       </div>
 
@@ -832,7 +990,6 @@ document.querySelector('.extracts-table')?.addEventListener('keydown', (event) =
    rendered in the table (i.e. the current search results).
    ========================================================== */
 const exportPdfBtn = document.getElementById('export-pdf-btn');
-const weeklySummaryBtn = document.getElementById('weekly-summary-btn');
 const exportPdfMessage = document.getElementById('export-pdf-message');
 
 function showExportMessage(text, type) {
@@ -892,27 +1049,6 @@ exportPdfBtn?.addEventListener('click', async () => {
   }
 });
 
-weeklySummaryBtn?.addEventListener('click', async () => {
-  if (exportPdfMessage) exportPdfMessage.hidden = true;
-  weeklySummaryBtn.disabled = true;
-  const originalLabel = weeklySummaryBtn.textContent;
-  weeklySummaryBtn.textContent = 'جارٍ التحميل…';
-
-  try {
-    const response = await fetch(`${EXTRACTS_BASE}/weekly_summary`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    await downloadPdfResponse(response, 'weekly_summary.pdf');
-  } catch (error) {
-    showExportMessage(error.message, 'error');
-  } finally {
-    weeklySummaryBtn.disabled = false;
-    weeklySummaryBtn.textContent = originalLabel;
-  }
-});
-
 const tabButtons = {
   view: document.getElementById('tab-btn-view'),
   add: document.getElementById('tab-btn-add'),
@@ -942,13 +1078,74 @@ if (window.location.hash === '#add') activateTab('add');
    Extract search
    ========================================================== */
 const extractSearchForm = document.querySelector('.extract-search');
+
+function attachSearchRowActions(group) {
+  const valuesList = group.querySelector('.search-values');
+  if (!valuesList) return;
+
+  const createInput = (value = '') => {
+    const row = document.createElement('div');
+    row.className = 'search-row-input';
+
+    const input = document.createElement('input');
+    const key = valuesList.dataset.name;
+    input.type = key === 'id' || key === 'unit' ? 'number' : 'text';
+    input.name = key;
+    if (key === 'id' || key === 'unit') input.min = '1';
+    input.value = value;
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'search-row-remove-btn';
+    remove.textContent = 'حذف';
+    remove.setAttribute('aria-label', `حذف قيمة ${key}`);
+    remove.addEventListener('click', () => {
+      const rows = valuesList.querySelectorAll('.search-row-input');
+      if (rows.length <= 1) {
+        input.value = '';
+        return;
+      }
+      row.remove();
+    });
+
+    row.appendChild(input);
+    row.appendChild(remove);
+    valuesList.appendChild(row);
+  };
+
+  const addButton = group.querySelector('.search-row-add-btn');
+  addButton?.addEventListener('click', () => createInput(''));
+
+  valuesList.querySelectorAll('.search-row-remove-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('.search-row-input');
+      const rows = valuesList.querySelectorAll('.search-row-input');
+      const input = row?.querySelector('input');
+      if (!row || !input) return;
+      if (rows.length <= 1) {
+        input.value = '';
+        return;
+      }
+      row.remove();
+    });
+  });
+
+  const baseRow = valuesList.querySelector('.search-row-input.is-base');
+  if (baseRow) {
+    const baseRemoveButton = baseRow.querySelector('.search-row-remove-btn');
+    if (baseRemoveButton) baseRemoveButton.remove();
+  }
+}
+
+document.querySelectorAll('.search-filter-group').forEach(attachSearchRowActions);
+
 extractSearchForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
   const params = new URLSearchParams();
   new FormData(extractSearchForm).forEach((value, key) => {
     const trimmedValue = String(value).trim();
-    if (trimmedValue) params.set(key, trimmedValue);
+    if (trimmedValue) params.append(key, trimmedValue);
   });
 
   const query = params.toString();
