@@ -2383,7 +2383,7 @@
     .hero-wrap {
       margin-left: -32px;
       margin-right: -32px;
-      padding-top: 0;
+      padding-top: 64px;
     }
 
     .hero-cover {
@@ -2394,17 +2394,17 @@
     }
 
     .hero-navbar {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      z-index: 6;
+      z-index: 20;
       display: flex;
       align-items: center;
       gap: 24px;
-      min-height: 92px;
-      padding: 18px 42px;
-      background: transparent;
+      min-height: 64px;
+      padding: 2px 28px;
+      background: #0B4D72;
       border-bottom: 0;
     }
 
@@ -2924,13 +2924,13 @@
     .sector-card-face {
       border-radius: 0;
       background: var(--paper);
-      border: 1px solid var(--line-strong);
+      border: 2px solid #707070;
     }
 
     .sector-card-back {
       border-radius: 0;
       background: var(--ink);
-      border: 1px solid var(--line-strong);
+      border: 2px solid #707070;
     }
 
     .marquee {
@@ -2939,7 +2939,7 @@
 
     .site-footer {
       margin-top: 132px;
-      background: var(--ink);
+      background: #0B4D72;
       border-top: 0;
     }
 
@@ -2977,6 +2977,7 @@
       .hero-wrap {
         margin-left: -20px;
         margin-right: -20px;
+        padding-top: 58px;
       }
 
       .hero-cover {
@@ -2984,8 +2985,8 @@
       }
 
       .hero-navbar {
-        min-height: 82px;
-        padding: 16px 20px;
+        min-height: 58px;
+        padding: 2px 14px;
       }
 
       .hero-navbar-logo {
@@ -3120,9 +3121,15 @@
         gap: 28px;
       }
 
+       /* edits by youssef */
+
       .hero-navbar {
-        min-height: 70px;
-        padding: 12px 20px;
+        min-height: 52px;
+        padding: 1px 14px;
+      }
+
+      .hero-wrap {
+        padding-top: 52px;
       }
 
       .hero-navbar-logo {
@@ -3264,6 +3271,17 @@
 
     .sector-card-face.sector-card-front h3 {
       color: var(--paper);
+      font-size: 30px;
+      font-weight: 800;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.75);
+    }
+
+    .sector-card-back p,
+    .sector-subcategory-item {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.55;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
     }
 
     /* ===== Premium page entrance ===== */
@@ -3280,7 +3298,7 @@
       pointer-events: none;
       background:
         linear-gradient(135deg, rgba(215, 25, 32, 0.12), transparent 34%),
-        linear-gradient(180deg, rgba(8, 10, 12, 0.98), rgba(20, 20, 20, 0.94));
+        linear-gradient(180deg, rgba(11, 77, 114, 0.98), rgba(18, 102, 143, 0.94));
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       opacity: 1;
@@ -3298,7 +3316,7 @@
       pointer-events: none;
       background:
         linear-gradient(315deg, rgba(215, 25, 32, 0.12), transparent 34%),
-        linear-gradient(0deg, rgba(8, 10, 12, 0.98), rgba(20, 20, 20, 0.94));
+        linear-gradient(0deg, rgba(11, 77, 114, 0.98), rgba(18, 102, 143, 0.94));
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       opacity: 1;
@@ -3466,21 +3484,22 @@
 
 <body>
 
+  <nav class="hero-navbar" aria-label="Main navigation">
+    <a href="#top" class="hero-navbar-logo" aria-label="Inshaa Minka home">
+      <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+    </a>
+    <div class="hero-navbar-links">
+      <a href="#company-summary">About</a>
+      <a href="#services-section">Services</a>
+      <a href="#projects-section">Projects</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+
   <main id="top">
 
     <div class="hero-wrap">
       <div class="hero-cover">
-        <nav class="hero-navbar" aria-label="Main navigation">
-          <a href="#top" class="hero-navbar-logo" aria-label="Inshaa Minka home">
-            <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
-          </a>
-          <div class="hero-navbar-links">
-            <a href="#company-summary">About</a>
-            <a href="#services-section">Services</a>
-            <a href="#projects-section">Projects</a>
-            <a href="#contact">Contact</a>
-          </div>
-        </nav>
         <video id="hero-video" poster="/static/hero.jpg" preload="none" muted loop playsinline
           aria-label="Inshaa building site under construction"></video>
         <div class="hero-cover-scrim" aria-hidden="true"></div>
@@ -3499,19 +3518,13 @@
 
     <section class="company-summary scroll-reveal" id="company-summary">
       <div class="company-summary-grid">
-        <div class="company-summary-intro">
-          <h2>Welcome Message <span>From CEO</span></h2>
-          <p>We bring disciplined planning, thoughtful design, and dependable delivery to every project we build.</p>
-          <div class="company-summary-rule" aria-hidden="true"></div>
-        </div>
-
         <div class="company-summary-row">
           <div class="company-summary-row-image">
             <img src="/static/summary.jpg" alt="Interior construction project">
           </div>
           <div class="company-summary-row-copy">
             <span class="summary-kicker">Our approach</span>
-            <h3>Built with discipline</h3>
+            <h3>Built With Discipline</h3>
             <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias.</p>
             <a class="summary-link" href="#services-section">Discover more</a>
           </div>
@@ -3641,7 +3654,6 @@
     <div class="marquee-section scroll-reveal" id="partners-section">
       <div class="section-head">
         <h2>Trusted relationships</h2>
-        <p>We work alongside organizations that value precision, communication and dependable delivery.</p>
       </div>
 
       <div class="marquee">
@@ -3651,8 +3663,7 @@
 
     <div class="marquee-section scroll-reveal" id="countries-section">
       <div class="section-head">
-        <h2>Our operating reach</h2>
-        <p>Local knowledge and regional experience supporting projects across multiple markets.</p>
+        <h2>Our vendors</h2>
       </div>
 
       <div class="marquee">
@@ -4154,40 +4165,7 @@
         heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
       }
 
-      const defaultDepth = { x: 0, y: 0 };
-      let target = { x: 0, y: 0 };
-      let current = { x: 0, y: 0 };
       let frame = null;
-
-      window.addEventListener('mousemove', (event) => {
-        const x = event.clientX / Math.max(window.innerWidth, 1);
-        const y = event.clientY / Math.max(window.innerHeight, 1);
-
-        target.x = (x - 0.5) * 16;
-        target.y = (y - 0.5) * -14;
-
-        const rect = heroCover.getBoundingClientRect();
-        const px = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
-        const py = clamp((event.clientY - rect.top) / Math.max(rect.height, 1), 0, 1);
-
-        spotlight.style.left = `${px * 100}%`;
-        spotlight.style.top = `${py * 100}%`;
-
-        if (frame) return;
-
-        frame = requestAnimationFrame(() => {
-          current.x += (target.x - current.x) * 0.12;
-          current.y += (target.y - current.y) * 0.12;
-
-          heroCover.style.transform = `perspective(1800px) rotateX(${current.y}deg) rotateY(${current.x}deg)`;
-          heroVideo.style.transform = `scale(${1.105 + Math.abs(current.x) / 40}) translate3d(${current.x * 3}px, ${current.y * 3}px, 0)`;
-          heroCopy.style.transform = `translate3d(${current.x * 2}px, ${current.y * 2}px, 0)`;
-          heroKicker.style.transform = `translateX(${current.x * 1.5}px)`;
-          heroActions.style.transform = `translateY(${Math.abs(current.y) * -1.4}px)`;
-
-          frame = null;
-        });
-      }, { passive: true });
 
       const updateScrollDepth = () => {
         if (!heroCover || !heroVideo) return;
@@ -4212,12 +4190,17 @@
     })();
 
     const PARTNER_LOGOS = [
-      { name: 'BMW', src: '/static/logos/bmw_logo.png' },
-      { name: 'KIA', src: '/static/logos/kia_logo.png' },
-      { name: 'FORD', src: '/static/logos/ford_logo.png' },
-      { name: 'JEEP', src: '/static/logos/jeep_logo.png' },
-      { name: 'CHEVROLET', src: '/static/logos/chevorlet_logo.png' },
-      { name: 'MAZDA', src: '/static/logos/mazda_logo.png' },
+      { name: 'BMW', src: '/static/trusted logo/IMG-20260914-WA0001.jpg' },
+      { name: 'KIA', src: '/static/trusted logo/IMG-20260914-WA0002.jpg' },
+      { name: 'FORD', src: '/static/trusted logo/IMG-20260914-WA0003.jpg' },
+      { name: 'JEEP', src: '/static/trusted logo/IMG-20260914-WA0004.jpg' },
+      { name: 'CHEVROLET', src: '/static/trusted logo/IMG-20260914-WA0005.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0006.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0007.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0008.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0009.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0010.jpg' },
+      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0011.jpg' },
     ];
 
     const COUNTRIES = [
