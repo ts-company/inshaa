@@ -6,17 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="75ee7ed6-1d9a-49d7-988e-30c539d78000" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/extracts/extract_category_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/extracts/extract_category_item.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/extracts/extract_history.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/extracts/extract_history.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/extracts/extracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/extracts/extracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/extracts/history_category_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/extracts/history_category_item.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/users_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/users_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routes/extracts.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/extracts.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/routes/home.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/home.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/exctract.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/exctract.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/extract_details.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/extract_details.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/extracts.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/extracts.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/home.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
