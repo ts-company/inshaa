@@ -173,8 +173,9 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
     story.append(Spacer(1, 12))
 
     story.append(Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style))
+    story.append(Paragraph(f"{ar(extract.contract)} : {ar('العقد')}", normal_style))
     story.append(Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style))
-    story.append(Paragraph(f"{ar(extract.customer_name)} : {ar('اسم العميل')}", normal_style))
+    story.append(Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style))
     story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
     story.append(Spacer(1, 12))
 
@@ -186,7 +187,7 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
 
         story.append(Paragraph(ar(cat.title), heading_style))
 
-        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "اجمالي الكمية", "الكمية الحالية", "الكمية السابقة", "الوحدة", "بند فرعي"]
+        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
         for item in items:
@@ -194,16 +195,14 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
                 Paragraph(f"{item.total}", cell_style),
                 Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
                 Paragraph(ar(int(item.currency)), cell_style),
-                Paragraph(f"{int(item.total_amount)}", cell_style),
-                Paragraph(f"{int(item.current_amount)}", cell_style),
-                Paragraph(f"{int(item.prev_amount)}", cell_style),
+                Paragraph(f"{int(item.amount)}", cell_style),
                 Paragraph(ar(item.unit_type), cell_style),
                 Paragraph(ar(item.title), cell_style),
             ])
 
         table = Table(
             table_data,
-            colWidths=[2.5 * cm, 2.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm, 4 * cm],
+            colWidths=[3 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm],
             repeatRows=1,
             hAlign="CENTER"
         )

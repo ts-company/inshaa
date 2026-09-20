@@ -8,6 +8,7 @@ class Extract(Base):
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at = Column(DateTime, nullable=False)
     project_name = Column(String(500), nullable=False)
+    contract = Column(String(500), nullable=False)
     unit_number = Column(Integer, nullable=False)
     contractor_name = Column(String(500), nullable=False)
     customer_name = Column(String(500), nullable=True)

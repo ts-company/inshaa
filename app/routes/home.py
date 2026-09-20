@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, File, UploadFile, HTTPException, status, Form
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.home.cv_categories_model import CvCategory
 from app.models.home.cv_sub_categories import CvSubCategory
 from app.models.home.home_projects_model import Project
 from app.models.home.home_projects_medias_model import ProjectMedia
+from app.models.hr.candidates import Candidate
 from app.database import get_db
-from app.utils import generate_url
+from app.utils import generate_url, upload_image, upload_file
 from app.config import BASE_DIR
 
 router = APIRouter(prefix="/home")
@@ -53,3 +55,35 @@ def get_cv(request: Request, db: Session = Depends(get_db)):
         }
         for c in categories
     ]
+
+@router.post("/apply")
+def apply(request: Request,
+          name: str = Form(...),
+          email: str = Form(...),
+          phone_number: str = Form(...),
+          age: int = Form(...),
+          picture: UploadFile = File(...),
+          cv: UploadFile = File(...),
+          db: Session = Depends(get_db)):
+
+    try:
+        picture_id = upload_image(picture, "candidates")
+        cv_id = upload_file(cv, "candidates")
+
+
+        new_can = Candidate(
+            name=name,
+            email=email,
+            phone_number=phone_number,
+            age=age,
+            picture_id=picture_id,
+            cv_id=cv_id
+        )
+        db.add(new_can)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except RuntimeError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

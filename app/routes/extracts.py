@@ -161,9 +161,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "id": item.id,
             "title": item.title,
             "unit_type": item.unit_type,
-            "prev_amount": item.prev_amount,
-            "current_amount": item.current_amount,
-            "total_amount": item.total_amount,
+            "amount": item.amount,
             "currency": item.currency,
             "completion_perc": int(item.completion_perc * 100),
             "total": item.total
@@ -211,6 +209,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
     extract = {
             "id": extract.id,
             "project_name": extract.project_name,
+            "contract": extract.contract,
             "unit_number": extract.unit_number,
             "contractor_name": extract.contractor_name,
             "customer_name": extract.customer_name,
@@ -266,9 +265,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "id": item.id,
             "title": item.title,
             "unit_type": item.unit_type,
-            "prev_amount": item.prev_amount,
-            "current_amount": item.current_amount,
-            "total_amount": item.total_amount,
+            "amount": item.amount,
             "currency": item.currency,
             "completion_perc": int(item.completion_perc * 100),
             "total": item.total
@@ -316,6 +313,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
     extract = {
             "id": extract.id,
             "project_name": extract.project_name,
+            "contract": extract.contract,
             "unit_number": extract.unit_number,
             "contractor_name": extract.contractor_name,
             "customer_name": extract.customer_name,
@@ -390,6 +388,7 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             created_by=user_id,
             created_at=datetime.now(timezone.utc),
             project_name=payload.project_name,
+            contract=payload.contract,
             unit_number=payload.unit_number,
             contractor_name=payload.contractor_name,
             customer_name=payload.customer_name,
@@ -411,16 +410,12 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             db.add(new_cat)
             db.flush()
             for item in cat.items:
-                if (item.prev_amount + item.current_amount) > item.total_amount:
-                    raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
-                item_total = round(item.current_amount * item.currency * item.completion_perc, 2)
+                item_total = round(item.amount * item.currency * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,
                     unit_type=item.unit_type,
-                    prev_amount=item.prev_amount,
-                    current_amount=item.current_amount,
-                    total_amount=item.total_amount,
+                    amount=item.amount,
                     currency=item.currency,
                     completion_perc=item.completion_perc,
                     total=item_total
@@ -503,6 +498,7 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             updated_at=datetime.now(timezone.utc),
             updated_by=user_id,
             project_name=extract.project_name,
+            contract=extract.contract,
             unit_number=extract.unit_number,
             contractor_name=extract.contractor_name,
             customer_name=extract.customer_name,
@@ -528,9 +524,7 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
                     extract_category_history_id=history_cat.id,
                     title=old_item.title,
                     unit_type=old_item.unit_type,
-                    prev_amount=old_item.prev_amount,
-                    current_amount=old_item.current_amount,
-                    total_amount=old_item.total_amount,
+                    amount=old_item.amount,
                     currency=old_item.currency,
                     completion_perc=old_item.completion_perc,
                     total=old_item.total
@@ -552,16 +546,12 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             db.add(new_cat)
             db.flush()
             for item in cat.items:
-                if (item.prev_amount + item.current_amount) > item.total_amount:
-                    raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
-                item_total = round(item.currency * item.current_amount * item.completion_perc, 2)
+                item_total = round(item.currency * item.amount * item.completion_perc, 2)
                 db.add(ExtractCategoryItem(
                     category_id=new_cat.id,
                     title=item.title,
                     unit_type=item.unit_type,
-                    prev_amount=item.prev_amount,
-                    current_amount=item.current_amount,
-                    total_amount=item.total_amount,
+                    amount=item.amount,
                     currency=item.currency,
                     completion_perc=item.completion_perc,
                     total=item_total
@@ -662,6 +652,7 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
         updated_at=datetime.now(timezone.utc),
         updated_by=user_id,
         project_name=extract.project_name,
+        contract=extract.contract,
         unit_number=extract.unit_number,
         contractor_name=extract.contractor_name,
         customer_name=extract.customer_name,
@@ -686,9 +677,7 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
                 extract_category_history_id=history_cat.id,
                 title=old_item.title,
                 unit_type=old_item.unit_type,
-                prev_amount=old_item.prev_amount,
-                current_amount=old_item.current_amount,
-                total_amount=old_item.total_amount,
+                amount=old_item.amount,
                 currency=old_item.currency,
                 completion_perc=old_item.completion_perc,
                 total=old_item.total

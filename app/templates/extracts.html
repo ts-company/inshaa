@@ -369,9 +369,10 @@ h1, h2, h3 { font-weight: 700; }
 
 .item-row {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto;
+  grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(110px, 1fr)) auto;
   gap: 10px;
   align-items: center;
+  width: 100%;
 }
 
 .item-row input {
@@ -383,6 +384,11 @@ h1, h2, h3 { font-weight: 700; }
   color: var(--ink);
   border-radius: 3px;
   width: 100%;
+  min-width: 0;
+}
+
+.item-row input:nth-child(1) {
+  min-width: 0;
 }
 
 .item-row input:focus { outline: none; border-color: var(--steel); }
@@ -391,17 +397,19 @@ h1, h2, h3 { font-weight: 700; }
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 
 .item-list-head {
   display: grid;
-  grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr auto;
+  grid-template-columns: minmax(180px, 1.5fr) repeat(4, minmax(110px, 1fr)) auto;
   gap: 10px;
   font-size: 13px;
   font-weight: 600;
   color: var(--steel-dark);
   opacity: 0.8;
   padding: 0 1px;
+  width: 100%;
 }
 
 .btn {
@@ -638,6 +646,7 @@ h1, h2, h3 { font-weight: 700; }
 /* ===== Responsive ===== */
 @media (max-width: 1000px) {
   .field-row-4, .field-row-5 { grid-template-columns: 1fr 1fr; }
+  .field-row-3 { grid-template-columns: 1fr 1fr; }
 }
 
 @media (max-width: 760px) {
@@ -885,15 +894,22 @@ h1, h2, h3 { font-weight: 700; }
 
   <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
-      <div class="field-row-5">
+      <div class="field-row-3">
         <label>
           اسم المشروع
           <input type="text" name="project_name" id="project-name" required>
         </label>
         <label>
+          العقد
+          <input type="text" name="contract" id="contract" required>
+        </label>
+        <label>
           رقم الوحدة
           <input type="text" name="unit_number" id="unit-number" required>
         </label>
+      </div>
+
+      <div class="field-row-3">
         <label>
           اسم المقاول
           <input type="text" name="contractor_name" id="contractor-name" required>
@@ -1315,20 +1331,10 @@ function buildItemRow(itemList) {
   const unitType = document.createElement('input');
   unitType.type = 'text';
 
-  const prevAmount = document.createElement('input');
-  prevAmount.type = 'number';
-  prevAmount.step = '0.01';
-  prevAmount.min = '0';
-
-  const currentAmount = document.createElement('input');
-  currentAmount.type = 'number';
-  currentAmount.step = '0.01';
-  currentAmount.min = '0';
-
-  const totalAmount = document.createElement('input');
-  totalAmount.type = 'number';
-  totalAmount.step = '0.01';
-  totalAmount.min = '0';
+  const amount = document.createElement('input');
+  amount.type = 'number';
+  amount.step = '1';
+  amount.min = '0';
 
   const currency = document.createElement('input');
   currency.type = 'number';
@@ -1349,9 +1355,7 @@ function buildItemRow(itemList) {
 
   row.appendChild(title);
   row.appendChild(unitType);
-  row.appendChild(prevAmount);
-  row.appendChild(currentAmount);
-  row.appendChild(totalAmount);
+  row.appendChild(amount);
   row.appendChild(currency);
   row.appendChild(completion);
   row.appendChild(remove);
@@ -1381,7 +1385,7 @@ function buildCategoryBlock() {
 
   const itemListHead = document.createElement('div');
   itemListHead.className = 'item-list-head';
-  itemListHead.innerHTML = '<span>بند فرعي</span><span>نوع الوحدة</span><span>الكمية السابقة</span><span>الكمية الحالية</span><span>اجمالي الكمية</span><span>الفئة</span><span>نسبة الانجاز</span><span></span>';
+  itemListHead.innerHTML = '<span>بند فرعي</span><span>نوع الوحدة</span><span>الكمية</span><span>الفئة</span><span>نسبة الانجاز</span><span></span>';
 
   const itemList = document.createElement('div');
   itemList.className = 'item-list';
@@ -1414,16 +1418,14 @@ function collectCategories() {
 
     const items = [];
     itemRows.forEach((row) => {
-      const [title, unitType, prevAmount, currentAmount, totalAmount, currency, completion] = row.querySelectorAll('input');
+      const [title, unitType, amount, currency, completion] = row.querySelectorAll('input');
       const titleVal = title.value.trim();
-      const totalAmountVal = totalAmount.value.trim();
-      if (!titleVal || totalAmountVal === '') return;
+      const amountVal = amount.value.trim();
+      if (!titleVal || amountVal === '') return;
       items.push({
         title: titleVal,
         unit_type: unitType.value.trim(),
-        prev_amount: prevAmount.value.trim() === '' ? 0 : Number(prevAmount.value),
-        current_amount: currentAmount.value.trim() === '' ? 0 : Number(currentAmount.value),
-        total_amount: Number(totalAmountVal),
+        amount: Number(amountVal),
         currency: currency.value.trim() === '' ? 1 : Number(currency.value),
         completion_perc: completion.value.trim() === '' ? 1 : Number(completion.value) / 100,
       });
@@ -1453,6 +1455,7 @@ addForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const projectName = document.getElementById('project-name').value.trim();
+  const contract = document.getElementById('contract').value.trim();
   const unitNumber = document.getElementById('unit-number').value.trim();
   const contractorName = document.getElementById('contractor-name').value.trim();
   const customerName = document.getElementById('customer-name').value.trim();
@@ -1466,8 +1469,8 @@ addForm.addEventListener('submit', async (e) => {
   const deductions = collectDeductions(deductionsList);
   const payments = collectFlatEntries(paymentsList, 'details', 'amount');
 
-  if (!projectName || !unitNumber || !contractorName || !jobTitle) {
-    showAddMessage('يجب إدخال اسم المشروع ورقم الوحدة واسم المقاول وعنوان الوظيفة.', 'error');
+  if (!projectName || !contract || !unitNumber || !contractorName || !jobTitle) {
+    showAddMessage('يجب إدخال اسم المشروع والعقد ورقم الوحدة واسم المقاول وعنوان الوظيفة.', 'error');
     return;
   }
   if (hasInvalidRateEntry(taxesList) || hasInvalidDeductionRateEntry(deductionsList)) {
@@ -1477,6 +1480,7 @@ addForm.addEventListener('submit', async (e) => {
 
   const payload = {
     project_name: projectName,
+    contract: contract,
     unit_number: unitNumber,
     contractor_name: contractorName,
     customer_name: customerName || null,

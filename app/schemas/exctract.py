@@ -18,9 +18,7 @@ class AddExtractDeduction(BaseModel):
 class AddExtractCategoryItem(BaseModel):
     title: str
     unit_type: str
-    prev_amount: Decimal
-    current_amount: Decimal
-    total_amount: Decimal
+    amount: Decimal
     currency: Decimal
     completion_perc: Decimal = Field(..., max_digits=5, decimal_places=4)
 
@@ -36,6 +34,7 @@ class AddExtractCategories(BaseModel):
 
 class AddExtract(BaseModel):
     project_name: str
+    contract: str
     unit_number: int
     contractor_name: str
     customer_name: str = None
