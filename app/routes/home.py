@@ -56,7 +56,12 @@ def get_cv(request: Request, db: Session = Depends(get_db)):
         for c in categories
     ]
 
-@router.post("/apply")
+@router.get("/opportunities")
+def get_projects(request: Request):
+    return templates.TemplateResponse("opportunities.html", {"request": request})
+
+
+@router.post("/opportunities/apply")
 def apply(request: Request,
           name: str = Form(...),
           email: str = Form(...),
