@@ -162,7 +162,7 @@
       aspect-ratio: 16 / 9;
       min-height: 360px;
       overflow: hidden;
-      background: var(--concrete);
+      background: #fff;
       border-radius: 0;
       box-shadow: 0 18px 44px rgba(42, 58, 71, 0.14);
       isolation: isolate;
@@ -662,65 +662,65 @@
     /* ===== Spec strip ===== */
     .spec-strip {
       margin-top: 40px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       background: transparent;
       border-radius: 10px;
       overflow: visible;
     }
 
     .spec-item {
-      padding: 32px 30px;
+      min-height: 230px;
+      width: min(100%, 1200px);
+      padding: 28px 24px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       border: 1px solid var(--line-strong);
-      border-radius: 8px;
+      border-radius: 10px;
       background: var(--surface);
       box-shadow: 0 8px 24px rgba(42, 58, 71, 0.06);
-    }
-
-    .spec-item:first-child {
-      border-left: 1px solid var(--line-strong);
     }
 
     .spec-value-wrap {
       display: flex;
       align-items: center;
-      gap: 6px;
-      min-height: 52px;
+      justify-content: center;
+      gap: 8px;
+      min-height: 68px;
+      line-height: 1;
     }
 
     .spec-value {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(44px, 4vw, 60px);
+      font-size: clamp(62px, 5vw, 128px);
       font-weight: 700;
       color: var(--steel-dark);
-      line-height: 1;
-      letter-spacing: -1px;
+      line-height: 0.9;
+      letter-spacing: -2px;
     }
 
     .spec-plus {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(36px, 3vw, 46px);
+      font-size: clamp(52px, 4vw, 98px);
       font-weight: 700;
       color: var(--yellow);
-      line-height: 1;
-      align-self: flex-start;
-      margin-top: 4px;
+      line-height: 0.9;
+      margin-top: 6px;
     }
 
     .spec-label {
-      font-size: 14px;
+      font-size: clamp(14px, 1vw, 22px);
       color: var(--steel-dark);
       opacity: 0.9;
       font-weight: 600;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       text-transform: uppercase;
       text-align: center;
+      line-height: 1.4;
     }
 
     /* ===== Services / Process ===== */
@@ -1250,19 +1250,23 @@
     }
 
     .sector-grid {
-      display: grid;
-      width: min(1080px, 100%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: stretch;
+      width: min(1160px, 100%);
       margin-left: auto;
       margin-right: auto;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      grid-auto-rows: 360px;
       gap: 32px 28px;
-      grid-auto-flow: row dense;
-      align-items: stretch;
+    }
+
+    .sector-grid-bottom {
+      margin-top: 32px;
     }
 
     .sector-card {
-      width: 100%;
+      flex: 0 1 320px;
+      width: 320px;
       height: 360px;
       perspective: 1000px;
       display: flex;
@@ -1561,13 +1565,18 @@
     }
 
     .partner-logo {
+      display: block;
       flex-shrink: 0;
-      height: 46px;
-      width: auto;
+      height: 52px;
+      width: 150px;
       object-fit: contain;
       filter: grayscale(1);
       opacity: 0.72;
       transition: opacity 0.15s ease, filter 0.15s ease;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 4px 10px;
+      box-sizing: border-box;
     }
 
     .marquee:hover .partner-logo {
@@ -1715,8 +1724,12 @@
       }
 
       .sector-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 28px 20px;
+      }
+
+      .sector-card {
+        width: calc(50% - 14px);
+        flex: 0 1 calc(50% - 14px);
       }
 
       .lightbox {
@@ -1744,6 +1757,15 @@
     }
 
     @media (max-width: 480px) {
+      .sector-grid {
+        gap: 20px;
+      }
+
+      .sector-card {
+        width: 100%;
+        flex: 0 1 100%;
+      }
+
       .lightbox-info {
         flex-direction: column;
         gap: 4px;
@@ -3117,8 +3139,12 @@
       }
 
       .sector-grid {
-        grid-template-columns: 1fr;
         gap: 28px;
+      }
+
+      .sector-card {
+        width: 100%;
+        flex: 0 1 100%;
       }
 
        /* edits by youssef */
@@ -3562,11 +3588,6 @@
             class="spec-plus">+</span></span>
         <span class="spec-label">projects delivered</span>
       </div>
-      <div class="spec-item">
-        <span class="spec-value-wrap"><span class="spec-value" data-target="340">0</span><span
-            class="spec-plus">+</span></span>
-        <span class="spec-label">specialists in our network</span>
-      </div>
     </div>
 
     <div class="services process-section scroll-reveal" id="services-section">
@@ -3574,25 +3595,25 @@
         <div class="process-title">What we deliver</div>
         <div class="process-grid">
           <div class="process-card">
-            <span class="process-number">01</span>
+            <span class="process-number">1</span>
             <span class="process-name">Residential construction</span>
             <p>End-to-end delivery for homes and villas, from the first setting-out to the final finish, with one team
               responsible for quality and coordination.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">02</span>
+            <span class="process-number">2</span>
             <span class="process-name">Commercial fit-out</span>
             <p>Efficient fit-outs for offices, retail and industrial spaces, planned around operational priorities and
               the date your business needs to open.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">03</span>
+            <span class="process-number">3</span>
             <span class="process-name">Renovation & structural works</span>
             <p>Carefully managed upgrades, extensions and structural interventions that respect the existing building
               and meet engineering requirements.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">04</span>
+            <span class="process-number">4</span>
             <span class="process-name">Project & site management</span>
             <p>Clear site leadership, dependable subcontractor coordination and disciplined material planning from
               mobilization through handover.</p>
@@ -3643,10 +3664,8 @@
         </div>
 
         <div id="sectors-status" class="sectors-status"></div>
-        <div class="sector-grid" id="sector-grid"></div>
-        <div class="projects-more-wrap sectors-more-wrap" id="sectors-more-wrap" hidden>
-          <button type="button" class="btn btn-ghost" id="sectors-more-btn">View more</button>
-        </div>
+        <div class="sector-grid sector-grid-top" id="sector-grid-top"></div>
+        <div class="sector-grid sector-grid-bottom" id="sector-grid-bottom"></div>
 
       </div>
     </div>
@@ -3663,7 +3682,7 @@
 
     <div class="marquee-section scroll-reveal" id="countries-section">
       <div class="section-head">
-        <h2>Our vendors</h2>
+        <h2>Our Vendors</h2>
       </div>
 
       <div class="marquee">
@@ -4114,11 +4133,6 @@
           .fromTo(heroVideo,
             { opacity: 0, scale: 1.22, filter: 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)', clipPath: 'inset(10% round 0px)' },
             { opacity: 1, scale: 1.10, filter: 'blur(0px) brightness(0.96) saturate(1.12) contrast(1.12)', clipPath: 'inset(0% round 0px)', duration: 1.3 }
-          )
-          .fromTo(heroCover,
-            { boxShadow: '0 18px 44px rgba(42,58,71,0.14)' },
-            { boxShadow: '0 0 70px rgba(217,154,24,0.16), 0 24px 60px rgba(42,58,71,0.14)', duration: 0.9, ease: 'sine.inOut' },
-            '-=0.85'
           );
 
         window.gsap.to(heroVideo, {
@@ -4203,13 +4217,17 @@
       { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0011.jpg' },
     ];
 
-    const COUNTRIES = [
-      { name: 'Egypt', flag: 'https://flagcdn.com/w160/eg.png' },
-      { name: 'Saudi Arabia', flag: 'https://flagcdn.com/w160/sa.png' },
-      { name: 'United Arab Emirates', flag: 'https://flagcdn.com/w160/ae.png' },
-      { name: 'Qatar', flag: 'https://flagcdn.com/w160/qa.png' },
-      { name: 'Kuwait', flag: 'https://flagcdn.com/w160/kw.png' },
-      { name: 'Jordan', flag: 'https://flagcdn.com/w160/jo.png' },
+    const VENDOR_LOGOS = [
+      { name: 'a', src: '/static/vonders%20logo/a.jpg' },
+      { name: 'b', src: '/static/vonders%20logo/b.jpg' },
+      { name: 'd', src: '/static/vonders%20logo/d.jpg' },
+      { name: 'e', src: '/static/vonders%20logo/e.jpg' },
+      { name: 'f', src: '/static/vonders%20logo/f.jpg' },
+      { name: 'g', src: '/static/vonders%20logo/g.jpg' },
+      { name: 'h', src: '/static/vonders%20logo/h.jpg' },
+      { name: 'j', src: '/static/vonders%20logo/j.jpg' },
+      { name: 'k', src: '/static/vonders%20logo/k.jpg' },
+      { name: 'l', src: '/static/vonders%20logo/l.jpg' },
     ];
 
     function setupMarquee(trackId, items, renderItem) {
@@ -4277,20 +4295,17 @@
       `<img class="partner-logo" src="${p.src}" alt="${p.name}" loading="eager">`
     ));
 
-    setupMarquee('countries-track', COUNTRIES, (c) => (
-      `<span class="country-chip" aria-label="${c.name}" title="${c.name}"><img class="country-flag" src="${c.flag}" alt="${c.name}" loading="lazy"></span>`
+    setupMarquee('countries-track', VENDOR_LOGOS, (v) => (
+      `<img class="partner-logo" src="${v.src}" alt="${v.name}" loading="eager">`
     ));
 
-    // ===== Track record / sectors (from /cv) =====
     const sectorsStatusEl = document.getElementById('sectors-status');
-    const sectorGridEl = document.getElementById('sector-grid');
+    const sectorGridTopEl = document.getElementById('sector-grid-top');
+    const sectorGridBottomEl = document.getElementById('sector-grid-bottom');
     const sectorDetailsEl = document.getElementById('sector-details');
     const sectorDetailsCloseBtn = document.getElementById('sector-details-close');
     const sectorDetailsTitleEl = document.getElementById('sector-details-title');
     const sectorDetailsListEl = document.getElementById('sector-details-list');
-    const sectorsMoreWrapEl = document.getElementById('sectors-more-wrap');
-    const sectorsMoreBtn = document.getElementById('sectors-more-btn');
-    let sectorsExpanded = false;
     let loadedSectorCategories = [];
 
     loadSectors();
@@ -4308,58 +4323,44 @@
         loadedSectorCategories = [...PDF_CV_CARDS, ...databaseCards];
         renderSectorsGrid(loadedSectorCategories);
       } catch (err) {
-        sectorGridEl.innerHTML = '';
+        sectorGridTopEl.innerHTML = '';
+        sectorGridBottomEl.innerHTML = '';
         sectorsStatusEl.classList.add('is-error');
         sectorsStatusEl.textContent = `Couldn't load track record (${err.message}). Check that the API is running and reachable at ${CV_ENDPOINT}.`;
       }
     }
 
     function renderSectorSkeletons(count) {
-      sectorGridEl.innerHTML = '';
+      sectorGridTopEl.innerHTML = '';
+      sectorGridBottomEl.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const card = document.createElement('div');
         card.className = 'sector-card sector-card-skeleton';
         card.innerHTML = `<span class="sector-card-inner"><span class="sector-card-face"><h3>Loading</h3></span></span>`;
-        sectorGridEl.appendChild(card);
+        (i < 3 ? sectorGridTopEl : sectorGridBottomEl).appendChild(card);
       }
     }
 
     function renderSectorsGrid(categories) {
-      sectorGridEl.querySelectorAll('.sector-card[data-carousel-timer]').forEach((card) => {
-        clearInterval(Number(card.dataset.carouselTimer));
+      [sectorGridTopEl, sectorGridBottomEl].forEach((grid) => {
+        grid.querySelectorAll('.sector-card[data-carousel-timer]').forEach((card) => {
+          clearInterval(Number(card.dataset.carouselTimer));
+        });
+        grid.innerHTML = '';
       });
-      sectorGridEl.innerHTML = '';
 
       if (categories.length === 0) {
         sectorsStatusEl.textContent = 'No track record to show yet.';
-        sectorsMoreWrapEl.hidden = true;
         return;
       }
 
       sectorsStatusEl.textContent = '';
-      const visibleCategories = sectorsExpanded ? categories : categories.slice(0, 3);
+      const visibleCategories = categories.slice(0, 7);
       visibleCategories.forEach((category, index) => {
-        sectorGridEl.appendChild(buildSectorCard(category, index));
+        const card = buildSectorCard(category, index);
+        (index < 3 ? sectorGridTopEl : sectorGridBottomEl).appendChild(card);
       });
-
-      sectorsMoreWrapEl.hidden = categories.length <= 3;
-      sectorsMoreBtn.textContent = sectorsExpanded ? 'View less' : 'View more';
     }
-
-    sectorsMoreBtn.addEventListener('click', () => {
-      const wasExpanded = sectorsExpanded;
-      sectorsExpanded = !sectorsExpanded;
-      renderSectorsGrid(loadedSectorCategories);
-
-      if (wasExpanded && !sectorsExpanded) {
-        requestAnimationFrame(() => {
-          document.getElementById('cv-section')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        });
-      }
-    });
 
     function buildSectorCard(category, categoryIndex) {
       const card = document.createElement('div');
