@@ -267,7 +267,7 @@ def generate_summary_pdf(extracts) -> BytesIO:
     )
 
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
-    logo = RLImage(logo_path, width=6 * cm, height=2 * cm)
+    logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
     header_text = Paragraph(ar("ملخص"), title_style)
 
     header_table = Table([[logo, header_text]], colWidths=[4 * cm, 12 * cm])

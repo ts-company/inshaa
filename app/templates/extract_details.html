@@ -444,10 +444,19 @@
       direction: rtl;
     }
 
-    .below-categories-row .history-panel {
+    .below-categories-row .side-panels-stack {
       grid-column: 2;
       grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
       direction: rtl;
+    }
+
+    .below-categories-row .side-panels-stack .previous-version-panel,
+    .below-categories-row .side-panels-stack .history-panel {
+      margin: 0;
+      width: 100%;
     }
 
     /* ---- Categories / items ---- */
@@ -712,23 +721,27 @@
       gap: 22px;
     }
 
-    .history-panel {
+    .history-panel,
+    .previous-version-panel {
       border: 1px solid var(--line-strong);
       background: var(--white);
       padding: 28px;
     }
 
-    .history-panel h2 {
+    .history-panel h2,
+    .previous-version-panel h2 {
       font-size: 21px;
       margin-bottom: 16px;
     }
 
-    .history-list {
+    .history-list,
+    .previous-version-list {
       display: flex;
       flex-direction: column;
     }
 
-    .history-link {
+    .history-link,
+    .previous-version-link {
       display: flex;
       flex-direction: column;
       gap: 2px;
@@ -750,12 +763,15 @@
       padding-left: 10px;
     }
 
-    .history-link-user {
+    .history-link-user,
+    .previous-version-link-title {
       font-size: 14px;
       font-weight: 600;
     }
 
-    .history-link-date {
+    .history-link-date,
+    .previous-version-link-date,
+    .previous-version-link-subtotal {
       color: var(--steel-dark);
       font-size: 13px;
     }
@@ -765,7 +781,8 @@
       font-size: 13px;
     }
 
-    .history-state {
+    .history-state,
+    .previous-version-state {
       color: var(--steel-dark);
       font-size: 13.5px;
     }
@@ -1154,7 +1171,7 @@
         grid-row: 1;
       }
 
-      .below-categories-row .history-panel {
+      .below-categories-row .side-panels-stack {
         grid-column: 1;
         grid-row: 2;
       }
@@ -1285,12 +1302,15 @@
       </div>
 
       <div class="category-edit-actions">
+        <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">create a new extract</a>
+        {% if type != 'prev_version' and not (type == 'active' and extract.approved) %}
         <button type="button" class="btn btn-primary edit-mode-hidden" id="btn-enter-edit">تعديل</button>
         <div class="edit-mode-buttons">
           <button type="button" class="btn btn-primary" id="btn-save-edit">حفظ</button>
           <button type="button" class="btn btn-secondary" id="btn-cancel-edit">الغاء</button>
         </div>
         <button type="button" class="btn btn-primary edit-mode-only" id="btn-open-add-category">اضافة بند رئيسي</button>
+        {% endif %}
         <p class="edit-save-error" id="edit-save-error" role="alert"></p>
       </div>
     </div>
@@ -1372,21 +1392,32 @@
     </div>
 
     <div class="below-categories-row">
-      {% if not history %}
-      <aside class="history-panel" id="extract-history-panel">
-        <h2>النسخ السابقة</h2>
-        <div class="history-list" id="extract-history-list">
-          <p class="history-state">Loading history...</p>
-        </div>
-      </aside>
-      {% endif %}
+      <div class="side-panels-stack">
+        <aside class="previous-version-panel" id="extract-previous-version-panel">
+          <h2>النسخة السابقة</h2>
+          <div class="previous-version-list" id="extract-previous-version-list">
+            <p class="previous-version-state">Loading previous version...</p>
+          </div>
+        </aside>
+
+        {% if not history %}
+        <aside class="history-panel" id="extract-history-panel">
+          <h2>التعديلات</h2>
+          <div class="history-list" id="extract-history-list">
+            <p class="history-state">Loading history...</p>
+          </div>
+        </aside>
+        {% endif %}
+      </div>
 
       <aside class="summary-panel">
+        {% if type != 'prev_version' and not (type == 'active' and extract.approved) %}
         <div class="accounting-edit-actions">
           <button type="button" class="btn btn-primary" id="btn-enter-accounting-edit">تعديل الحسابات</button>
           <button type="button" class="btn btn-primary" id="btn-save-accounting-edit">حفظ</button>
           <button type="button" class="btn btn-secondary" id="btn-cancel-accounting-edit">الغاء</button>
         </div>
+        {% endif %}
         <p class="accounting-save-error" id="accounting-save-error" role="alert"></p>
         <div class="summary-block">
           <div class="summary-line is-subtotal">
@@ -1482,8 +1513,19 @@
     </div>
 
     <label class="approval-control" for="extract-approved">
-      {% if "generate pdf" in permissions %}
+      {% if "generate pdf" in permissions and (
+        type == 'history' or
+        type == 'prev_version' or
+        (type == 'active' and extract.approved == true)
+      ) %}
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?is_history={{ history }}">Generate PDF</a>
+      {% endif %}
+
+      {% if "approve extracts" in permissions and type != 'history' and type != 'prev_version' %}
+      <span class="approval-toggle">
+        <input type="checkbox" id="extract-approved" {% if extract.approved %}checked{% endif %}>
+        <span>Approved</span>
+      </span>
       {% endif %}
     </label>
   </main>
@@ -1684,6 +1726,58 @@
 
       const historyList = document.getElementById('extract-history-list');
       const historyPanel = document.getElementById('extract-history-panel');
+      const previousVersionList = document.getElementById('extract-previous-version-list');
+      const previousVersionPanel = document.getElementById('extract-previous-version-panel');
+
+      if (previousVersionList) {
+        fetch(API_BASE + '/old_ver/' + extractId, { credentials: 'include' })
+          .then(function (res) {
+            if (res.status === 404 || res.status === 403) {
+              previousVersionPanel.remove();
+              return null;
+            }
+            if (!res.ok) throw new Error('Request failed with status ' + res.status);
+            return res.json();
+          })
+          .then(function (previousVersion) {
+            if (!previousVersion || !previousVersion.id) {
+              if (previousVersionPanel) {
+                previousVersionList.innerHTML = '';
+                const emptyState = document.createElement('p');
+                emptyState.className = 'previous-version-state';
+                emptyState.textContent = 'لا توجد نسخة سابقة.';
+                previousVersionList.appendChild(emptyState);
+              }
+              return;
+            }
+
+            previousVersionList.innerHTML = '';
+            const link = document.createElement('a');
+            link.className = 'previous-version-link';
+            link.href = '/system/extracts/details/' + previousVersion.id;
+
+            const title = document.createElement('span');
+            title.className = 'previous-version-link-title';
+            title.textContent = 'المستخلص السابق';
+
+            const idText = document.createElement('span');
+            idText.className = 'previous-version-link-subtotal';
+            idText.textContent = 'الاجمالي: ' + previousVersion.sub_total + ' EGP';
+
+            link.appendChild(title);
+            link.appendChild(idText);
+            previousVersionList.appendChild(link);
+          })
+          .catch(function () {
+            if (!previousVersionPanel) return;
+            previousVersionList.innerHTML = '';
+            const errorState = document.createElement('p');
+            errorState.className = 'previous-version-state';
+            errorState.textContent = 'لا يمكن تحميل النسخة السابقة.';
+            previousVersionList.appendChild(errorState);
+          });
+      }
+
       if (historyList) {
         fetch(API_BASE + '/histories/' + extractId, { credentials: 'include' })
           .then(function (res) {
@@ -1791,8 +1885,10 @@
       function setEditMode(enabled) {
         editMode = enabled;
         document.body.classList.toggle('is-edit-mode', enabled);
-        document.getElementById('btn-save-edit').hidden = !enabled;
-        document.getElementById('btn-cancel-edit').hidden = !enabled;
+        const btnSaveEdit = document.getElementById('btn-save-edit');
+        const btnCancelEdit = document.getElementById('btn-cancel-edit');
+        if (btnSaveEdit) btnSaveEdit.hidden = !enabled;
+        if (btnCancelEdit) btnCancelEdit.hidden = !enabled;
       }
 
       function formatAmount(value) {
@@ -2068,92 +2164,114 @@
       const categoriesColumn = document.querySelector('.categories-column');
       const categoryModal = document.getElementById('modal-add-category');
 
-      document.getElementById('btn-enter-edit').addEventListener('click', function () {
-        clearError('edit-save-error');
-        editSnapshot = categoriesColumn.innerHTML;
-        setEditMode(true);
-      });
-
-      document.getElementById('btn-cancel-edit').addEventListener('click', function () {
-        if (editSnapshot !== null) categoriesColumn.innerHTML = editSnapshot;
-        categoriesColumn.prepend(categoryModal);
-        categoryModal.classList.remove('is-open');
-        clearError('edit-save-error');
-        editSnapshot = null;
-        setEditMode(false);
-      });
-
-      document.getElementById('btn-save-edit').addEventListener('click', function () {
-        if (!editMode) return;
-        const saveButton = document.getElementById('btn-save-edit');
-        const categories = serializeCategories();
-        const hasInvalidCategory = categories.some(function (category) {
-          return !category.title || category.items.some(function (item) {
-            return !validateItem(item);
-          });
+      const btnEnterEdit = document.getElementById('btn-enter-edit');
+      if (btnEnterEdit) {
+        btnEnterEdit.addEventListener('click', function () {
+          clearError('edit-save-error');
+          editSnapshot = categoriesColumn.innerHTML;
+          setEditMode(true);
         });
-        if (hasInvalidCategory) {
-          showEditSaveError('برجاء التأكد من اكتمال كل بند رئيسي وكل بند فرعي قبل الحفظ');
-          return;
-        }
-        saveButton.disabled = true;
-        patchJSON(API_BASE + '/edit_extract/' + extractId, {
-          categories: categories,
-        })
-          .then(function () {
-            editSnapshot = null;
-            setEditMode(false);
-            window.location.reload();
-          })
-          .catch(function (err) {
-            saveButton.disabled = false;
-            showEditSaveError(err.status === 403
-              ? 'غير مسموح بالتعديل'
-              : 'Could not save extract. ' + err.message);
+      }
+
+      const btnCancelEdit = document.getElementById('btn-cancel-edit');
+      if (btnCancelEdit) {
+        btnCancelEdit.addEventListener('click', function () {
+          if (editSnapshot !== null) categoriesColumn.innerHTML = editSnapshot;
+          categoriesColumn.prepend(categoryModal);
+          categoryModal.classList.remove('is-open');
+          clearError('edit-save-error');
+          editSnapshot = null;
+          setEditMode(false);
+        });
+      }
+
+      const btnSaveEdit = document.getElementById('btn-save-edit');
+      if (btnSaveEdit) {
+        btnSaveEdit.addEventListener('click', function () {
+          if (!editMode) return;
+          const categories = serializeCategories();
+          const hasInvalidCategory = categories.some(function (category) {
+            return !category.title || category.items.some(function (item) {
+              return !validateItem(item);
+            });
           });
-      });
+          if (hasInvalidCategory) {
+            showEditSaveError('برجاء التأكد من اكتمال كل بند رئيسي وكل بند فرعي قبل الحفظ');
+            return;
+          }
+          btnSaveEdit.disabled = true;
+          patchJSON(API_BASE + '/edit_extract/' + extractId, {
+            categories: categories,
+          })
+            .then(function () {
+              editSnapshot = null;
+              setEditMode(false);
+              window.location.reload();
+            })
+            .catch(function (err) {
+              btnSaveEdit.disabled = false;
+              showEditSaveError(err.status === 403
+                ? 'غير مسموح بالتعديل'
+                : 'Could not save extract. ' + err.message);
+            });
+        });
+      }
 
       function addItemRow() {
         const node = rowTemplate.content.cloneNode(true);
         rowsContainer.appendChild(node);
       }
 
-      document.getElementById('btn-open-add-category').addEventListener('click', function () {
-        document.getElementById('form-add-category').reset();
-        rowsContainer.innerHTML = '';
-        clearError('add-category-error');
-        categoriesColumn.prepend(categoryModal);
-        openModal('modal-add-category');
-        document.getElementById('cat-title').focus();
-      });
+      const btnOpenAddCategory = document.getElementById('btn-open-add-category');
+      if (btnOpenAddCategory) {
+        btnOpenAddCategory.addEventListener('click', function () {
+          document.getElementById('form-add-category').reset();
+          rowsContainer.innerHTML = '';
+          clearError('add-category-error');
+          categoriesColumn.prepend(categoryModal);
+          openModal('modal-add-category');
+          document.getElementById('cat-title').focus();
+        });
+      }
 
-      document.getElementById('btn-add-item-row').addEventListener('click', addItemRow);
+      const btnAddItemRow = document.getElementById('btn-add-item-row');
+      if (btnAddItemRow) {
+        btnAddItemRow.addEventListener('click', addItemRow);
+      }
 
-      rowsContainer.addEventListener('click', function (e) {
-        if (e.target.matches('[data-remove-row]')) {
-          e.target.closest('.item-row').remove();
-        }
-      });
+      if (rowsContainer) {
+        rowsContainer.addEventListener('click', function (e) {
+          if (e.target.matches('[data-remove-row]')) {
+            e.target.closest('.item-row').remove();
+          }
+        });
+      }
 
-      document.getElementById('form-add-category').addEventListener('submit', function (event) {
-        event.preventDefault();
-      });
+      const formAddCategory = document.getElementById('form-add-category');
+      if (formAddCategory) {
+        formAddCategory.addEventListener('submit', function (event) {
+          event.preventDefault();
+        });
+      }
 
-      document.getElementById('btn-stage-category').addEventListener('click', function () {
-        clearError('add-category-error');
-        const title = document.getElementById('cat-title').value.trim();
-        const items = Array.from(rowsContainer.querySelectorAll('.item-row')).map(readItemFields);
-        if (!title || !items.length || items.some(function (item) { return !validateItem(item); })) {
-          showError('add-category-error', 'برجاء إكمال اسم البند الرئيسي وجميع البنود الفرعية قبل إضافته للتعديل.');
-          return;
-        }
+      const btnStageCategory = document.getElementById('btn-stage-category');
+      if (btnStageCategory) {
+        btnStageCategory.addEventListener('click', function () {
+          clearError('add-category-error');
+          const title = document.getElementById('cat-title').value.trim();
+          const items = Array.from(rowsContainer.querySelectorAll('.item-row')).map(readItemFields);
+          if (!title || !items.length || items.some(function (item) { return !validateItem(item); })) {
+            showError('add-category-error', 'برجاء إكمال اسم البند الرئيسي وجميع البنود الفرعية قبل إضافته للتعديل.');
+            return;
+          }
 
-        categoriesColumn.querySelector('.empty-categories')?.remove();
-        categoriesColumn.appendChild(createCategoryBlock(title, items));
-        closeModal('modal-add-category');
-        document.getElementById('form-add-category').reset();
-        rowsContainer.innerHTML = '';
-      });
+          categoriesColumn.querySelector('.empty-categories')?.remove();
+          categoriesColumn.appendChild(createCategoryBlock(title, items));
+          closeModal('modal-add-category');
+          document.getElementById('form-add-category').reset();
+          rowsContainer.innerHTML = '';
+        });
+      }
 
       // ---------- Delete Category ----------
       document.addEventListener('click', function (event) {
@@ -2383,42 +2501,50 @@
         button.addEventListener('click', function () { addAccountingRow(button.dataset.accountingAdd); });
       });
 
-      document.getElementById('btn-enter-accounting-edit').addEventListener('click', function () {
-        accountingEditMode = true;
-        document.body.classList.add('is-accounting-edit-mode');
-        accountingError('');
-        renderAccountingEditors();
-      });
+      const btnEnterAccountingEdit = document.getElementById('btn-enter-accounting-edit');
+      if (btnEnterAccountingEdit) {
+        btnEnterAccountingEdit.addEventListener('click', function () {
+          accountingEditMode = true;
+          document.body.classList.add('is-accounting-edit-mode');
+          accountingError('');
+          renderAccountingEditors();
+        });
+      }
 
-      document.getElementById('btn-cancel-accounting-edit').addEventListener('click', function () {
-        window.location.reload();
-      });
+      const btnCancelAccountingEdit = document.getElementById('btn-cancel-accounting-edit');
+      if (btnCancelAccountingEdit) {
+        btnCancelAccountingEdit.addEventListener('click', function () {
+          window.location.reload();
+        });
+      }
 
-      document.getElementById('btn-save-accounting-edit').addEventListener('click', function () {
-        if (!accountingEditMode) return;
-        const error = validateAccounting();
-        if (error) {
-          accountingError(error);
-          return;
-        }
-        const saveButton = document.getElementById('btn-save-accounting-edit');
-        saveButton.disabled = true;
-        accountingError('');
-        patchJSON(API_BASE + '/edit_accounting/' + extractId, {
-          taxes: accountingState.taxes.map(function (tax) { return { title: tax.title.trim(), rate: tax.rate }; }),
-          deductions: accountingState.deductions.map(function (deduction) {
-            return deduction.rate !== null
-              ? { title: deduction.title.trim(), rate: deduction.rate, amount: null }
-              : { title: deduction.title.trim(), rate: null, amount: deduction.amount };
-          }),
-          payments: accountingState.payments.map(function (payment) { return { details: payment.details.trim(), amount: payment.amount }; }),
-        })
-          .then(function () { window.location.reload(); })
-          .catch(function (err) {
-            saveButton.disabled = false;
-            accountingError(err.status === 403 ? 'غير مسموح بتعديل الحسابات.' : 'تعذر حفظ الحسابات. ' + err.message);
-          });
-      });
+      const btnSaveAccountingEdit = document.getElementById('btn-save-accounting-edit');
+      if (btnSaveAccountingEdit) {
+        btnSaveAccountingEdit.addEventListener('click', function () {
+          if (!accountingEditMode) return;
+          const error = validateAccounting();
+          if (error) {
+            accountingError(error);
+            return;
+          }
+          btnSaveAccountingEdit.disabled = true;
+          accountingError('');
+          patchJSON(API_BASE + '/edit_accounting/' + extractId, {
+            taxes: accountingState.taxes.map(function (tax) { return { title: tax.title.trim(), rate: tax.rate }; }),
+            deductions: accountingState.deductions.map(function (deduction) {
+              return deduction.rate !== null
+                ? { title: deduction.title.trim(), rate: deduction.rate, amount: null }
+                : { title: deduction.title.trim(), rate: null, amount: deduction.amount };
+            }),
+            payments: accountingState.payments.map(function (payment) { return { details: payment.details.trim(), amount: payment.amount }; }),
+          })
+            .then(function () { window.location.reload(); })
+            .catch(function (err) {
+              btnSaveAccountingEdit.disabled = false;
+              accountingError(err.status === 403 ? 'غير مسموح بتعديل الحسابات.' : 'تعذر حفظ الحسابات. ' + err.message);
+            });
+        });
+      }
 
       // ---------- Approve extract ----------
       const approvalCheckbox = document.getElementById('extract-approved');

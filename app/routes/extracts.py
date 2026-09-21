@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Request, Body, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -62,9 +62,9 @@ def get_extracts(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if user_role == "super_admin":
-        query = db.query(Extract)
+        query = db.query(Extract).filter(Extract.is_active.is_(True))
     else:
-        query = db.query(Extract).filter(Extract.created_by == user_id)
+        query = db.query(Extract).filter(Extract.created_by == user_id, Extract.is_active.is_(True))
 
     if id:
         query = query.filter(Extract.id.in_(id))
@@ -206,7 +206,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
     ]
 
 
-    extract = {
+    output = {
             "id": extract.id,
             "project_name": extract.project_name,
             "contract": extract.contract,
@@ -225,8 +225,9 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "deductions": deductions,
             "approved": extract.approved
         }
+    type = "active" if extract.parent_id is None else "prev_version"
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": False, "permissions": permission_types})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": output, "type": type, "permissions": permission_types})
 
 
 @router.get("/details_hist/{history_id}")
@@ -331,7 +332,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "deductions": deductions
         }
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "history": True, "permissions": permission_types})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types})
 
 
 @router.get("/histories/{ext_id}")
@@ -398,7 +399,8 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             total_deductions=0,
             total_payments=0,
             total=0,
-            approved=True
+            approved=False,
+            is_active=True
         )
 
         db.add(new_extract)
@@ -461,6 +463,124 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
+
+@router.get("/create_new_ver/{ext_id}")
+def add_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "add extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if extract.parent_id is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+    if not extract.approved:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+    old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+    old_cats_ids = [cat.id for cat in old_cats]
+    old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
+
+    old_items_by_cat = {}
+    for old_item in old_items:
+        old_items_by_cat.setdefault(old_item.category_id, []).append(old_item)
+
+    old_taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == ext_id).all()
+    old_deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == ext_id).all()
+    old_payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == ext_id).all()
+
+    try:
+        new_ver = Extract(
+            created_by=user_id,
+            created_at=datetime.now(timezone.utc),
+            project_name=extract.project_name,
+            contract=extract.contract,
+            unit_number=extract.unit_number,
+            contractor_name=extract.contractor_name,
+            customer_name=extract.customer_name,
+            job_title=extract.job_title,
+            sub_total=extract.sub_total,
+            total_taxes=extract.total_taxes,
+            total_deductions=extract.total_deductions,
+            total_payments=extract.total_payments,
+            total=extract.total,
+            approved=False,
+            is_active=True
+        )
+        db.add(new_ver)
+        db.flush()
+        extract.parent_id = new_ver.id
+        extract.is_active = False
+        for old_cat in old_cats:
+            new_cat = ExtractCategory(
+                extract_id=new_ver.id,
+                title=old_cat.title
+            )
+            db.add(new_cat)
+            db.flush()
+            for old_item in old_items_by_cat.get(old_cat.id, []):
+                db.add(ExtractCategoryItem(
+                    category_id=new_cat.id,
+                    title=old_item.title,
+                    unit_type=old_item.unit_type,
+                    amount=old_item.amount,
+                    currency=old_item.currency,
+                    completion_perc=old_item.completion_perc,
+                    total=old_item.total
+                ))
+
+        for t in old_taxes:
+            db.add(ExtractTaxes(extract_id=new_ver.id, title=t.title, rate=t.rate))
+        for d in old_deductions:
+            if d.rate is not None:
+                db.add(ExtractDeduction(extract_id=new_ver.id, title=d.title, rate=d.rate))
+            else:
+                db.add(ExtractDeduction(extract_id=new_ver.id, title=d.title, amount=d.amount))
+        for p in old_payments:
+            db.add(ExtractPreviouslyPaid(extract_id=new_ver.id, details=p.details, amount=p.amount))
+
+        db.commit()
+        db.refresh(new_ver)
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return RedirectResponse(url=f"/system/extracts/details/{new_ver.id}")
+
+@router.get("/old_ver/{ext_id}")
+def get_old_vers(request: Request, ext_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "add extracts").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    old_extract = db.query(Extract).filter(Extract.parent_id == ext_id).first()
+    if not old_extract:
+        return {}
+
+    return  {
+        "id": old_extract.id,
+        "sub_total": old_extract.sub_total
+    }
 
 @router.patch("/edit_extract/{ext_id}")
 def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Session = Depends(get_db)):
@@ -754,6 +874,8 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not extract.is_active:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     try:
         extract.approved = True
@@ -780,6 +902,8 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not extract.is_active:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     try:
         extract.approved = False
@@ -823,6 +947,8 @@ def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = D
         extract = db.query(Extract).filter(Extract.id == ext_id).first()
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if not extract.approved:
+            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
         categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
         category_ids = [c.id for c in categories]
