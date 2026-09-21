@@ -10,17 +10,19 @@
   <style>
     :root {
       --ink: #1C1F22;
-      --paper: #F6F3EC;
+      --paper: #F3F7F9;
       --surface: #FFFFFF;
       --steel: #3E5468;
       --steel-dark: #2A3A47;
-      --yellow: #D4A13A;
+      --blue: #0B4D72;
+      --blue-soft: #EAF3F7;
+      --red: #D71920;
       --line: #DCE5E9;
       --line-strong: #B9C9D0;
       --danger: #A2402C;
       --success: #1D6F4F;
-      --shadow: 0 18px 42px rgba(16, 33, 46, 0.12);
-      --radius: 18px;
+      --shadow: 0 20px 44px rgba(11, 77, 114, 0.12);
+      --radius: 12px;
     }
 
     * { box-sizing: border-box; }
@@ -28,7 +30,7 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88));
+      background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center center / cover no-repeat fixed;
       color: var(--ink);
       font-family: 'Barlow', sans-serif;
       font-size: 16px;
@@ -46,15 +48,24 @@
     button { font-family: 'Barlow', sans-serif; cursor: pointer; }
 
     .site-header {
-      background: rgba(16, 33, 46, 0.96);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 0 8px 24px rgba(16, 33, 46, 0.16);
+      background: #0B4D72;
+      border-bottom: 0;
+      box-shadow: 0 10px 28px rgba(11, 77, 114, 0.28);
+    }
+
+    .site-header::after {
+      content: '';
+      display: block;
+      height: 4px;
+      width: 32%;
+      background: var(--red);
     }
 
     .header-inner {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 18px 32px;
+      min-height: 112px;
+      padding: 26px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -101,8 +112,37 @@
     main {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 50px 32px 90px;
+      padding: 64px 32px 96px;
     }
+
+    .page-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      min-height: 42px;
+      padding: 0 16px 0 12px;
+      border: 1px solid rgba(11, 77, 114, 0.2);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.92);
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 5px 14px rgba(11, 77, 114, 0.1);
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .page-back:hover {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      color: var(--blue);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(11, 77, 114, 0.16);
+    }
+
+    .page-back:active { transform: translateY(0); }
+    .page-back:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
     .page-head {
       display: flex;
@@ -112,17 +152,34 @@
       margin-bottom: 30px;
     }
 
+    .page-head::after {
+      content: 'Candidate pipeline';
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 14px;
+      border-left: 3px solid var(--red);
+      background: rgba(255,255,255,0.72);
+      color: var(--steel);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
     .page-head h1 {
-      font-size: clamp(32px, 4vw, 52px);
+      font-size: clamp(38px, 4vw, 58px);
       letter-spacing: 0.2px;
+      margin-top: 10px;
     }
 
     .page-badge {
-      background: rgba(212, 161, 58, 0.12);
-      color: var(--steel-dark);
-      border: 1px solid rgba(212, 161, 58, 0.25);
-      border-radius: 999px;
-      padding: 8px 12px;
+      display: inline-flex;
+      background: var(--blue-soft);
+      color: var(--blue);
+      border: 1px solid rgba(11, 77, 114, 0.16);
+      border-radius: 4px;
+      padding: 7px 11px;
       font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.6px;
@@ -132,45 +189,54 @@
     .candidate-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 22px;
+      gap: 24px;
     }
 
     .candidate-card {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.96);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(150px, 0.78fr) minmax(0, 1.22fr);
+      align-items: stretch;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 26px 52px rgba(11, 77, 114, 0.17);
     }
 
     .candidate-card__image-wrap {
-      background: #edf3f5;
-      border-bottom: 1px solid var(--line);
-      min-height: 220px;
+      background: var(--blue-soft);
+      border-right: 1px solid var(--line);
+      aspect-ratio: 3 / 4;
+      min-height: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 12px;
     }
 
     .candidate-card__image {
       width: 100%;
-      height: 220px;
-      object-fit: cover;
+      height: 100%;
+      object-fit: contain;
       display: block;
     }
 
     .candidate-card__body {
-      padding: 20px 18px 18px;
+      padding: 22px 20px 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
       flex: 1;
     }
 
     .candidate-card__name {
-      font-size: 28px;
+      font-size: 30px;
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 600;
       line-height: 1.1;
@@ -181,6 +247,9 @@
       gap: 8px;
       font-size: 15px;
       color: var(--steel-dark);
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
     }
 
     .meta-row {
@@ -193,7 +262,7 @@
 
     .meta-label {
       font-weight: 700;
-      color: var(--ink);
+      color: var(--blue);
     }
 
     .candidate-actions {
@@ -211,7 +280,7 @@
       min-height: 40px;
       padding: 0 16px;
       border: 1px solid transparent;
-      border-radius: 999px;
+      border-radius: 4px;
       font-size: 14px;
       font-weight: 700;
       text-decoration: none;
@@ -221,12 +290,12 @@
     .btn:hover { transform: translateY(-1px); }
 
     .btn-primary {
-      background: var(--ink);
+      background: var(--blue);
       color: #FFFFFF;
     }
 
     .btn-primary:hover {
-      background: var(--steel-dark);
+      background: #083B57;
     }
 
     .btn-danger {
@@ -244,10 +313,15 @@
       background: rgba(255,255,255,0.9);
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      padding: 48px 24px;
+      padding: 64px 24px;
       text-align: center;
       color: var(--steel-dark);
       box-shadow: var(--shadow);
+    }
+
+    .empty-state h2 {
+      font-size: 32px;
+      margin-bottom: 8px;
     }
 
     .status-message {
@@ -274,15 +348,33 @@
         flex-direction: column;
         align-items: flex-start;
       }
+
+      .page-head::after {
+        margin-top: 4px;
+      }
+
+      .candidate-card {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .candidate-card__image-wrap {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .candidate-card:hover {
+        transform: none;
+      }
     }
   </style>
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
-      <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+      <span class="wordmark" aria-label="Inshaa Minka">
         <img src="/static/logo.png" alt="Inshaa Minka">
-      </a>
+      </span>
       <nav class="header-links" aria-label="Admin navigation">
         <a href="/system/dashboard">Dashboard</a>
       </nav>
@@ -290,6 +382,7 @@
   </header>
 
   <main>
+    <a href="/system/dashboard/" class="page-back">Back to dashboard</a>
     <div class="page-head">
       <div>
         <p class="page-badge">Human resources</p>

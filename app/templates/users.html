@@ -119,6 +119,35 @@ main {
   text-align: right;
 }
 
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  min-height: 42px;
+  padding: 0 16px 0 12px;
+  border: 1px solid rgba(11, 77, 114, 0.2);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.92);
+  color: #0B4D72;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 5px 14px rgba(11, 77, 114, 0.1);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.page-back:hover {
+  border-color: #0B4D72;
+  background: #EAF3F7;
+  color: #083B57;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(11, 77, 114, 0.16);
+}
+
+.page-back:active { transform: translateY(0); }
+.page-back:focus-visible { outline: 2px solid #0B4D72; outline-offset: 3px; }
+
 .page-kicker {
   font-size: 14px;
   color: var(--small-text);
@@ -675,15 +704,16 @@ main {
   <div class="header-inner">
     <div class="brand-lockup">
       <div>
-        <a href="/" class="wordmark" aria-label="Inshaa Minka home">
+        <span class="wordmark" aria-label="Inshaa Minka">
           <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
-        </a>
+        </span>
       </div>
     </div>
   </div>
 </header>
 
 <main>
+  <a href="/system/dashboard/" class="page-back">Back to dashboard</a>
   <div class="page-head">
     <h1>المستخدمون</h1>
   </div>
