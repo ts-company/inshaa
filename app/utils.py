@@ -9,11 +9,12 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib import colors
 from reportlab.lib.units import cm
-from reportlab.lib.enums import TA_RIGHT, TA_LEFT
+from reportlab.lib.enums import TA_RIGHT, TA_LEFT, TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Image as RLImage
 from reportlab.lib.pagesizes import letter
+from reportlab.platypus import KeepTogether
 from io import BytesIO
 from app.config import BASE_DIR
 
@@ -118,6 +119,7 @@ def ar(text) -> str:
         return text
     return get_display(arabic_reshaper.reshape(text))
 
+
 def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -153,8 +155,10 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     totals_value_style = ParagraphStyle(
         "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_LEFT
     )
+    cat_totals_value_style = ParagraphStyle(
+        "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_CENTER
+    )
 
-    # --- Logo + title on the same line ---
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
 
@@ -190,11 +194,12 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         if not items:
             continue
 
-        story.append(Paragraph(ar(cat.title), heading_style))
+        heading = Paragraph(ar(cat.title), heading_style)
 
         headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
+        cat_total = 0
         for item in items:
             table_data.append([
                 Paragraph(f"{item.total}", cell_style),
@@ -204,6 +209,15 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
                 Paragraph(ar(item.unit_type), cell_style),
                 Paragraph(ar(item.title), cell_style),
             ])
+            cat_total += item.total
+
+        # Row index BEFORE appending — this is where the total row will land.
+        cat_total_row = len(table_data)
+        table_data.append([
+            Paragraph(f"{cat_total}", cat_totals_value_style),
+            Paragraph(ar("اجمالي البند"), totals_label_style),
+            "", "", "", "",
+        ])
 
         table = Table(
             table_data,
@@ -215,12 +229,23 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f2f2f2")]),
+            # zebra striping only over the item rows, not the total row
+            ("ROWBACKGROUNDS", (0, 1), (-1, cat_total_row - 1), [colors.white, colors.HexColor("#f2f2f2")]),
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("TOPPADDING", (0, 0), (-1, -1), 4),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            # category total row: merge the label across the 5 non-total columns
+            ("SPAN", (1, cat_total_row), (-1, cat_total_row)),
+            ("BACKGROUND", (0, cat_total_row), (-1, cat_total_row), colors.HexColor("#dfe6ea")),
+            ("LINEABOVE", (0, cat_total_row), (-1, cat_total_row), 1, colors.black),
         ]))
-        story.append(table)
+
+        # Keep the heading glued to its table — if the pair doesn't fit in
+        # what's left of the current page, the whole group moves to a fresh
+        # page instead of leaving the heading (or a stray row or two)
+        # stranded alone. Tables genuinely too long for one page still
+        # split normally after that, with the header row repeating.
+        story.append(KeepTogether([heading, table]))
         story.append(Spacer(1, 16))
 
     totals_rows = [("اجمالي المستخلص", extract.sub_total)] + [(f"{t.title}", f"{int(t.rate * 100)}%") for t in taxes] +\
@@ -242,8 +267,13 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
-    story.append(totals_table)
-    story.append(Paragraph(f"{ar('مدير المشروع')}", normal_style))
+
+    # Same reasoning here: the totals block and the signature line should
+    # land on the same page together, not get separated by a page break.
+    story.append(KeepTogether([
+        totals_table,
+        Paragraph(f"{ar('مدير المشروع')}", normal_style),
+    ]))
 
     doc.build(story)
     buffer.seek(0)

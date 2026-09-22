@@ -847,7 +847,6 @@ main {
         <select id="permission-type" name="permission_type" required>
           <option value="" disabled selected>اختر</option>
           <option value="manage users">Manage Users</option>
-          <option value="manage page">Manage Page</option>
           <option value="add extracts">Add Extracts</option>
           <option value="delete extracts">Delete Extracts</option>
           <option value="approve extracts">Approve Extracts</option>
@@ -873,7 +872,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'manage page', 'add extracts', 'delete extracts', 'extracts history', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits'];
+const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'extracts history', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');

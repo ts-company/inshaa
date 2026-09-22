@@ -747,6 +747,25 @@
       font-size: 15px;
     }
 
+    .category-total-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--steel-dark);
+    }
+
+    .category-total-value {
+      font-family: var(--font-head);
+      font-size: 24px;
+      color: var(--ink);
+    }
+
     /* ---- Summary panel ---- */
     .summary-panel {
       border: 1px solid var(--line-strong);
@@ -1467,6 +1486,10 @@
             {% endfor %}
           </tbody>
         </table>
+        <div class="category-total-row">
+          <span>إجمالي البند</span>
+          <span class="category-total-value">{{ "{:,.2f}".format(cat["items"] | map(attribute='total') | sum) }}</span>
+        </div>
         {% else %}
         <p class="empty-items">لا توجد عناصر في هذا البند</p>
         {% endif %}
