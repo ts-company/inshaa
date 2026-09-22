@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Extracts — Inshaa</title>
+<title>Invoices — Inshaa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -902,7 +902,7 @@ h1, h2, h3 { font-weight: 700; }
             <td>{{ e.unit_number }}</td>
             <td>{{ e.job_title }}</td>
             <td class="extract-contractor">{{ e.contractor_name if e.contractor_name else "—" }}</td>
-            <td class="extract-contractor">{{ e.customer_name if e.customer_name else "—" }}</td>
+            <td>{{ e.customer_name if e.customer_name else "—" }}</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
             <td class="is-numeric">{{ "{:,.2f}".format(e.total_deductions) }} EGP</td>

@@ -76,7 +76,7 @@ def get_extracts(
         query = query.filter(or_(*[Extract.contractor_name.ilike(f"%{c}%") for c in contractor]))
 
     if customer:
-        query = query.filter(or_(*[Extract.contractor_name.ilike(f"%{c}%") for c in customer]))
+        query = query.filter(or_(*[Extract.customer_name.ilike(f"%{c}%") for c in customer]))
 
     if unit:
         query = query.filter(Extract.unit_number.in_(unit))
@@ -90,6 +90,7 @@ def get_extracts(
             "project_name": e.project_name,
             "unit_number": e.unit_number,
             "contractor_name": e.contractor_name,
+            "customer_name": e.customer_name,
             "job_title": e.job_title,
             "sub_total": e.sub_total,
             "total_taxes": e.total_taxes,
@@ -223,7 +224,8 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "previously_paid": previously_paid,
             "taxes": taxes,
             "deductions": deductions,
-            "approved": extract.approved
+            "approved": extract.approved,
+            "parent_id": extract.parent_id
         }
     type = "active" if extract.parent_id is None else "prev_version"
 
@@ -240,7 +242,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "extracts history").first()
+        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "view edits").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -345,7 +347,7 @@ def get_histories(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     if user.role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "extracts history").first()
+                                                 Permission.type == "view edits").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
@@ -600,6 +602,9 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    if extract.approved or extract.parent_id is not None:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
     old_items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(old_cats_ids)).all()
@@ -754,6 +759,9 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
     extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if extract.approved or extract.parent_id is not None:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
@@ -914,7 +922,7 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     return {"success": True}
 
 @router.get("/generate_pdf/{ext_id}")
-def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = Depends(get_db)):
+def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -927,7 +935,7 @@ def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = D
         if "generate pdf" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    if is_history:
+    if type == "history":
         extract = db.query(ExtractHistory).filter(ExtractHistory.id == ext_id).first()
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -942,6 +950,24 @@ def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = D
         items_by_cat = {}
         for item in items:
             items_by_cat.setdefault(item.extract_category_history_id, []).append(item)
+
+    elif type == "active":
+        extract = db.query(Extract).filter(Extract.id == ext_id).first()
+        if not extract:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if not extract.approved:
+            raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+        categories = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
+        category_ids = [c.id for c in categories]
+        items = db.query(ExtractCategoryItem).filter(ExtractCategoryItem.category_id.in_(category_ids)).all()
+
+        taxes = db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
+        deductions = db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
+        payments = db.query(ExtractPreviouslyPaid).filter(ExtractPreviouslyPaid.extract_id == extract.id).all()
+        items_by_cat = {}
+        for item in items:
+            items_by_cat.setdefault(item.category_id, []).append(item)
 
     else:
         extract = db.query(Extract).filter(Extract.id == ext_id).first()
@@ -962,7 +988,7 @@ def del_payment(request: Request, ext_id: int, is_history: bool, db: Session = D
             items_by_cat.setdefault(item.category_id, []).append(item)
 
     try:
-        pdf_buffer = generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, deductions, payments)
+        pdf_buffer = generate_extract_pdf(extract, type, categories, items_by_cat, taxes, deductions, payments)
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

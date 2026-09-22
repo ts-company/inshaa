@@ -184,6 +184,42 @@
       flex-wrap: wrap;
     }
 
+    .page-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .prev-version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px 8px 14px;
+      border-radius: 999px;
+      background: rgba(183, 68, 48, 0.08);
+      border: 1px solid rgba(183, 68, 48, 0.25);
+      color: #7c2d1d;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .prev-version-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #b74430;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .page-kicker {
       font-size: 14px;
       color: var(--steel);
@@ -734,33 +770,66 @@
       margin-bottom: 16px;
     }
 
+    .previous-version-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .previous-version-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .previous-version-column {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .previous-version-column h3 {
+      font-size: 16px;
+      margin: 0;
+      color: var(--steel-dark);
+      line-height: 1.2;
+    }
+
     .history-list,
     .previous-version-list {
       display: flex;
       flex-direction: column;
+      gap: 10px;
     }
 
     .history-link,
     .previous-version-link {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 12px 0;
-      border-top: 1px solid var(--line);
+      gap: 4px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(62, 84, 104, 0.03);
       color: var(--ink);
       text-decoration: none;
-      transition: background 0.15s ease, color 0.15s ease, padding 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+      min-height: 76px;
+      justify-content: center;
     }
 
     .history-link:first-child {
       border-top-color: var(--line-strong);
     }
 
-    .history-link:hover {
+    .history-link:hover,
+    .previous-version-link:hover {
       color: var(--steel-dark);
       background: rgba(62, 84, 104, 0.06);
-      padding-right: 10px;
-      padding-left: 10px;
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
     }
 
     .history-link-user,
@@ -785,6 +854,8 @@
     .previous-version-state {
       color: var(--steel-dark);
       font-size: 13.5px;
+      margin: 0;
+      line-height: 1.5;
     }
 
     .summary-block-head {
@@ -1258,7 +1329,20 @@
   </header>
 
   <main>
-    <a href="/system/extracts/" class="back-link">الرجوع</a>
+    <div class="page-top-row">
+      <a href="/system/extracts/" class="back-link">الرجوع</a>
+      {% if type == 'prev_version' %}
+      <div class="prev-version-badge" aria-label="نسخة قديمة">
+        <span class="prev-version-icon" aria-hidden="true">!</span>
+        <span>نسخة قديمة</span>
+      </div>
+      {% elif type == 'active' %}
+      <div class="prev-version-badge" aria-label="النسخة الحالية" style="background: rgba(11, 77, 114, 0.08); border-color: rgba(11, 77, 114, 0.25); color: #0b4d72;">
+        <span class="prev-version-icon" aria-hidden="true" style="background: #0b4d72;">✓</span>
+        <span>النسخة الحالية</span>
+      </div>
+      {% endif %}
+    </div>
 
     <div class="page-head">
       <div>
@@ -1288,7 +1372,7 @@
             <span class="project-detail-label">اسم العميل</span>
             <span class="project-detail-value">{{ extract.customer_name if extract.customer_name else "—" }}</span>
           </div>
-          {% if history %}
+          {% if type == 'history' %}
           <div class="project-detail">
             <span class="project-detail-label">تم التحديث بواسطة</span>
             <span class="project-detail-value">{{ extract.updated_by }}</span>
@@ -1302,8 +1386,10 @@
       </div>
 
       <div class="category-edit-actions">
+        {% if type == 'active' and extract.approved and type != 'history' %}
         <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">create a new extract</a>
-        {% if type != 'prev_version' and not (type == 'active' and extract.approved) %}
+        {% endif %}
+        {% if type != 'history' and type != 'prev_version' and not (type == 'active' and extract.approved) %}
         <button type="button" class="btn btn-primary edit-mode-hidden" id="btn-enter-edit">تعديل</button>
         <div class="edit-mode-buttons">
           <button type="button" class="btn btn-primary" id="btn-save-edit">حفظ</button>
@@ -1393,14 +1479,29 @@
 
     <div class="below-categories-row">
       <div class="side-panels-stack">
+        {% if type != 'history' %}
         <aside class="previous-version-panel" id="extract-previous-version-panel">
-          <h2>النسخة السابقة</h2>
-          <div class="previous-version-list" id="extract-previous-version-list">
-            <p class="previous-version-state">Loading previous version...</p>
+          <div class="previous-version-layout">
+            <div class="previous-version-column">
+              <div class="previous-version-list" id="extract-previous-version-list">
+                <p class="previous-version-state">Loading previous version...</p>
+              </div>
+            </div>
+            <div class="previous-version-column">
+              {% if extract.parent_id %}
+              <a class="previous-version-link previous-version-link--next" href="/system/extracts/details/{{ extract.parent_id }}">
+                <span class="previous-version-link-title">النسخة التالية</span>
+                <span class="previous-version-link-subtotal">عرض النسخة التالية</span>
+              </a>
+              {% else %}
+              <p class="previous-version-state">لا توجد نسخة تالية.</p>
+              {% endif %}
+            </div>
           </div>
         </aside>
+        {% endif %}
 
-        {% if not history %}
+        {% if "view edits" in permissions and type != 'history' %}
         <aside class="history-panel" id="extract-history-panel">
           <h2>التعديلات</h2>
           <div class="history-list" id="extract-history-list">
@@ -1411,7 +1512,7 @@
       </div>
 
       <aside class="summary-panel">
-        {% if type != 'prev_version' and not (type == 'active' and extract.approved) %}
+        {% if type != 'history' and type != 'prev_version' and not (type == 'active' and extract.approved) %}
         <div class="accounting-edit-actions">
           <button type="button" class="btn btn-primary" id="btn-enter-accounting-edit">تعديل الحسابات</button>
           <button type="button" class="btn btn-primary" id="btn-save-accounting-edit">حفظ</button>
@@ -1518,13 +1619,13 @@
         type == 'prev_version' or
         (type == 'active' and extract.approved == true)
       ) %}
-      <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?is_history={{ history }}">Generate PDF</a>
+      <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?type={{ type }}">Generate PDF</a>
       {% endif %}
 
       {% if "approve extracts" in permissions and type != 'history' and type != 'prev_version' %}
       <span class="approval-toggle">
         <input type="checkbox" id="extract-approved" {% if extract.approved %}checked{% endif %}>
-        <span>Approved</span>
+        <span>الموافقة</span>
       </span>
       {% endif %}
     </label>
@@ -1733,7 +1834,11 @@
         fetch(API_BASE + '/old_ver/' + extractId, { credentials: 'include' })
           .then(function (res) {
             if (res.status === 404 || res.status === 403) {
-              previousVersionPanel.remove();
+              previousVersionList.innerHTML = '';
+              const emptyState = document.createElement('p');
+              emptyState.className = 'previous-version-state';
+              emptyState.textContent = 'لا توجد نسخة سابقة.';
+              previousVersionList.appendChild(emptyState);
               return null;
             }
             if (!res.ok) throw new Error('Request failed with status ' + res.status);
@@ -1741,7 +1846,7 @@
           })
           .then(function (previousVersion) {
             if (!previousVersion || !previousVersion.id) {
-              if (previousVersionPanel) {
+              if (previousVersionList) {
                 previousVersionList.innerHTML = '';
                 const emptyState = document.createElement('p');
                 emptyState.className = 'previous-version-state';
@@ -1769,7 +1874,7 @@
             previousVersionList.appendChild(link);
           })
           .catch(function () {
-            if (!previousVersionPanel) return;
+            if (!previousVersionList) return;
             previousVersionList.innerHTML = '';
             const errorState = document.createElement('p');
             errorState.className = 'previous-version-state';
@@ -1794,7 +1899,7 @@
             if (!histories.length) {
               const emptyState = document.createElement('p');
               emptyState.className = 'history-state';
-              emptyState.textContent = 'لا توجد نسخ سابقة.';
+              emptyState.textContent = 'لا توجد تعديلات سابقة.';
               historyList.appendChild(emptyState);
               return;
             }
@@ -1925,16 +2030,24 @@
           '<td class="is-actions" data-label=""><button type="button" class="btn-text btn-delete-item edit-mode-only" data-item-title="">حذف</button></td>';
 
         const cells = row.children;
+        const amount = Number(item.amount ?? 0);
+        const currency = Number(item.currency ?? 0);
+        const completionRaw = Number(item.completion_perc ?? 0);
+        const completionPercent = completionPercentage(completionRaw);
+        const unitCompletion = completionRaw <= 1 ? completionRaw : completionRaw / 100;
+        const total = Number.isFinite(amount) && Number.isFinite(currency)
+          ? currency * amount * unitCompletion
+          : 0;
+
         cells[0].querySelector('.editable-value').textContent = item.title;
         cells[1].querySelector('.editable-value').textContent = item.unit_type;
         cells[2].dataset.editValue = item.amount;
         cells[2].querySelector('.editable-value').textContent = formatAmount(item.amount);
         cells[3].dataset.editValue = item.currency;
         cells[3].querySelector('.editable-value').textContent = formatAmount(item.currency);
-        const itemCompletionPercentage = completionPercentage(item.completion_perc);
-        cells[4].dataset.editValue = itemCompletionPercentage;
-        cells[4].querySelector('.editable-value').textContent = itemCompletionPercentage + '%';
-        cells[5].textContent = formatAmount(item.total);
+        cells[4].dataset.editValue = completionPercent;
+        cells[4].querySelector('.editable-value').textContent = completionPercent + '%';
+        cells[5].textContent = formatAmount(total);
         cells[6].querySelector('.btn-delete-item').dataset.itemId = '';
         cells[6].querySelector('.btn-delete-item').dataset.itemTitle = item.title;
         return row;
@@ -2555,6 +2668,9 @@
           approvalCheckbox.disabled = true;
 
           patchJSON(API_BASE + '/' + approvalAction + '/' + extractId, {})
+            .then(function () {
+              window.location.reload();
+            })
             .catch(function (err) {
               approvalCheckbox.checked = !approved;
               showOperationError(approvalCheckbox, 'لا يمكن تحديث الموافقة. ' + err.message);

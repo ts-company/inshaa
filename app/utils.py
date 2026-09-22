@@ -118,7 +118,7 @@ def ar(text) -> str:
         return text
     return get_display(arabic_reshaper.reshape(text))
 
-def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
+def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -158,7 +158,12 @@ def generate_extract_pdf(extract, is_history, categories, items_by_cat, taxes, d
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
 
-    header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style) if not is_history else Paragraph(f"{extract.id} {ar('نسخة سابقة')}", title_style)
+    if type == "active":
+        header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style)
+    elif type == "history":
+        header_text = Paragraph(f"{extract.id} {ar('نسخة تم تعديلها')}", title_style)
+    else:
+        header_text = Paragraph(f"{extract.id} {ar('نسخة قديمة')}", title_style)
 
     header_table = Table(
         [[logo, header_text]],
