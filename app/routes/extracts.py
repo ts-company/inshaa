@@ -50,17 +50,6 @@ def get_extracts(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
-    if user.role != "super_admin":
-        if "generate pdf" not in permission_types and\
-                "edit extracts" not in permission_types and\
-                "approve extracts" not in permission_types and\
-                "accounting" not in permission_types and\
-                "add extracts" not in permission_types and\
-                "delete extracts" not in permission_types and\
-                "extracts history" not in permission_types:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
     if user_role == "super_admin":
         query = db.query(Extract).filter(Extract.is_active.is_(True))
     else:
@@ -138,15 +127,6 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
-    if user.role != "super_admin":
-        if "edit extracts" not in permission_types and\
-                "generate pdf" not in permission_types and\
-                "approve extracts" not in permission_types and\
-                "accounting" not in permission_types and\
-                "add extracts" not in permission_types and\
-                "delete extracts" not in permission_types and\
-                "extracts history" not in permission_types:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
@@ -229,7 +209,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
         }
     type = "active" if extract.parent_id is None else "prev_version"
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": output, "type": type, "permissions": permission_types})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": output, "type": type, "permissions": permission_types, "user_role": user_role})
 
 
 @router.get("/details_hist/{history_id}")
@@ -334,7 +314,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "deductions": deductions
         }
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types})
+    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types, "user_role": user_role})
 
 
 @router.get("/histories/{ext_id}")
@@ -366,7 +346,6 @@ def get_histories(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "id": h.id,
             "updated_by": f"{u.first_name} {u.last_name}" if u is not None else None,
             "updated_at": h.updated_at.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),
-            "sub_total": h.sub_total
         }
         for h, u in results
     ]
@@ -566,11 +545,6 @@ def get_old_vers(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "add extracts").first()
-        if not permission:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -592,15 +566,17 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "edit extracts").first()
-        if not permission:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
     extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user_role != "super_admin":
+        if extract.created_by != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        else:
+            permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "edit extracts").first()
+            if not permission:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     if extract.approved or extract.parent_id is not None:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
@@ -723,18 +699,24 @@ def add_cat(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
-        permission = db.query(Permission).filter(Permission.user_id == user_id,
-                                                 Permission.type == "delete extracts").first()
-        if not permission:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
     extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+    if user_role != "super_admin":
+        if extract.created_by != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        else:
+            permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "delete extracts").first()
+            if not permission:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    child = db.query(Extract).filter(Extract.parent_id == extract.id).first()
+
     try:
         db.delete(extract)
+        if child:
+            child.is_active = True
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -750,11 +732,12 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
+    if user_role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
                                                  Permission.type == "accounting").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
 
     extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
     if not extract:
@@ -873,7 +856,7 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
+    if user_role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
                                                  Permission.type == "approve extracts").first()
         if not permission:
@@ -901,11 +884,12 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
+    if user_role != "super_admin":
         permission = db.query(Permission).filter(Permission.user_id == user_id,
                                                  Permission.type == "approve extracts").first()
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
 
     extract = db.query(Extract).filter(Extract.id == ext_id).first()
     if not extract:
@@ -929,11 +913,11 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user.role != "super_admin":
-        permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
-        permission_types = [p.type for p in permissions]
-        if "generate pdf" not in permission_types:
+    if user_role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "generate pdf").first()
+        if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
 
     if type == "history":
         extract = db.query(ExtractHistory).filter(ExtractHistory.id == ext_id).first()

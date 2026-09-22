@@ -1,17 +1,11 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Request, UploadFile, File, Form
-from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi import APIRouter, Depends, status, HTTPException, Request
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.users_model import User
-from app.models.home.home_projects_model import Project
-from app.models.home.home_projects_medias_model import ProjectMedia
 from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db
-from app.utils import generate_url, upload_file
 from app.config import BASE_DIR
-from typing import List
 
 router = APIRouter(prefix="/system/dashboard")
 
@@ -29,4 +23,4 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
     permissions = db.query(Permission).filter(Permission.user_id == user_id).all()
     perm_types = [row.type for row in permissions]
 
-    return templates.TemplateResponse("dashboard.html", {"request": request, "permissions": perm_types, "user": f"{user.first_name} {user.last_name}"})
+    return templates.TemplateResponse("dashboard.html", {"request": request, "permissions": perm_types, "user": f"{user.first_name} {user.last_name}", "user_role": user_role},)

@@ -872,7 +872,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'extracts history', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits'];
+const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');
@@ -1092,13 +1092,6 @@ if (permissionsModal) {
       return;
     }
 
-    const item = btn.closest('.permission-item');
-    const name = item ? item.querySelector('.permission-name')?.textContent.trim() : 'this permission';
-
-    if (!window.confirm(`Delete ${name}?`)) {
-      return;
-    }
-
     try {
       const res = await fetch(`${API_BASE}/users/del_permission/${permId}`, {
         method: 'DELETE',
@@ -1113,6 +1106,7 @@ if (permissionsModal) {
       await loadUserPermissions(userId);
     } catch (err) {
       window.alert(`Couldn't reach the server (${err.message}).`);
+      return;
     }
   });
 }

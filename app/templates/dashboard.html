@@ -528,25 +528,9 @@ main {
     <h1>Dashboard</h1>
   </div>
 
-  {% if permissions %}
   <div class="action-grid">
 
-    {% if "manage page" in permissions %}
-    <a class="action-card" href="/system/page/">
-      <span class="action-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <rect x="4" y="3.5" width="16" height="17" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <line x1="7.5" y1="8" x2="16.5" y2="8" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="7.5" y1="11.5" x2="16.5" y2="11.5" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="7.5" y1="15" x2="13" y2="15" stroke="currentColor" stroke-width="1.4"/>
-        </svg>
-      </span>
-      <h2>ادارة الصفحة الرئيسية</h2>
-      <span class="action-go">فتح</span>
-    </a>
-    {% endif %}
-
-    {% if "manage users" in permissions %}
+    {% if user_role == 'super_admin' or "manage users" in permissions %}
     <a class="action-card" href="/system/users/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
@@ -561,7 +545,6 @@ main {
     </a>
     {% endif %}
 
-    {% if "add extracts" in permissions or "delete extracts" in permissions or "extracts history" in permissions or "edit extracts" in permissions or "accounting" in permissions or "approve extracts" in permissions %}
     <a class="action-card" href="/system/extracts/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
@@ -572,24 +555,8 @@ main {
       <h2>المستخلصات</h2>
       <span class="action-go">فتح</span>
     </a>
-    {% endif %}
 
-    {% if "manage reviewings" in permissions %}
-    <a class="action-card" href="/system/reviewings/">
-      <span class="action-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="20" height="20">
-          <circle cx="9.5" cy="8.5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M4 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" fill="none" stroke="currentColor" stroke-width="1.6"/>
-          <circle cx="17" cy="7.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M14.8 12c2.6 0.2 4.4 1.9 4.7 4.4" fill="none" stroke="currentColor" stroke-width="1.4"/>
-        </svg>
-      </span>
-      <h2>ادارة المقايسات</h2>
-      <span class="action-go">فتح</span>
-    </a>
-    {% endif %}
-
-    {% if "hr management" in permissions %}
+    {% if user_role == 'super_admin' or "hr management" in permissions %}
     <a class="action-card" href="/system/hr_management/">
       <span class="action-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20">
@@ -605,12 +572,6 @@ main {
     {% endif %}
 
   </div>
-  {% else %}
-  <div class="empty-state">
-    <h2>Nothing assigned yet</h2>
-    <p>Your account doesn't have any permissions set up, so there's nothing to manage here. Contact an administrator if you think this is wrong.</p>
-  </div>
-  {% endif %}
 </main>
 
 <footer class="site-footer">

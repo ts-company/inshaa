@@ -207,6 +207,22 @@
       line-height: 1;
     }
 
+    .approved-status-message {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(29, 111, 79, 0.08);
+      border: 1px solid rgba(29, 111, 79, 0.24);
+      color: #1d6f4f;
+      font-size: 12.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
     .prev-version-icon {
       display: inline-flex;
       align-items: center;
@@ -1352,14 +1368,15 @@
       <a href="/system/extracts/" class="back-link">الرجوع</a>
       {% if type == 'prev_version' %}
       <div class="prev-version-badge" aria-label="نسخة قديمة">
-        <span class="prev-version-icon" aria-hidden="true">!</span>
         <span>نسخة قديمة</span>
       </div>
       {% elif type == 'active' %}
       <div class="prev-version-badge" aria-label="النسخة الحالية" style="background: rgba(11, 77, 114, 0.08); border-color: rgba(11, 77, 114, 0.25); color: #0b4d72;">
-        <span class="prev-version-icon" aria-hidden="true" style="background: #0b4d72;">✓</span>
         <span>النسخة الحالية</span>
       </div>
+      {% if extract.approved %}
+      <div class="approved-status-message">تمت الموافقة</div>
+      {% endif %}
       {% endif %}
     </div>
 
@@ -1405,7 +1422,7 @@
       </div>
 
       <div class="category-edit-actions">
-        {% if type == 'active' and extract.approved and type != 'history' %}
+        {% if type == 'active' and extract.approved and type != 'history' and (user_role == 'super_admin' or "add extracts" in permissions) %}
         <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">create a new extract</a>
         {% endif %}
         {% if type != 'history' and type != 'prev_version' and not (type == 'active' and extract.approved) %}
@@ -1524,7 +1541,7 @@
         </aside>
         {% endif %}
 
-        {% if "view edits" in permissions and type != 'history' %}
+        {% if (user_role == 'super_admin' or "view edits" in permissions) and type != 'history' %}
         <aside class="history-panel" id="extract-history-panel">
           <h2>التعديلات</h2>
           <div class="history-list" id="extract-history-list">
@@ -1637,7 +1654,7 @@
     </div>
 
     <label class="approval-control" for="extract-approved">
-      {% if "generate pdf" in permissions and (
+      {% if (user_role == 'super_admin' or "generate pdf" in permissions) and (
         type == 'history' or
         type == 'prev_version' or
         (type == 'active' and extract.approved == true)
@@ -1645,7 +1662,7 @@
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?type={{ type }}">Generate PDF</a>
       {% endif %}
 
-      {% if "approve extracts" in permissions and type != 'history' and type != 'prev_version' %}
+      {% if (user_role == 'super_admin' or "approve extracts" in permissions) and type != 'history' and type != 'prev_version' %}
       <span class="approval-toggle">
         <input type="checkbox" id="extract-approved" {% if extract.approved %}checked{% endif %}>
         <span>الموافقة</span>
@@ -1940,13 +1957,8 @@
               date.className = 'history-link-date';
               date.textContent = historyItem.updated_at;
 
-              const subtotal = document.createElement('span');
-              subtotal.className = 'history-link-subtotal';
-              subtotal.textContent = 'الإجمالي: ' + formatAmount(historyItem.sub_total) + ' EGP';
-
               link.appendChild(user);
               link.appendChild(date);
-              link.appendChild(subtotal);
               historyList.appendChild(link);
             });
           })

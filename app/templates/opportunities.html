@@ -417,12 +417,14 @@
 
         <label>
           Profile picture
-          <input type="file" name="picture" id="picture" accept="image/*" required>
+          <input type="file" name="picture" id="picture" accept="image/jpeg,image/png,image/webp" required>
+          <span class="field-hint">Allowed types: JPEG, PNG, WEBP, JPG · Maximum size: 5 MB</span>
         </label>
 
         <label>
           CV
-          <input type="file" name="cv" id="cv" accept=".pdf,.doc,.docx" required>
+          <input type="file" name="cv" id="cv" accept=".pdf" required>
+          <span class="field-hint">Allowed type: PDF · Maximum size: 5 MB</span>
         </label>
 
         <div class="submit-wrap">

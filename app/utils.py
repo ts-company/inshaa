@@ -31,7 +31,7 @@ cloudinary.config(
 )
 
 
-ALLOWED_PFP_MIME_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_PFP_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/jpg"}
 MAX_PFP_SIZE = 5 * 1024 * 1024
 MAX_PFP_PIXELS = 10_000_000
 
@@ -102,7 +102,7 @@ def is_valid_image(upload_file) -> bool:
         width, height = image.size
         if width * height > MAX_PFP_PIXELS:
             return False
-        if image.format not in {"JPEG", "PNG", "WEBP"}:
+        if image.format not in {"JPEG", "PNG", "WEBP", "JPG"}:
             return False
         return True
 
@@ -188,7 +188,6 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
     story.append(Spacer(1, 12))
 
-    # --- One table per category, each with its own label + header row ---
     for cat in categories:
         items = items_by_cat.get(cat.id, [])
         if not items:
@@ -211,7 +210,6 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
             ])
             cat_total += item.total
 
-        # Row index BEFORE appending — this is where the total row will land.
         cat_total_row = len(table_data)
         table_data.append([
             Paragraph(f"{cat_total}", cat_totals_value_style),
@@ -240,11 +238,6 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
             ("LINEABOVE", (0, cat_total_row), (-1, cat_total_row), 1, colors.black),
         ]))
 
-        # Keep the heading glued to its table — if the pair doesn't fit in
-        # what's left of the current page, the whole group moves to a fresh
-        # page instead of leaving the heading (or a stray row or two)
-        # stranded alone. Tables genuinely too long for one page still
-        # split normally after that, with the header row repeating.
         story.append(KeepTogether([heading, table]))
         story.append(Spacer(1, 16))
 
@@ -268,8 +261,6 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
 
-    # Same reasoning here: the totals block and the signature line should
-    # land on the same page together, not get separated by a page break.
     story.append(KeepTogether([
         totals_table,
         Paragraph(f"{ar('مدير المشروع')}", normal_style),

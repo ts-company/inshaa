@@ -8,7 +8,7 @@ from app.models.home.home_projects_model import Project
 from app.models.home.home_projects_medias_model import ProjectMedia
 from app.models.hr.candidates import Candidate
 from app.database import get_db
-from app.utils import generate_url, upload_image, upload_file
+from app.utils import generate_url, upload_image, upload_file, is_valid_image, is_material_valid
 from app.config import BASE_DIR
 
 router = APIRouter(prefix="/home")
@@ -70,6 +70,9 @@ def apply(request: Request,
           picture: UploadFile = File(...),
           cv: UploadFile = File(...),
           db: Session = Depends(get_db)):
+
+    if not is_valid_image(picture) or not is_material_valid(cv):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     try:
         picture_id = upload_image(picture, "candidates")
