@@ -661,11 +661,25 @@
       border-bottom: 1px solid var(--line);
       font-size: 15.5px;
       word-break: break-word;
+      vertical-align: top;
+    }
+
+    .items-table td.is-numeric {
+      white-space: nowrap;
     }
 
     .editable-cell {
       position: relative;
       white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    .item-title.editable-cell,
+    .item-title.editable-cell .editable-value {
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      line-height: 1.6;
     }
 
     .editable-cell:hover .inline-edit-trigger,
@@ -709,6 +723,8 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
+      line-height: 1.5;
     }
 
     .inline-editor input {

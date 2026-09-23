@@ -924,6 +924,15 @@ h1, h2, h3 { font-weight: 700; }
 
   <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
+      <div class="subgroup">
+        <span class="subgroup-label">استيراد من ملف Excel</span>
+        <p class="field-hint">قم بتحميل ملف Excel يحتوي على بيانات المستخلص. سيتم تعبئة البنود والضرائب والخصومات وما سبق صرفه تلقائياً.</p>
+        <div class="upload-row">
+          <input type="file" id="xlsx-upload" accept=".xlsx,.xls" aria-label="Upload extract Excel file">
+          <button type="button" class="btn btn-outline btn-small" id="load-xlsx-btn">تحميل من Excel</button>
+        </div>
+      </div>
+
       <div class="field-row-3">
         <label>
           اسم المشروع
@@ -990,8 +999,308 @@ h1, h2, h3 { font-weight: 700; }
   <p>© 2026 Inshaa</p>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const EXTRACTS_BASE = `/system/extracts`;
+
+function normalize(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).trim().replace(/\s+/g, ' ');
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function parsePercentValue(value) {
+  if (value === null || value === undefined || value === '') return null;
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const percentMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
+    if (percentMatch) {
+      const numericValue = Number(percentMatch[1]);
+      return Number.isFinite(numericValue) ? numericValue : null;
+    }
+
+    const plainNumber = Number(trimmed.replace(/%/g, '').replace(/,/g, ''));
+    if (Number.isFinite(plainNumber)) {
+      return plainNumber;
+    }
+  }
+
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function getCellValueFromRef(worksheet, rowIndex, colIndex) {
+  const ref = XLSX.utils.encode_cell({ c: colIndex, r: rowIndex });
+  const cell = worksheet[ref];
+  return cell ? cell.v : undefined;
+}
+
+function parseExtractSheet(worksheet) {
+  if (!worksheet) {
+    throw new Error('The selected file does not contain a readable sheet.');
+  }
+
+  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
+  const maxRow = rows.length;
+  if (!maxRow) {
+    throw new Error('The uploaded file is empty.');
+  }
+
+  let headerRowIdx = null;
+  for (let rowIdx = 0; rowIdx < Math.min(maxRow, 30); rowIdx += 1) {
+    const rowText = (rows[rowIdx] || []).map((cell) => normalize(cell)).join(' ');
+    if (rowText.includes('الوحدة') && (rowText.includes('الكمية') || rowText.includes('بيان'))) {
+      headerRowIdx = rowIdx;
+      break;
+    }
+  }
+
+  if (headerRowIdx === null) {
+    throw new Error("Couldn't locate the items table header row.");
+  }
+
+  const dataStart = headerRowIdx + 2;
+  const categoryByRow = {};
+  const merges = worksheet['!merges'] || [];
+  merges.forEach((range) => {
+    if (range.s.c === 1 && range.e.c === 1) {
+      const topValue = normalize(getCellValueFromRef(worksheet, range.s.r, range.s.c + 1));
+      if (topValue) {
+        for (let r = range.s.r; r <= range.e.r; r += 1) {
+          categoryByRow[r] = topValue;
+        }
+      }
+    }
+  });
+
+  const categories = {};
+  let currentCategory = null;
+  let stopRow = null;
+
+  for (let rowIdx = dataStart; rowIdx < maxRow; rowIdx += 1) {
+    const row = rows[rowIdx] || [];
+    if (!row.length) continue;
+
+    const firstCellText = normalize(row[0]);
+    if (firstCellText.includes('اجمالى المستخلص') || row.slice(0, 3).some((cell) => normalize(cell).includes('اجمالى المستخلص'))) {
+      stopRow = rowIdx;
+      break;
+    }
+
+    const title = normalize(row[2]);
+    if (!title) continue;
+
+    const categoryTitle = categoryByRow[rowIdx] || currentCategory || 'بدون بند رئيسي';
+    currentCategory = categoryByRow[rowIdx] || currentCategory;
+    const unitType = normalize(row[3]);
+    const amount = toNumber(row[6]);
+    const rate = toNumber(row[7]);
+    const completion = parsePercentValue(row[8]);
+
+    const item = {
+      title,
+      unit_type: unitType,
+      amount: amount !== null ? amount : 0,
+      currency: rate !== null ? rate : 1,
+      completion_perc: completion !== null ? completion : 1,
+    };
+
+    if (!categories[categoryTitle]) categories[categoryTitle] = [];
+    categories[categoryTitle].push(item);
+  }
+
+  if (stopRow === null) {
+    throw new Error("Couldn't find the 'اجمالى المستخلص' totals row to know where the item table ends.");
+  }
+
+  const taxes = [];
+  const deductions = [];
+  const payments = [];
+  const stopLabels = ['اجمالى الاستقطاعات', 'صافى المستخلص'];
+
+  for (let rowIdx = stopRow + 1; rowIdx < maxRow; rowIdx += 1) {
+    const row = rows[rowIdx] || [];
+    let label = null;
+    let value = null;
+
+    for (let cIdx = row.length - 1; cIdx >= 0; cIdx -= 1) {
+      const cellValue = row[cIdx];
+      const cellNumber = toNumber(cellValue);
+      const cellText = normalize(cellValue);
+
+      if (cellNumber !== null && value === null) {
+        value = cellNumber;
+      } else if (cellText && label === null && cellNumber === null) {
+        label = cellText;
+      }
+    }
+
+    if (!label) continue;
+    if (stopLabels.some((stopLabel) => label.includes(stopLabel))) break;
+    if (value === null) continue;
+
+    if (label.includes('ما سبق صرفه')) {
+      payments.push({ details: label, amount: value });
+      continue;
+    }
+
+    const pctMatch = label.match(/(\d+(?:\.\d+)?)\s*%/);
+    if (pctMatch) {
+      taxes.push({ title: label, rate: Number(pctMatch[1]) / 100 });
+    } else {
+      deductions.push({ title: label, amount: value });
+    }
+  }
+
+  return {
+    categories: Object.entries(categories).map(([title, items]) => ({ title, items })),
+    taxes,
+    deductions,
+    payments,
+  };
+}
+
+function clearCategories() {
+  categoriesList.innerHTML = '';
+}
+
+function clearEntryList(list) {
+  list.innerHTML = '';
+}
+
+function fillRowValues(row, values) {
+  const inputs = row.querySelectorAll('input');
+  if (inputs.length >= 1 && values.title !== undefined) inputs[0].value = values.title;
+  if (inputs.length >= 2 && values.type !== undefined) {
+    const select = row.querySelector('select');
+    if (select) select.value = values.type;
+  }
+  if (inputs.length >= 2 && values.amount !== undefined) inputs[1].value = values.amount;
+  if (inputs.length >= 3 && values.rate !== undefined) inputs[2].value = values.rate;
+}
+
+function createImportedCategoryBlock(category) {
+  const block = buildCategoryBlock();
+  const titleInput = block.querySelector('.category-header input[type="text"]');
+  titleInput.value = category.title || 'بدون بند رئيسي';
+
+  const itemList = block.querySelector('.item-list');
+  itemList.innerHTML = '';
+
+  if (!Array.isArray(category.items) || category.items.length === 0) {
+    buildItemRow(itemList);
+    return block;
+  }
+
+  category.items.forEach((item) => {
+    const row = buildItemRow(itemList);
+    const inputs = row.querySelectorAll('input');
+    if (inputs.length >= 1) inputs[0].value = item.title || '';
+    if (inputs.length >= 2) inputs[1].value = item.unit_type || '';
+    if (inputs.length >= 3) inputs[2].value = item.amount ?? 0;
+    if (inputs.length >= 4) inputs[3].value = item.currency ?? 1;
+    if (inputs.length >= 5) inputs[4].value = item.completion_perc !== undefined ? item.completion_perc : 1;
+  });
+
+  return block;
+}
+
+function populateParsedData(parsed) {
+  clearCategories();
+  if (Array.isArray(parsed.categories) && parsed.categories.length) {
+    parsed.categories.forEach((category) => createImportedCategoryBlock(category));
+  } else {
+    buildCategoryBlock();
+  }
+
+  clearEntryList(taxesList);
+  parsed.taxes.forEach((tax) => {
+    const row = buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
+    const inputs = row.querySelectorAll('input');
+    if (inputs[0]) inputs[0].value = tax.title || '';
+    if (inputs[1]) inputs[1].value = tax.rate !== undefined ? ((Number(tax.rate) || 0) * 100).toString() : '';
+  });
+
+  clearEntryList(deductionsList);
+  parsed.deductions.forEach((deduction) => {
+    const row = buildDeductionRow(deductionsList);
+    const titleInput = row.querySelector('input[type="text"]');
+    const amountInput = row.querySelector('input[type="number"]');
+    const select = row.querySelector('select');
+
+    if (titleInput) titleInput.value = deduction.title || '';
+    if (deduction.amount !== undefined && deduction.amount !== null) {
+      if (select) select.value = 'amount';
+      if (amountInput) amountInput.value = deduction.amount;
+    } else if (deduction.rate !== undefined && deduction.rate !== null) {
+      if (select) select.value = 'rate';
+      if (amountInput) amountInput.value = ((Number(deduction.rate) || 0) * 100).toString();
+    }
+  });
+
+  clearEntryList(paymentsList);
+  parsed.payments.forEach((payment) => {
+    const row = buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
+    const inputs = row.querySelectorAll('input');
+    if (inputs[0]) inputs[0].value = payment.details || '';
+    if (inputs[1]) inputs[1].value = payment.amount ?? 0;
+  });
+}
+
+async function handleXlsxUpload(file) {
+  if (!file) return;
+
+  const fileName = file.name.toLowerCase();
+  if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+    throw new Error('Please upload a valid Excel file (.xlsx or .xls).');
+  }
+
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data, { type: 'array' });
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+  const parsed = parseExtractSheet(worksheet);
+  populateParsedData(parsed);
+}
+
+const xlsxUpload = document.getElementById('xlsx-upload');
+const loadXlsxBtn = document.getElementById('load-xlsx-btn');
+
+loadXlsxBtn?.addEventListener('click', async () => {
+  const file = xlsxUpload?.files?.[0];
+  if (!file) {
+    showAddMessage('يرجى اختيار ملف Excel أولاً.', 'error');
+    return;
+  }
+
+  try {
+    await handleXlsxUpload(file);
+    showAddMessage('تم تحميل ملف Excel بنجاح وملأت البيانات تلقائياً.', 'success');
+  } catch (error) {
+    showAddMessage(error.message || 'تعذر قراءة الملف.', 'error');
+  }
+});
+
+xlsxUpload?.addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    await handleXlsxUpload(file);
+    showAddMessage('تم تحميل ملف Excel بنجاح وملأت البيانات تلقائياً.', 'success');
+  } catch (error) {
+    showAddMessage(error.message || 'تعذر قراءة الملف.', 'error');
+  }
+});
+
 
 document.querySelector('.extracts-table')?.addEventListener('click', async (event) => {
   const deleteButton = event.target.closest('[data-action="delete-extract"]');

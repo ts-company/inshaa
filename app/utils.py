@@ -15,6 +15,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Image as RLImage
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import KeepTogether
+from reportlab.pdfbase.pdfmetrics import stringWidth
 from io import BytesIO
 from app.config import BASE_DIR
 
@@ -120,6 +121,37 @@ def ar(text) -> str:
     return get_display(arabic_reshaper.reshape(text))
 
 
+def ar_wrap(text, font_name="Arabic", font_size=9, max_width=100) -> str:
+    """
+    Wrap Arabic text ourselves (in logical order), then reshape+bidi
+    each line separately. Avoids ReportLab's native RTL wordWrap bug
+    where a wrapped continuation line renders ABOVE the first line
+    instead of below it (caused by feeding it a fully bidi-reordered
+    string and letting ReportLab wrap that).
+    """
+    text = "" if text is None else str(text)
+    if not text:
+        return ""
+
+    words = text.split(" ")
+    lines, current = [], []
+
+    def width_of(words_list):
+        return stringWidth(ar(" ".join(words_list)), font_name, font_size)
+
+    for word in words:
+        candidate = current + [word]
+        if current and width_of(candidate) > max_width:
+            lines.append(" ".join(current))
+            current = [word]
+        else:
+            current = candidate
+    if current:
+        lines.append(" ".join(current))
+
+    return "<br/>".join(ar(line) for line in lines)
+
+
 def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -188,12 +220,18 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
     story.append(Spacer(1, 12))
 
+    # column widths for the item table (kept in one place so ar_wrap
+    # can use the same numbers as the Table itself)
+    col_widths = [3 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm]
+    title_col_width = col_widths[-1]
+    unit_col_width = col_widths[-2]
+
     for cat in categories:
         items = items_by_cat.get(cat.id, [])
         if not items:
             continue
 
-        heading = Paragraph(ar(cat.title), heading_style)
+        heading = Paragraph(ar_wrap(cat.title, "Arabic-Bold", 12, max_width=16 * cm), heading_style)
 
         headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
@@ -205,8 +243,14 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
                 Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
                 Paragraph(ar(int(item.currency)), cell_style),
                 Paragraph(f"{int(item.amount)}", cell_style),
-                Paragraph(ar(item.unit_type), cell_style),
-                Paragraph(ar(item.title), cell_style),
+                Paragraph(
+                    ar_wrap(item.unit_type, "Arabic", 9, max_width=unit_col_width - 12),
+                    cell_style,
+                ),
+                Paragraph(
+                    ar_wrap(item.title, "Arabic", 9, max_width=title_col_width - 12),
+                    cell_style,
+                ),
             ])
             cat_total += item.total
 
@@ -219,7 +263,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
 
         table = Table(
             table_data,
-            colWidths=[3 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm],
+            colWidths=col_widths,
             repeatRows=1,
             hAlign="CENTER"
         )
@@ -250,7 +294,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         [("صافي المستخلص", extract.total)]
 
     totals_data = [
-        [Paragraph(f"{value}", totals_value_style), Paragraph(ar(label), totals_label_style)]
+        [Paragraph(f"{value}", totals_value_style), Paragraph(ar_wrap(label, "Arabic-Bold", 9, max_width=4 * cm - 12), totals_label_style)]
         for label, value in totals_rows
     ]
     totals_table = Table(totals_data, colWidths=[6 * cm, 4 * cm], hAlign="LEFT")

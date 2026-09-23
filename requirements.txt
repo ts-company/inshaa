@@ -17,3 +17,4 @@ pillow
 cloudinary
 reportlab
 arabic_reshaper
+openpyxl
