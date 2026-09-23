@@ -170,7 +170,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
         {
             "id": t.id,
             "title": t.title,
-            "rate": int(t.rate*100),
+            "rate": t.rate,
             "amount": t.rate * extract.sub_total
         }
         for t in db.query(ExtractTaxes).filter(ExtractTaxes.extract_id == extract.id).all()
@@ -276,7 +276,7 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
         {
             "id": t.id,
             "title": t.title,
-            "rate": int(t.rate*100),
+            "rate": t.rate,
             "amount": t.rate * extract.sub_total
         }
         for t in db.query(ExtractTaxesHistory).filter(ExtractTaxesHistory.extract_history_id == extract.id).all()

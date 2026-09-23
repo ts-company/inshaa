@@ -291,14 +291,89 @@ h1, h2, h3 { font-weight: 700; }
   padding-top: 24px;
 }
 
-.subgroup-label {
-  font-size: 20px;
-  font-family: var(--font-head);
-  font-weight: 600;
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal-card {
+  width: min(460px, 100%);
+  background: var(--white);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(17, 17, 17, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(62, 84, 104, 0.04);
+}
+
+.modal-header h2 {
+  font-size: 24px;
   color: var(--ink);
 }
 
-.subgroup-sub-label {
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--steel-dark);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--steel-dark);
+  font-weight: 600;
+}
+
+.upload-field input[type="file"] {
+  width: 100%;
+  padding: 12px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
   font-size: 15px;
   color: var(--steel-dark);
   opacity: 0.85;
@@ -924,15 +999,6 @@ h1, h2, h3 { font-weight: 700; }
 
   <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
-      <div class="subgroup">
-        <span class="subgroup-label">استيراد من ملف Excel</span>
-        <p class="field-hint">قم بتحميل ملف Excel يحتوي على بيانات المستخلص. سيتم تعبئة البنود والضرائب والخصومات وما سبق صرفه تلقائياً.</p>
-        <div class="upload-row">
-          <input type="file" id="xlsx-upload" accept=".xlsx,.xls" aria-label="Upload extract Excel file">
-          <button type="button" class="btn btn-outline btn-small" id="load-xlsx-btn">تحميل من Excel</button>
-        </div>
-      </div>
-
       <div class="field-row-3">
         <label>
           اسم المشروع
@@ -987,13 +1053,29 @@ h1, h2, h3 { font-weight: 700; }
         <button type="button" class="btn btn-outline btn-small" id="add-payment-btn">اضافة دفع</button>
       </div>
 
-      <div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" id="open-xlsx-modal-btn">رفع Excel</button>
         <button type="submit" class="btn" id="add-extract-btn">اضافة مستخلص</button>
-        <p class="form-message" id="add-extract-message" role="alert" hidden></p>
       </div>
+      <p class="form-message" id="add-extract-message" role="alert" hidden></p>
     </form>
   </section>
 </main>
+
+<div class="modal-backdrop" id="xlsx-modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="xlsx-modal-title">
+    <div class="modal-header">
+      <h2 id="xlsx-modal-title">رفع ملف Excel</h2>
+      <button type="button" class="modal-close" aria-label="إغلاق">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="upload-field">
+        <span>اختر ملف المستخلص</span>
+        <input type="file" id="xlsx-upload" accept=".xlsx,.xls" aria-label="Upload extract Excel file">
+      </label>
+    </div>
+  </div>
+</div>
 
 <footer class="site-footer">
   <p>© 2026 Inshaa</p>
@@ -1068,18 +1150,6 @@ function parseExtractSheet(worksheet) {
   }
 
   const dataStart = headerRowIdx + 2;
-  const categoryByRow = {};
-  const merges = worksheet['!merges'] || [];
-  merges.forEach((range) => {
-    if (range.s.c === 1 && range.e.c === 1) {
-      const topValue = normalize(getCellValueFromRef(worksheet, range.s.r, range.s.c + 1));
-      if (topValue) {
-        for (let r = range.s.r; r <= range.e.r; r += 1) {
-          categoryByRow[r] = topValue;
-        }
-      }
-    }
-  });
 
   const categories = {};
   let currentCategory = null;
@@ -1095,11 +1165,15 @@ function parseExtractSheet(worksheet) {
       break;
     }
 
+    // Column B = "بند رئيسى". For merged cells only the first row of the block
+    // has a value; rows with an empty B keep the previous category.
+    const categoryCell = normalize(row[1]);
+    if (categoryCell) currentCategory = categoryCell;
+
     const title = normalize(row[2]);
     if (!title) continue;
 
-    const categoryTitle = categoryByRow[rowIdx] || currentCategory || 'بدون بند رئيسي';
-    currentCategory = categoryByRow[rowIdx] || currentCategory;
+    const categoryTitle = currentCategory || 'بدون بند رئيسي';
     const unitType = normalize(row[3]);
     const amount = toNumber(row[6]);
     const rate = toNumber(row[7]);
@@ -1145,19 +1219,6 @@ function parseExtractSheet(worksheet) {
 
     if (!label) continue;
     if (stopLabels.some((stopLabel) => label.includes(stopLabel))) break;
-    if (value === null) continue;
-
-    if (label.includes('ما سبق صرفه')) {
-      payments.push({ details: label, amount: value });
-      continue;
-    }
-
-    const pctMatch = label.match(/(\d+(?:\.\d+)?)\s*%/);
-    if (pctMatch) {
-      taxes.push({ title: label, rate: Number(pctMatch[1]) / 100 });
-    } else {
-      deductions.push({ title: label, amount: value });
-    }
   }
 
   return {
@@ -1223,7 +1284,7 @@ function populateParsedData(parsed) {
 
   clearEntryList(taxesList);
   parsed.taxes.forEach((tax) => {
-    const row = buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
+    const row = buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '-100', max: '100' });
     const inputs = row.querySelectorAll('input');
     if (inputs[0]) inputs[0].value = tax.title || '';
     if (inputs[1]) inputs[1].value = tax.rate !== undefined ? ((Number(tax.rate) || 0) * 100).toString() : '';
@@ -1272,20 +1333,30 @@ async function handleXlsxUpload(file) {
 }
 
 const xlsxUpload = document.getElementById('xlsx-upload');
-const loadXlsxBtn = document.getElementById('load-xlsx-btn');
+const xlsxModal = document.getElementById('xlsx-modal');
+const openXlsxModalBtn = document.getElementById('open-xlsx-modal-btn');
+const closeXlsxModalBtn = document.querySelector('.modal-close');
 
-loadXlsxBtn?.addEventListener('click', async () => {
-  const file = xlsxUpload?.files?.[0];
-  if (!file) {
-    showAddMessage('يرجى اختيار ملف Excel أولاً.', 'error');
-    return;
-  }
+function openXlsxModal() {
+  if (!xlsxModal) return;
+  xlsxModal.hidden = false;
+}
 
-  try {
-    await handleXlsxUpload(file);
-    showAddMessage('تم تحميل ملف Excel بنجاح وملأت البيانات تلقائياً.', 'success');
-  } catch (error) {
-    showAddMessage(error.message || 'تعذر قراءة الملف.', 'error');
+function closeXlsxModal() {
+  if (!xlsxModal) return;
+  xlsxModal.hidden = true;
+  if (xlsxUpload) xlsxUpload.value = '';
+}
+
+openXlsxModalBtn?.addEventListener('click', openXlsxModal);
+closeXlsxModalBtn?.addEventListener('click', closeXlsxModal);
+xlsxModal?.addEventListener('click', (event) => {
+  if (event.target === xlsxModal) closeXlsxModal();
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && xlsxModal && !xlsxModal.hidden) {
+    closeXlsxModal();
   }
 });
 
@@ -1295,6 +1366,7 @@ xlsxUpload?.addEventListener('change', async (event) => {
 
   try {
     await handleXlsxUpload(file);
+    closeXlsxModal();
     showAddMessage('تم تحميل ملف Excel بنجاح وملأت البيانات تلقائياً.', 'success');
   } catch (error) {
     showAddMessage(error.message || 'تعذر قراءة الملف.', 'error');
@@ -1395,7 +1467,7 @@ exportPdfBtn?.addEventListener('click', async () => {
       body: JSON.stringify(extractIds),
     });
 
-    await downloadPdfResponse(response, 'extracts_summary.pdf');
+    await downloadPdfResponse(response, 'invoices_summary.pdf');
   } catch (error) {
     showExportMessage(error.message, 'error');
   } finally {
@@ -1564,7 +1636,7 @@ function buildDeductionRow(list) {
 
   const value = document.createElement('input');
   value.type = 'number';
-  value.step = '1';
+  value.step = '0.0001';
   value.min = '0';
   value.placeholder = 'الكمية';
 
@@ -1596,6 +1668,14 @@ function buildDeductionRow(list) {
   return row;
 }
 
+function normalizeRateValue(rawValue) {
+  const numericValue = Number(rawValue);
+  if (!Number.isFinite(numericValue)) return null;
+
+  const normalized = Number((numericValue / 100).toFixed(4));
+  return Number.isFinite(normalized) ? normalized : null;
+}
+
 function collectDeductions(list) {
   return Array.from(list.querySelectorAll('.deduction-entry-row')).reduce((entries, row) => {
     const [title, value] = row.querySelectorAll('input');
@@ -1607,7 +1687,9 @@ function collectDeductions(list) {
     const numericValue = Number(valueRaw);
     if (type === 'rate') {
       if (numericValue < -100 || numericValue > 100) return entries;
-      entries.push({ title: titleValue, rate: numericValue / 100, amount: null });
+      const normalizedRate = normalizeRateValue(numericValue);
+      if (normalizedRate === null) return entries;
+      entries.push({ title: titleValue, rate: normalizedRate, amount: null });
     } else {
       if (numericValue < 0) return entries;
       entries.push({ title: titleValue, rate: null, amount: numericValue });
@@ -1641,12 +1723,12 @@ const taxesList = document.getElementById('taxes-list');
 const deductionsList = document.getElementById('deductions-list');
 const paymentsList = document.getElementById('payments-list');
 
-buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
+buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.0001', min: '-100', max: '100' });
 buildDeductionRow(deductionsList);
 buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
 
 document.getElementById('add-tax-btn').addEventListener('click', () => {
-  buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '1', min: '-100', max: '100' });
+  buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.0001', min: '-100', max: '100' });
 });
 
 document.getElementById('add-deduction-btn').addEventListener('click', () => {
@@ -1801,10 +1883,12 @@ addForm.addEventListener('submit', async (e) => {
   const jobTitle = document.getElementById('job-title').value.trim();
 
   const categories = collectCategories();
-  const taxes = collectFlatEntries(taxesList, 'title', 'rate').map((tax) => ({
-    ...tax,
-    rate: tax.rate / 100,
-  }));
+  const taxes = collectFlatEntries(taxesList, 'title', 'rate')
+    .map((tax) => {
+      const normalizedRate = normalizeRateValue(tax.rate);
+      return normalizedRate === null ? null : { ...tax, rate: normalizedRate };
+    })
+    .filter(Boolean);
   const deductions = collectDeductions(deductionsList);
   const payments = collectFlatEntries(paymentsList, 'details', 'amount');
 

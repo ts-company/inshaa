@@ -250,36 +250,60 @@
 
     .page-head h1.project-detail-value {
       margin: 0;
+      font-size: 18px;
+      font-family: var(--font-body);
+      line-height: 1.4;
+      font-weight: 600;
     }
 
     .project-details {
-      display: flex;
-      align-items: flex-end;
-      gap: 32px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 0;
+      min-width: min(100%, 780px);
+      border: 1px solid rgba(62, 84, 104, 0.18);
+      background: rgba(255, 255, 255, 0.36);
+      overflow: hidden;
     }
 
     .project-detail {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      justify-content: center;
+      gap: 8px;
+      min-width: 0;
+      min-height: 110px;
+      padding: 16px 20px;
+      border-left: 1px solid rgba(62, 84, 104, 0.14);
+      border-bottom: 1px solid rgba(62, 84, 104, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .project-detail:nth-child(3n + 1) {
+      border-left: none;
+    }
+
+    .project-detail:nth-last-child(-n + 3) {
+      border-bottom: none;
     }
 
     .project-detail-label {
       font-size: 12.5px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--steel-dark);
       text-transform: uppercase;
       letter-spacing: 0.04em;
+      line-height: 1.2;
     }
 
     .project-detail-value {
-      font-family: var(--font-head);
-      font-size: 38px;
+      font-family: var(--font-body);
+      font-size: 18px;
       font-weight: 600;
-      line-height: 1.05;
+      line-height: 1.4;
       margin: 0;
       color: var(--ink);
+      word-break: break-word;
     }
 
     .meta-row {
@@ -643,6 +667,12 @@
       color: var(--steel-dark);
       padding: 0 14px 12px;
       border-bottom: 1px solid var(--line-strong);
+    }
+
+    .items-table thead th:first-child,
+    .items-table tbody td:first-child {
+      width: 32%;
+      min-width: 180px;
     }
 
     .items-table th.is-numeric,
@@ -1303,9 +1333,40 @@
       }
     }
 
+    @media (max-width: 760px) {
+      .project-details {
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+      }
+
+      .project-detail:nth-child(3n + 1) {
+        border-left: 1px solid rgba(62, 84, 104, 0.14);
+      }
+
+      .project-detail:nth-child(2n + 1) {
+        border-left: none;
+      }
+
+      .project-detail:nth-last-child(-n + 3) {
+        border-bottom: 1px solid rgba(62, 84, 104, 0.14);
+      }
+
+      .project-detail:nth-last-child(-n + 2) {
+        border-bottom: none;
+      }
+    }
+
     @media (max-width: 600px) {
       .inline-add-item-row {
         grid-template-columns: 1fr 1fr;
+      }
+
+      .project-details {
+        grid-template-columns: 1fr;
+      }
+
+      .project-detail {
+        border-right: none;
+        padding-right: 0;
       }
 
       .inline-add-item-actions {
@@ -1439,7 +1500,7 @@
 
       <div class="category-edit-actions">
         {% if type == 'active' and extract.approved and type != 'history' and (user_role == 'super_admin' or "add extracts" in permissions) %}
-        <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">create a new extract</a>
+        <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">انشاء مستخلص جديد</a>
         {% endif %}
         {% if type != 'history' and type != 'prev_version' and not (type == 'active' and extract.approved) %}
         <button type="button" class="btn btn-primary edit-mode-hidden" id="btn-enter-edit">تعديل</button>
@@ -1590,9 +1651,9 @@
           <div class="accounting-display" id="taxes-display">
             {% if extract.taxes %}
             {% for tax in extract.taxes %}
-            <div class="summary-line summary-line-removable" data-accounting-title="{{ tax.title }}" data-accounting-rate="{{ tax.rate / 100 }}">
+            <div class="summary-line summary-line-removable" data-accounting-title="{{ tax.title }}" data-accounting-rate="{{ tax.rate }}">
               <span>{{ tax.title }}</span>
-              <span><span class="tax-rate">{{ tax.rate }}%</span><span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span></span>
+              <span><span class="tax-rate">{{ tax.rate * 100 }}</span><span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span></span>
             </div>
             {% endfor %}
             {% else %}<p class="summary-empty">لا توجد ضرائب</p>{% endif %}
@@ -1620,7 +1681,7 @@
               <span>{{ ded.title }}</span>
               <span>
                 {% if ded.rate is not none %}
-                <span class="tax-rate">{{ (ded.rate * 100)|round(2) }}%</span>
+                <span class="tax-rate">{{ ded.rate * 100 }}</span>
                 <span class="tax-amount">EGP {{ "{:,.2f}".format(ded.rate * extract.sub_total) }}</span>
                 {% else %}
                 EGP {{ "{:,.2f}".format(ded.amount) }}
@@ -2046,6 +2107,26 @@
         if (btnSaveEdit) btnSaveEdit.hidden = !enabled;
         if (btnCancelEdit) btnCancelEdit.hidden = !enabled;
       }
+
+      function formatRateDisplay(rate) {
+        const numericRate = Number(rate);
+        if (!Number.isFinite(numericRate)) return '';
+
+        const percentage = numericRate * 100;
+        const trimmed = Number(percentage.toFixed(4));
+        return Number.isInteger(trimmed)
+          ? String(trimmed)
+          : String(Number(trimmed.toFixed(4)));
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.tax-rate').forEach(function (element) {
+          const row = element.closest('[data-accounting-rate]');
+          const rateValue = row ? row.dataset.accountingRate : element.dataset.rate;
+          if (rateValue === undefined || rateValue === null || rateValue === '') return;
+          element.textContent = formatRateDisplay(rateValue) + '%';
+        });
+      });
 
       function formatAmount(value) {
         return Number(value).toLocaleString(undefined, {
@@ -2564,11 +2645,15 @@
       }
 
       function rateAsPercentage(rate) {
-        return Number((Number(rate) * 100).toFixed(2));
+        const numericRate = Number(rate);
+        if (!Number.isFinite(numericRate)) return 0;
+        return Number((numericRate * 100).toFixed(4));
       }
 
       function percentageAsRate(percentage) {
-        return Number((Number(percentage) / 100).toFixed(4));
+        const numericPercentage = Number(percentage);
+        if (!Number.isFinite(numericPercentage)) return 0;
+        return Number((numericPercentage / 100).toFixed(4));
       }
 
       function renderAccountingEditors() {
@@ -2578,7 +2663,7 @@
           const row = document.createElement('div');
           row.className = 'accounting-editor-row';
           const title = createAccountingInput(tax.title, 'text', 'اسم الضريبة');
-          const rate = createAccountingInput(rateAsPercentage(tax.rate), 'number', 'النسبة', '0.01', '-100');
+          const rate = createAccountingInput(rateAsPercentage(tax.rate), 'number', 'النسبة', '0.0001', '-100');
           const remove = document.createElement('button');
           remove.type = 'button';
           remove.textContent = 'حذف';
@@ -2596,7 +2681,7 @@
           const kind = document.createElement('select');
           kind.innerHTML = '<option value="amount">قيمة بالجنية</option><option value="rate">نسبة مئوية</option>';
           kind.value = deduction.rate !== null ? 'rate' : 'amount';
-          const value = createAccountingInput(kind.value === 'rate' ? rateAsPercentage(deduction.rate) : deduction.amount, 'number', kind.value === 'rate' ? 'النسبة' : 'القيمة', '0.01', kind.value === 'rate' ? '-100' : '0');
+          const value = createAccountingInput(kind.value === 'rate' ? rateAsPercentage(deduction.rate) : deduction.amount, 'number', kind.value === 'rate' ? 'النسبة' : 'القيمة', '0.0001', kind.value === 'rate' ? '-100' : '0');
           const remove = document.createElement('button');
           remove.type = 'button';
           remove.textContent = 'حذف';
@@ -2619,12 +2704,14 @@
               deduction.rate = percentageAsRate(value.value || 0);
               value.min = '-100';
               value.max = '100';
+              value.step = '0.0001';
               value.placeholder = 'النسبة';
             } else {
               deduction.rate = null;
               deduction.amount = Number(value.value || 0);
               value.min = '0';
               value.removeAttribute('max');
+              value.step = '0.0001';
               value.placeholder = 'القيمة';
             }
           });
