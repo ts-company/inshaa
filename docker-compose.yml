@@ -12,12 +12,14 @@ services:
       POSTGRES_DB: inshaa_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
     ports:
       - "5433:5432"
 
   app:
     build: .
     container_name: inshaa
+    restart: always
     depends_on:
       - db
     environment:

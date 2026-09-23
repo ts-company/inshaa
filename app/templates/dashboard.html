@@ -167,7 +167,22 @@ button { font-family: var(--font-body); cursor: pointer; }
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
-.logout-link:hover {
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFFFFF;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 4px;
+  padding: 8px 14px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.logout-link:hover,
+.header-action-btn:hover {
   color: #FFFFFF;
   background: rgba(215,25,32,0.18);
   border-color: rgba(255,255,255,0.62);
@@ -408,6 +423,14 @@ main {
 }
 
 .modal-msg { font-size: 13.5px; min-height: 18px; }
+.modal-msg.is-warning {
+  color: #9B2C2C;
+  font-weight: 600;
+  background: rgba(155, 44, 44, 0.08);
+  border: 1px solid rgba(155, 44, 44, 0.18);
+  padding: 10px 12px;
+  border-radius: 4px;
+}
 .modal-msg.is-error { color: #A2402C; }
 .modal-msg.is-success { color: #2A6B3F; }
 
@@ -501,6 +524,28 @@ main {
     </div>
     <div class="header-actions">
       <span class="user-greeting">{{ user }}</span>
+      {% if user_role == 'super_admin' %}
+      <a class="logout-link" href="/system/db_backup" download>
+        <span class="header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"></ellipse>
+            <path d="M4.5 5.5v8.5c0 1.4 3.4 2.5 7.5 2.5s7.5-1.1 7.5-2.5V5.5"></path>
+            <path d="M12 12v6M9.5 15.5l2.5 2.5 2.5-2.5"></path>
+          </svg>
+        </span>
+        Download backup
+      </a>
+      <button type="button" class="header-action-btn" id="restore-btn">
+        <span class="header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4v8"></path>
+            <path d="M9 15l3 3 3-3"></path>
+            <path d="M5 16.5v1.5A1.5 1.5 0 0 0 6.5 19.5h11A1.5 1.5 0 0 0 19 18v-1.5"></path>
+          </svg>
+        </span>
+        Restore Database
+      </button>
+      {% endif %}
       <button type="button" class="settings-btn" id="settings-btn">
         <span class="header-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -607,6 +652,32 @@ main {
   </div>
 </div>
 
+<!-- Restore database modal -->
+<div class="modal-overlay" id="restore-modal" role="dialog" aria-modal="true" aria-labelledby="restore-title" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="restore-title">Restore Database</h2>
+      <button type="button" class="modal-close" id="restore-close" aria-label="Close">&times;</button>
+    </div>
+
+    <form id="restore-form" class="modal-form">
+      <p class="modal-msg is-warning" id="restore-note">Warning: restoring a database will overwrite the current data. Please upload the correct .dump file only.</p>
+
+      <label class="field">
+        <span>Database dump file</span>
+        <input type="file" name="file" id="restore-file" accept=".dump" required>
+      </label>
+
+      <p class="modal-msg" id="restore-msg" role="status"></p>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="restore-cancel">Cancel</button>
+        <button type="submit" class="btn-primary" id="restore-submit">Upload and restore</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
@@ -615,6 +686,14 @@ const settingsCancel = document.getElementById('settings-cancel');
 const settingsForm = document.getElementById('settings-form');
 const settingsMsg = document.getElementById('settings-msg');
 const settingsSubmit = document.getElementById('settings-submit');
+const restoreBtn = document.getElementById('restore-btn');
+const restoreModal = document.getElementById('restore-modal');
+const restoreClose = document.getElementById('restore-close');
+const restoreCancel = document.getElementById('restore-cancel');
+const restoreForm = document.getElementById('restore-form');
+const restoreFile = document.getElementById('restore-file');
+const restoreMsg = document.getElementById('restore-msg');
+const restoreSubmit = document.getElementById('restore-submit');
 
 if (settingsBtn) {
   settingsBtn.addEventListener('click', openModal);
@@ -625,12 +704,25 @@ if (settingsBtn) {
     if (e.target === settingsModal) closeModal();
   });
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !settingsModal.hidden) closeModal();
-  });
-
   settingsForm.addEventListener('submit', handleSubmit);
 }
+
+if (restoreBtn) {
+  restoreBtn.addEventListener('click', openRestoreModal);
+  restoreClose.addEventListener('click', closeRestoreModal);
+  restoreCancel.addEventListener('click', closeRestoreModal);
+
+  restoreModal.addEventListener('click', (e) => {
+    if (e.target === restoreModal) closeRestoreModal();
+  });
+
+  restoreForm.addEventListener('submit', handleRestoreSubmit);
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !settingsModal.hidden) closeModal();
+  if (e.key === 'Escape' && !restoreModal.hidden) closeRestoreModal();
+});
 
 function openModal() {
   settingsMsg.textContent = '';
@@ -641,6 +733,81 @@ function openModal() {
 
 function closeModal() {
   settingsModal.hidden = true;
+}
+
+function openRestoreModal() {
+  restoreFile.value = '';
+  restoreMsg.textContent = '';
+  restoreMsg.className = 'modal-msg';
+  restoreSubmit.disabled = false;
+  restoreModal.hidden = false;
+}
+
+function closeRestoreModal() {
+  restoreModal.hidden = true;
+}
+
+function showRestoreMsg(text, cls) {
+  restoreMsg.textContent = text;
+  restoreMsg.className = `modal-msg ${cls}`;
+}
+
+async function handleRestoreSubmit(e) {
+  e.preventDefault();
+
+  const file = restoreFile.files[0];
+
+  if (!file) {
+    showRestoreMsg('Please select a .dump file to restore.', 'is-error');
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith('.dump')) {
+    showRestoreMsg('Expected a .dump file produced by pg_dump -F c', 'is-error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  restoreSubmit.disabled = true;
+  showRestoreMsg('Uploading and restoring…', '');
+
+  try {
+    const res = await fetch('/system/db_restore', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData
+    });
+
+    let payload = null;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      payload = await res.json();
+    }
+
+    if (!res.ok) {
+      const detail = payload && payload.detail ? payload.detail : 'The database could not be restored.';
+      if (res.status === 400) {
+        throw new Error(detail || 'Expected a .dump file produced by pg_dump -F c');
+      }
+      if (res.status === 403) {
+        throw new Error('You do not have permission to restore the database.');
+      }
+      if (res.status === 500) {
+        throw new Error(detail || 'Restore failed.');
+      }
+      throw new Error(detail || 'Unable to restore the database.');
+    }
+
+    const successMsg = payload && payload.warnings ? `Restore completed successfully. Warning: ${payload.warnings}` : 'Database restored successfully.';
+    showRestoreMsg(successMsg, 'is-success');
+    restoreFile.value = '';
+    setTimeout(() => closeRestoreModal(), 1800);
+  } catch (err) {
+    showRestoreMsg(err.message || 'Unable to restore the database. Please try again.', 'is-error');
+    restoreSubmit.disabled = false;
+  }
 }
 
 async function handleSubmit(e) {
