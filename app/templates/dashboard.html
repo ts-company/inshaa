@@ -94,30 +94,42 @@ button { font-family: var(--font-body); cursor: pointer; }
 .header-actions {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 8px;
-  padding: 5px;
+  padding: 6px 8px;
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 6px;
+  border-radius: 8px;
   background: rgba(4, 31, 48, 0.2);
   backdrop-filter: blur(8px);
 }
 
+.header-actions > * {
+  flex-shrink: 0;
+}
+
 .user-greeting {
-  max-width: 190px;
+  display: inline-flex;
+  align-items: center;
+  max-width: 180px;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 7px 11px;
-  border-right: 1px solid rgba(255,255,255,0.18);
+  padding: 9px 12px;
+  border-radius: 4px;
   font-size: 14px;
   color: #FFFFFF;
-  background: transparent;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
 }
 
 .settings-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
+  min-height: 42px;
+  white-space: nowrap;
   font-size: 14px;
   font-weight: 600;
   color: #FFFFFF;
@@ -155,7 +167,10 @@ button { font-family: var(--font-body); cursor: pointer; }
 .logout-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
+  min-height: 42px;
+  white-space: nowrap;
   font-size: 14px;
   font-weight: 600;
   color: #FFFFFF;
@@ -170,7 +185,10 @@ button { font-family: var(--font-body); cursor: pointer; }
 .header-action-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
+  min-height: 42px;
+  white-space: nowrap;
   font-size: 14px;
   font-weight: 600;
   color: #FFFFFF;
@@ -633,7 +651,7 @@ main {
 
     <form id="settings-form" class="modal-form">
       <label class="field">
-        <span>Username</span>
+        <span>New username</span>
         <input type="text" name="username" id="settings-username">
       </label>
 
