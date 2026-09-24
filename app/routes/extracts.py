@@ -438,7 +438,7 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
         new_extract.total_taxes = total_taxes
         new_extract.total_deductions = total_deductions
         new_extract.total_payments = total_payments
-        new_extract.total = (new_extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        new_extract.total = new_extract.sub_total - (total_deductions + total_payments + total_taxes)
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -683,7 +683,7 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
         extract.total_taxes = total_taxes
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
-        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.total = extract.sub_total - (total_deductions + total_payments + total_taxes)
         extract.approved = False
         db.commit()
     except SQLAlchemyError:
@@ -840,7 +840,7 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
         extract.total_taxes = total_taxes
         extract.total_deductions = total_deductions
         extract.total_payments = total_payments
-        extract.total = (extract.sub_total + total_taxes) - (total_deductions + total_payments)
+        extract.total = extract.sub_total - (total_deductions + total_payments + total_taxes)
         extract.approved = False
         db.commit()
     except SQLAlchemyError:

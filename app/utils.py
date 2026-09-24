@@ -112,6 +112,9 @@ def is_valid_image(upload_file) -> bool:
     finally:
         upload_file.file.seek(0)
 
+def format_rate(rate):
+    return f"{round(float(rate) * 100, 2):g}"
+
 def ar(text) -> str:
     if text is None:
         return ""
@@ -122,13 +125,6 @@ def ar(text) -> str:
 
 
 def ar_wrap(text, font_name="Arabic", font_size=9, max_width=100) -> str:
-    """
-    Wrap Arabic text ourselves (in logical order), then reshape+bidi
-    each line separately. Avoids ReportLab's native RTL wordWrap bug
-    where a wrapped continuation line renders ABOVE the first line
-    instead of below it (caused by feeding it a fully bidi-reordered
-    string and letting ReportLab wrap that).
-    """
     text = "" if text is None else str(text)
     if not text:
         return ""
@@ -240,7 +236,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         for item in items:
             table_data.append([
                 Paragraph(f"{item.total}", cell_style),
-                Paragraph(f"{int(item.completion_perc * 100)}%", cell_style),
+                Paragraph(f"{format_rate(item.completion_perc)}%", cell_style),
                 Paragraph(ar(int(item.currency)), cell_style),
                 Paragraph(f"{int(item.amount)}", cell_style),
                 Paragraph(
@@ -285,12 +281,12 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         story.append(KeepTogether([heading, table]))
         story.append(Spacer(1, 16))
 
-    totals_rows = [("اجمالي المستخلص", extract.sub_total)] + [(f"{t.title}", f"{int(t.rate * 100)}%") for t in taxes] +\
-        [("اجمالي الضرائب", extract.total_taxes)] + [(f"{d.title}", f"{int(d.rate * 100)}%" if d.rate is not None else d.amount) for d in dedutions] +\
+    totals_rows = [("اجمالي المستخلص", extract.sub_total)] + [(f"{t.title}", f"{format_rate(t.rate)}%") for t in taxes] +\
+        [("اجمالي الضرائب", extract.total_taxes)] + [(f"{d.title}", f"{format_rate(d.rate)}%" if d.rate is not None else d.amount) for d in dedutions] +\
         [("اجمالي الخصومات", extract.total_deductions)] +\
         [(f"{p.details}", p.amount) for p in payments] +\
         [("اجمالي ما سبق صرفه", extract.total_payments)] + \
-        [("اجمالي الخصومات و ما سبق صرفه", extract.total_payments + extract.total_deductions)] + \
+        [("اجمالي الاستقطاعات", extract.total_payments + extract.total_deductions + extract.total_taxes)] + \
         [("صافي المستخلص", extract.total)]
 
     totals_data = [

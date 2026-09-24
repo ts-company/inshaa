@@ -1665,10 +1665,6 @@
             <span>مجموع الضرائب</span>
             <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
           </div>
-          <div class="summary-line is-subtotal">
-            <span>الاجمالي + الضرائب</span>
-            <span>{{ "{:,.2f}".format(extract.sub_total + extract.total_taxes) }} EGP</span>
-          </div>
         </div>
 
         <div class="summary-block">
@@ -1720,8 +1716,8 @@
         </div>
 
         <div class="summary-line is-subtotal">
-          <span>مجموع الخصومات و ما سبق صرفه</span>
-          <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments) }} EGP</span>
+          <span>اجمالي الاستقطاعات</span>
+          <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments + extract.total_taxes) }} EGP</span>
         </div>
 
         <div class="summary-line is-grand-total">
