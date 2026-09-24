@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="/static/js/language-toggle.js" defer></script>
 <style>
 /* ===== Tokens (matches the main site theme) ===== */
 :root {
@@ -95,12 +96,14 @@ button { font-family: var(--font-body); cursor: pointer; }
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 8px;
-  background: rgba(4, 31, 48, 0.2);
-  backdrop-filter: blur(8px);
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(4,31,48,0.24));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 12px 30px rgba(4, 31, 48, 0.2);
+  backdrop-filter: blur(16px) saturate(135%);
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
 }
 
 .header-actions > * {
@@ -115,55 +118,19 @@ button { font-family: var(--font-body); cursor: pointer; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 9px 12px;
-  border-radius: 4px;
+  padding: 9px 13px;
+  border-radius: 9px;
   font-size: 14px;
-  color: #FFFFFF;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-}
-
-.settings-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 42px;
-  white-space: nowrap;
-  font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #FFFFFF;
   background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.28);
-  border-radius: 4px;
-  padding: 8px 14px;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
 }
 
-.header-icon {
-  display: inline-flex;
-  width: 16px;
-  height: 16px;
-  flex: 0 0 16px;
-}
-
-.header-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.settings-btn:hover {
-  background: rgba(255,255,255,0.18);
-  border-color: rgba(255,255,255,0.5);
-  transform: translateY(-1px);
-}
-
-.settings-btn:focus-visible,
-.logout-link:focus-visible {
-  outline: 2px solid #FFFFFF;
-  outline-offset: 3px;
-}
-
+.settings-btn,
+.header-action-btn,
+.backup-link,
 .logout-link {
   display: inline-flex;
   align-items: center;
@@ -173,38 +140,103 @@ button { font-family: var(--font-body); cursor: pointer; }
   white-space: nowrap;
   font-size: 14px;
   font-weight: 600;
-  color: #FFFFFF;
-  text-decoration: none;
+  color: rgba(255,255,255,0.94);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 9px;
   padding: 8px 14px;
-  border: 1px solid rgba(255,255,255,0.32);
-  border-radius: 4px;
-  background: transparent;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 12px rgba(2, 25, 39, 0.12);
+  transition: background 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.header-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+}
+
+.header-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.settings-btn {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.5);
+  color: #FFFFFF;
+}
+
+.settings-btn:focus-visible,
+.header-action-btn:focus-visible,
+.backup-link:focus-visible,
+.logout-link:focus-visible {
+  outline: 2px solid #FFFFFF;
+  outline-offset: 3px;
+}
+
+.settings-btn:hover {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.8);
+  color: #FFFFFF;
+}
+
+.backup-link {
+  color: #D9F2FF;
+  background: rgba(17, 133, 190, 0.16);
+  border-color: rgba(143, 216, 247, 0.48);
+  text-decoration: none;
 }
 
 .header-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 42px;
-  white-space: nowrap;
-  font-size: 14px;
-  font-weight: 600;
-  color: #FFFFFF;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 4px;
-  padding: 8px 14px;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  background: rgba(240, 180, 41, 0.16);
+  border-color: rgba(255, 214, 105, 0.5);
+  color: #FFE8A8;
 }
 
-.logout-link:hover,
-.header-action-btn:hover {
+.logout-link {
+  background: rgba(215, 25, 32, 0.13);
+  border-color: rgba(255, 157, 161, 0.45);
+  color: #FFD9DB;
+  text-decoration: none;
+}
+
+.backup-link:hover {
+  background: rgba(17, 153, 214, 0.3);
+  border-color: #8FD8F7;
   color: #FFFFFF;
-  background: rgba(215,25,32,0.18);
-  border-color: rgba(255,255,255,0.62);
-  transform: translateY(-1px);
+}
+
+.header-action-btn:hover {
+  background: rgba(240, 180, 41, 0.3);
+  border-color: #FFD669;
+  color: #FFFFFF;
+}
+
+.logout-link:hover {
+  color: #FFFFFF;
+  background: rgba(215,25,32,0.34);
+  border-color: #FF9DA1;
+}
+
+.settings-btn:hover,
+.backup-link:hover,
+.header-action-btn:hover,
+.logout-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.16);
+}
+
+.settings-btn:active,
+.backup-link:active,
+.header-action-btn:active,
+.logout-link:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* ===== Layout ===== */
@@ -220,13 +252,13 @@ main {
   position: relative;
   margin-bottom: 42px;
   max-width: 680px;
-  padding-left: 24px;
+  padding-inline-start: 24px;
 }
 
 .dash-head::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 4px;
   bottom: 4px;
   width: 4px;
@@ -482,11 +514,15 @@ main {
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .header-inner { padding: 16px 20px; flex-wrap: wrap; gap: 14px; }
-  .header-actions { gap: 6px; width: 100%; justify-content: flex-end; }
-  .user-greeting { max-width: 140px; }
+  .header-actions { gap: 6px; width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+  .user-greeting { max-width: 140px; margin-right: auto; }
+  .settings-btn,
+  .header-action-btn,
+  .backup-link,
+  .logout-link { padding-left: 11px; padding-right: 11px; }
   main { padding: 40px 20px 72px; }
   .dash-head h1 { font-size: 32px; }
-  .dash-head { margin-bottom: 32px; padding-left: 18px; }
+  .dash-head { margin-bottom: 32px; padding-inline-start: 18px; }
   .action-grid { grid-template-columns: 1fr; gap: 16px; }
   .action-card { min-height: 190px; padding: 24px; }
 }
@@ -543,7 +579,7 @@ main {
     <div class="header-actions">
       <span class="user-greeting">{{ user }}</span>
       {% if user_role == 'super_admin' %}
-      <a class="logout-link" href="/system/db_backup" download>
+      <a class="backup-link" href="/system/db_backup" download aria-label="Download database backup">
         <span class="header-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <ellipse cx="12" cy="5.5" rx="7.5" ry="2.5"></ellipse>
