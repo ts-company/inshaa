@@ -50,10 +50,7 @@ def get_extracts(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    if user_role == "super_admin":
-        query = db.query(Extract).filter(Extract.is_active.is_(True))
-    else:
-        query = db.query(Extract).filter(Extract.created_by == user_id, Extract.is_active.is_(True))
+    query = db.query(Extract).filter(Extract.is_active.is_(True))
 
     if id:
         query = query.filter(Extract.id.in_(id))
@@ -205,6 +202,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "taxes": taxes,
             "deductions": deductions,
             "approved": extract.approved,
+            "approval_date": extract.approval_date.astimezone(ZoneInfo("Africa/Cairo")).strftime('%Y/%m/%d') if extract.approval_date is not None else None,
             "parent_id": extract.parent_id
         }
     type = "active" if extract.parent_id is None else "prev_version"
@@ -870,6 +868,7 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     try:
         extract.approved = True
+        extract.approval_date = datetime.now(timezone.utc)
         db.commit()
     except SQLAlchemyError:
         db.rollback()
@@ -899,6 +898,7 @@ def del_payment(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
     try:
         extract.approved = False
+        extract.approval_date = None
         db.commit()
     except SQLAlchemyError:
         db.rollback()

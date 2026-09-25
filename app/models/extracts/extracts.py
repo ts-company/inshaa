@@ -19,5 +19,6 @@ class Extract(Base):
     total_payments = Column(Numeric(12, 2), nullable=False)
     total = Column(Numeric(12, 2), nullable=False)
     approved = Column(Boolean, nullable=False)
+    approval_date = Column(DateTime, nullable=True)
     parent_id = Column(Integer, ForeignKey("extracts.id", ondelete="SET NULL"), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)

@@ -1453,7 +1453,7 @@
         <span>النسخة الحالية</span>
       </div>
       {% if extract.approved %}
-      <div class="approved-status-message">تمت الموافقة</div>
+      <div class="approved-status-message">تمت الموافقة في {{ extract.approval_date or "غير محدد" }}</div>
       {% endif %}
       {% endif %}
     </div>
@@ -1709,10 +1709,6 @@
           </div>
           <div class="accounting-editor" id="payments-editor"></div>
           <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="payment">اضافة دفع</button>
-          <div class="summary-line is-subtotal">
-            <span>مجموع ما سبق صرفه</span>
-            <span>{{ "{:,.2f}".format(extract.total_payments) }} EGP</span>
-          </div>
         </div>
 
         <div class="summary-line is-subtotal">

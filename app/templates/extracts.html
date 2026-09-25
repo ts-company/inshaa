@@ -1037,7 +1037,7 @@ h1, h2, h3 { font-weight: 700; }
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">الضرائب <span class="field-optional">(اختياري)</span></span>
+        <span class="subgroup-label">الضرائب <span class="field-optional"></span></span>
         <div class="entry-list" id="taxes-list"></div>
         <button type="button" class="btn btn-outline btn-small" id="add-tax-btn">اضافة ضريبة</button>
       </div>
@@ -1049,7 +1049,7 @@ h1, h2, h3 { font-weight: 700; }
       </div>
 
       <div class="subgroup">
-        <span class="subgroup-label">ما سبق صرفه <span class="field-optional">(اختياري)</span></span>
+        <span class="subgroup-label">ما سبق صرفه <span class="field-optional"></span></span>
         <div class="entry-list" id="payments-list"></div>
         <button type="button" class="btn btn-outline btn-small" id="add-payment-btn">اضافة دفع</button>
       </div>
@@ -1284,6 +1284,7 @@ function populateParsedData(parsed) {
   }
 
   clearEntryList(taxesList);
+  buildDefaultTaxRows();
   parsed.taxes.forEach((tax) => {
     const row = buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.01', min: '-100', max: '100' });
     const inputs = row.querySelectorAll('input');
@@ -1309,6 +1310,7 @@ function populateParsedData(parsed) {
   });
 
   clearEntryList(paymentsList);
+  buildDefaultPaymentRow();
   parsed.payments.forEach((payment) => {
     const row = buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
     const inputs = row.querySelectorAll('input');
@@ -1724,9 +1726,44 @@ const taxesList = document.getElementById('taxes-list');
 const deductionsList = document.getElementById('deductions-list');
 const paymentsList = document.getElementById('payments-list');
 
-buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.0001', min: '-100', max: '100' });
+function buildFixedEntryRow(list, fieldAConfig, fieldBConfig, values) {
+  const row = buildEntryRow(list, fieldAConfig, fieldBConfig);
+  const [fieldA, fieldB] = row.querySelectorAll('input');
+  fieldA.value = values.title;
+  fieldB.value = values.value;
+  fieldA.readOnly = true;
+  fieldB.readOnly = true;
+  row.querySelector('.entry-row-remove').remove();
+}
+
+function buildDefaultTaxRows() {
+  [
+    { title: 'تامين اعمال', value: '0' },
+    { title: 'تامين مقاولات', value: '0' },
+    { title: 'خصم ضرائب', value: '0' },
+  ].forEach((tax) => {
+    buildFixedEntryRow(
+      taxesList,
+      { placeholder: 'اسم الضريبة' },
+      { placeholder: 'النسبة', step: '0.0001', min: '-100', max: '100' },
+      tax,
+    );
+  });
+}
+
+function buildDefaultPaymentRow() {
+  buildFixedEntryRow(
+    paymentsList,
+    { placeholder: 'تفاصيل الدفع' },
+    { placeholder: 'الكمية', step: '1', min: '0' },
+    { title: 'ما سبق صرفه', value: '0' },
+  );
+}
+
+buildDefaultTaxRows();
+
 buildDeductionRow(deductionsList);
-buildEntryRow(paymentsList, { placeholder: 'تفاصيل الدفع' }, { placeholder: 'الكمية', step: '1', min: '0' });
+buildDefaultPaymentRow();
 
 document.getElementById('add-tax-btn').addEventListener('click', () => {
   buildEntryRow(taxesList, { placeholder: 'اسم الضريبة' }, { placeholder: 'النسبة', step: '0.0001', min: '-100', max: '100' });

@@ -18,6 +18,7 @@ from reportlab.platypus import KeepTogether
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from io import BytesIO
 from app.config import BASE_DIR
+from zoneinfo import ZoneInfo
 
 pdfmetrics.registerFont(TTFont("Arabic", f"{BASE_DIR}/static/fonts/NotoSansArabic-Regular.ttf"))
 pdfmetrics.registerFont(TTFont("Arabic-Bold", f"{BASE_DIR}/static/fonts/NotoSansArabic-Bold.ttf"))
@@ -153,8 +154,8 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
-        topMargin=1.5 * cm,
-        bottomMargin=1.5 * cm,
+        topMargin=0.5 * cm,
+        bottomMargin=0.5 * cm,
     )
     styles = getSampleStyleSheet()
     story = []
@@ -184,7 +185,10 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_LEFT
     )
     cat_totals_value_style = ParagraphStyle(
-        "totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_CENTER
+        "cat_totals_value_ar", parent=cell_style, fontName="Helvetica-Bold", alignment=TA_CENTER
+    )
+    net_total_style = ParagraphStyle(
+        "net_total_ar", parent=cell_style, fontName="Arabic-Bold", fontSize=13, alignment=TA_LEFT
     )
 
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
@@ -209,16 +213,31 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     story.append(header_table)
     story.append(Spacer(1, 12))
 
-    story.append(Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style))
-    story.append(Paragraph(f"{ar(extract.contract)} : {ar('العقد')}", normal_style))
-    story.append(Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style))
-    story.append(Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style))
-    story.append(Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style))
-    story.append(Spacer(1, 12))
 
-    # column widths for the item table (kept in one place so ar_wrap
-    # can use the same numbers as the Table itself)
-    col_widths = [3 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm, 4 * cm]
+    proj_col_width = 8.5 * cm
+    proj_details_table = Table(
+        [
+            [Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style)],
+            [Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style), Paragraph(f"{ar(extract.contract or '-')} : {ar('العقد')}", normal_style)],
+            [Paragraph(f"{ar(extract.job_title)} : {ar('نوع العمل')}", normal_style), Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style)],
+            [Paragraph(f"{ar(extract.approval_date.astimezone(ZoneInfo('Africa/Cairo')).strftime('%Y/%m/%d'))} {ar('تمت الموافقة في')}", normal_style)],
+        ],
+        colWidths=[proj_col_width, proj_col_width],
+        hAlign="CENTER",
+    )
+    proj_details_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+
+    story.append(KeepTogether([
+        proj_details_table,
+        Spacer(1, 12),
+    ]))
+
+    col_widths = [3 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 8 * cm]
     title_col_width = col_widths[-1]
     unit_col_width = col_widths[-2]
 
@@ -281,30 +300,88 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         story.append(KeepTogether([heading, table]))
         story.append(Spacer(1, 16))
 
-    totals_rows = [("اجمالي المستخلص", extract.sub_total)] + [(f"{t.title}", f"{format_rate(t.rate)}%") for t in taxes] +\
-        [("اجمالي الضرائب", extract.total_taxes)] + [(f"{d.title}", f"{format_rate(d.rate)}%" if d.rate is not None else d.amount) for d in dedutions] +\
-        [("اجمالي الخصومات", extract.total_deductions)] +\
-        [(f"{p.details}", p.amount) for p in payments] +\
-        [("اجمالي ما سبق صرفه", extract.total_payments)] + \
-        [("اجمالي الاستقطاعات", extract.total_payments + extract.total_deductions + extract.total_taxes)] + \
-        [("صافي المستخلص", extract.total)]
+    # ============================================================
+    # Taxes / deductions / payments — 3-column detail table
+    # (amount, rate, title) — plain, no header row, no coloring
+    # ============================================================
 
-    totals_data = [
-        [Paragraph(f"{value}", totals_value_style), Paragraph(ar_wrap(label, "Arabic-Bold", 9, max_width=4 * cm - 12), totals_label_style)]
-        for label, value in totals_rows
-    ]
-    totals_table = Table(totals_data, colWidths=[6 * cm, 4 * cm], hAlign="LEFT")
-    totals_table.setStyle(TableStyle([
-        ("LINEABOVE", (0, -1), (-1, -1), 1, colors.black),
+    detail_col_widths = [3 * cm, 1.5 * cm, 4 * cm]  # amount, rate, title
+    detail_title_width = detail_col_widths[-1]
+
+    detail_data = []
+
+    detail_data.append([
+        Paragraph(f"{extract.sub_total}", totals_value_style),
+        Paragraph("", totals_value_style),
+        Paragraph(ar_wrap("اجمالي المستخلص", "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+    ])
+
+    for t in taxes:
+        detail_data.append([
+            Paragraph(f"{round(t.rate * extract.sub_total, 2)}", totals_value_style),
+            Paragraph(f"{format_rate(t.rate)}%", totals_value_style),
+            Paragraph(ar_wrap(t.title, "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+        ])
+
+    for d in dedutions:
+        detail_data.append([
+            Paragraph(f"{d.amount if d.amount is not None else round(d.rate*extract.sub_total, 2)}" , totals_value_style),
+            Paragraph(f"{format_rate(d.rate)}%" if d.rate is not None else "" , totals_value_style),
+            Paragraph(ar_wrap(d.title, "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+        ])
+
+    for p in payments:
+        detail_data.append([
+            Paragraph(f"{p.amount}", totals_value_style),
+            Paragraph("", totals_value_style),
+            Paragraph(ar_wrap(p.details, "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+        ])
+
+    detail_data.append([
+        Paragraph(f"{extract.total_payments + extract.total_deductions + extract.total_taxes}", totals_value_style),
+        Paragraph("", totals_value_style),
+        Paragraph(ar_wrap("اجمالي الاستقطاعات", "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+    ])
+
+    detail_data.append([
+        Paragraph(f"{extract.total}", totals_value_style),
+        Paragraph("", totals_value_style),
+        Paragraph(ar_wrap("صافي المستخلص", "Arabic-Bold", 9, max_width=detail_title_width - 12), totals_label_style),
+    ])
+
+    detail_table = Table(detail_data, colWidths=detail_col_widths, hAlign="LEFT")
+    detail_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
 
-    story.append(KeepTogether([
-        totals_table,
-        Paragraph(f"{ar('مدير المشروع')}", normal_style),
+    sign_style = ParagraphStyle(
+        "sign_ar", parent=normal_style, alignment=TA_CENTER
+    )
+    signature_col_width = 6.5 * cm
+    signature_table = Table(
+        [[
+            Paragraph(ar("مدير حسابات"), sign_style),  # leftmost
+            Paragraph(ar("مهندس موقع"), sign_style),  # middle
+            Paragraph(ar("مدير المشروع"), sign_style),  # rightmost
+        ]],
+        colWidths=[signature_col_width, signature_col_width, signature_col_width],
+        hAlign="CENTER",
+    )
+    signature_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
+
+    story.append(KeepTogether([
+        detail_table,
+        Spacer(1, 12),
+        signature_table,
+    ]))
+
 
     doc.build(story)
     buffer.seek(0)
