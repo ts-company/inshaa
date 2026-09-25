@@ -176,7 +176,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         leading=13, alignment=TA_RIGHT, wordWrap="RTL"
     )
     header_style = ParagraphStyle(
-        "cell_header_ar", parent=cell_style, fontName="Arabic-Bold", textColor=colors.white
+        "cell_header_ar", parent=cell_style, fontName="Arabic-Bold", textColor=colors.white, fontSize=7
     )
     totals_label_style = ParagraphStyle(
         "totals_label_ar", parent=cell_style, fontName="Arabic-Bold"
@@ -214,7 +214,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     story.append(Spacer(1, 12))
 
 
-    proj_col_width = 8.5 * cm
+    proj_col_width = 9 * cm
     proj_details_table = Table(
         [
             [Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style)],
@@ -237,10 +237,11 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
         Spacer(1, 12),
     ]))
 
-    col_widths = [3 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 8 * cm]
-    title_col_width = col_widths[-1]
-    unit_col_width = col_widths[-2]
+    col_widths = [3 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 8 * cm, 1 * cm]
+    title_col_width = col_widths[-2]
+    unit_col_width = col_widths[-3]
 
+    item_counter = 1
     for cat in categories:
         items = items_by_cat.get(cat.id, [])
         if not items:
@@ -248,7 +249,7 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
 
         heading = Paragraph(ar_wrap(cat.title, "Arabic-Bold", 12, max_width=16 * cm), heading_style)
 
-        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي"]
+        headers = ["الاجمالي", "نسبة الانجاز", "الفئة", "الكمية", "الوحدة", "بند فرعي", "رقم البند"]
         table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
         cat_total = 0
@@ -266,8 +267,10 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
                     ar_wrap(item.title, "Arabic", 9, max_width=title_col_width - 12),
                     cell_style,
                 ),
+                Paragraph(f"{item_counter}", cell_style),
             ])
             cat_total += item.total
+            item_counter += 1
 
         cat_total_row = len(table_data)
         table_data.append([
