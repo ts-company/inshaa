@@ -953,7 +953,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         for item in items:
             items_by_cat.setdefault(item.category_id, []).append(item)
 
-    else:
+    elif type == "prev_version":
         extract = db.query(Extract).filter(Extract.id == ext_id).first()
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -970,6 +970,9 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         items_by_cat = {}
         for item in items:
             items_by_cat.setdefault(item.category_id, []).append(item)
+            
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     try:
         pdf_buffer = generate_extract_pdf(extract, type, categories, items_by_cat, taxes, deductions, payments)
