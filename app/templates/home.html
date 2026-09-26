@@ -2451,6 +2451,41 @@
       margin-left: auto;
     }
 
+    .hero-navbar-toggle {
+      display: none;
+      width: 42px;
+      height: 42px;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 5px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 3px;
+      background: transparent;
+      color: #FFFFFF;
+    }
+
+    .hero-navbar-toggle span {
+      display: block;
+      width: 19px;
+      height: 2px;
+      background: currentColor;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .hero-navbar.is-open .hero-navbar-toggle span:first-child {
+      transform: translateY(7px) rotate(45deg);
+    }
+
+    .hero-navbar.is-open .hero-navbar-toggle span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hero-navbar.is-open .hero-navbar-toggle span:last-child {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
     .hero-navbar-links a,
     .hero-navbar-login {
       color: #FFFFFF;
@@ -3015,9 +3050,37 @@
         width: min(220px, 38vw);
       }
 
+      .hero-navbar-toggle {
+        display: inline-flex;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      .hero-navbar-links {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2px;
+        margin: 0;
+        padding: 8px 14px 14px;
+        background: #0B4D72;
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.2);
+      }
+
+      .hero-navbar.is-open .hero-navbar-links {
+        display: flex;
+      }
+
       .hero-navbar-links a {
-        padding: 8px 7px;
-        font-size: 11px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        font-size: 13px;
       }
 
       .hero-navbar-login {
@@ -3514,7 +3577,13 @@
     <a href="#top" class="hero-navbar-logo" aria-label="Inshaa Minka home">
       <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
     </a>
-    <div class="hero-navbar-links">
+    <button class="hero-navbar-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false"
+      aria-controls="hero-navbar-links">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="hero-navbar-links" id="hero-navbar-links">
       <a href="#company-summary">About</a>
       <a href="#services-section">Services</a>
       <a href="#projects-section">Projects</a>
@@ -3753,6 +3822,31 @@
   </div>
 
   <script>
+    const siteNavbar = document.querySelector('.hero-navbar');
+    const navbarToggle = document.querySelector('.hero-navbar-toggle');
+
+    if (siteNavbar && navbarToggle) {
+      const closeNavbar = () => {
+        siteNavbar.classList.remove('is-open');
+        navbarToggle.setAttribute('aria-expanded', 'false');
+        navbarToggle.setAttribute('aria-label', 'Open navigation menu');
+      };
+
+      navbarToggle.addEventListener('click', () => {
+        const isOpen = siteNavbar.classList.toggle('is-open');
+        navbarToggle.setAttribute('aria-expanded', String(isOpen));
+        navbarToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+      });
+
+      siteNavbar.querySelectorAll('.hero-navbar-links a').forEach((link) => {
+        link.addEventListener('click', closeNavbar);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeNavbar();
+      });
+    }
+
     (function setupPageEntrance() {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const finalLogo = document.querySelector('.hero-navbar-logo');
