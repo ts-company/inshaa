@@ -20,7 +20,7 @@ app = FastAPI()
 
 app.mount("/static",StaticFiles(directory=BASE_DIR / "static"), name="static")
 
-Base.metadata.drop_all(bind=engine)
+# Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 
