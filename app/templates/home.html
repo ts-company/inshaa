@@ -2486,20 +2486,26 @@
       transform: translateY(-7px) rotate(-45deg);
     }
 
-    .hero-navbar-links a,
+    .hero-navbar-links a {
+      animation: entrance-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both;
+      font-size: 16px;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-decoration: none;
+      padding: 9px 13px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
     .hero-navbar-login {
       color: #FFFFFF;
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.4px;
       text-decoration: none;
-    }
-
-    .hero-navbar-links a {
-      padding: 9px 13px;
-      border: 1px solid transparent;
-      border-radius: 3px;
-      transition: background 0.2s ease, border-color 0.2s ease;
     }
 
     .hero-navbar-links a:hover {
@@ -2647,10 +2653,17 @@
       margin: 0 auto 84px;
     }
 
-    .company-summary-row:last-child { margin-bottom: 0; }
+    .company-summary-row:last-child {
+      margin-bottom: 0;
+    }
 
-    .company-summary-row.is-reversed .company-summary-row-image { order: 2; }
-    .company-summary-row.is-reversed .company-summary-row-copy { order: 1; }
+    .company-summary-row.is-reversed .company-summary-row-image {
+      order: 2;
+    }
+
+    .company-summary-row.is-reversed .company-summary-row-copy {
+      order: 1;
+    }
 
     .company-summary-row-image {
       aspect-ratio: 4 / 3;
@@ -3210,7 +3223,7 @@
         flex: 0 1 100%;
       }
 
-       /* edits by youssef */
+      /* edits by youssef */
 
       .hero-navbar {
         min-height: 52px;
@@ -3223,6 +3236,12 @@
 
       .hero-navbar-logo {
         width: min(200px, 54vw);
+      }
+
+      .hero-navbar-logo img {
+        display: block;
+        width: 230px;
+        height: auto;
       }
 
       .hero-navbar-links {
@@ -3415,13 +3434,13 @@
       transition: transform 1050ms cubic-bezier(0.76, 0, 0.24, 1), opacity 1050ms ease, visibility 0s linear 1050ms;
     }
 
-    body:not(.page-ready) > main {
+    body:not(.page-ready)>main {
       opacity: 0;
       filter: blur(8px);
       transform: translateY(18px) scale(0.985);
     }
 
-    body > main {
+    body>main {
       animation: page-content-in 850ms cubic-bezier(0.2, 0.8, 0.2, 1) 1480ms both;
     }
 
@@ -3459,16 +3478,33 @@
     }
 
     @keyframes logo-intro-in {
-      from { opacity: 0; filter: blur(8px) drop-shadow(0 0 24px rgba(255, 255, 255, 0.18)); }
-      to { opacity: 1; filter: blur(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.16)); transform: translate(-50%, -50%) scale(1); }
+      from {
+        opacity: 0;
+        filter: blur(8px) drop-shadow(0 0 24px rgba(255, 255, 255, 0.18));
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.16));
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
 
     @keyframes logo-intro-out {
-      from { opacity: 1; filter: blur(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.16)); transform: translate(-50%, -50%) scale(1); }
-      to { opacity: 0; filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.08)); transform: translate(-50%, -50%) scale(0.94); }
+      from {
+        opacity: 1;
+        filter: blur(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.16));
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        filter: blur(4px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.08));
+        transform: translate(-50%, -50%) scale(0.94);
+      }
     }
 
-    body.page-ready > main {
+    body.page-ready>main {
       animation: page-content-in 850ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
     }
 
@@ -3497,9 +3533,17 @@
       animation: entrance-up 600ms cubic-bezier(0.2, 0.8, 0.2, 1) 300ms both;
     }
 
-    .page-ready .hero-navbar-links a:nth-child(2) { animation-delay: 360ms; }
-    .page-ready .hero-navbar-links a:nth-child(3) { animation-delay: 420ms; }
-    .page-ready .hero-navbar-links a:nth-child(4) { animation-delay: 480ms; }
+    .page-ready .hero-navbar-links a:nth-child(2) {
+      animation-delay: 360ms;
+    }
+
+    .page-ready .hero-navbar-links a:nth-child(3) {
+      animation-delay: 420ms;
+    }
+
+    .page-ready .hero-navbar-links a:nth-child(4) {
+      animation-delay: 480ms;
+    }
 
     .page-ready .company-summary-image,
     .page-ready .company-summary-copy,
@@ -3511,40 +3555,75 @@
 
     .page-ready .process-card:nth-child(2),
     .page-ready .project-card:nth-child(2),
-    .page-ready .sector-card:nth-child(2) { animation-delay: 1010ms; }
+    .page-ready .sector-card:nth-child(2) {
+      animation-delay: 1010ms;
+    }
 
     .page-ready .process-card:nth-child(3),
     .page-ready .project-card:nth-child(3),
-    .page-ready .sector-card:nth-child(3) { animation-delay: 1080ms; }
+    .page-ready .sector-card:nth-child(3) {
+      animation-delay: 1080ms;
+    }
 
     .page-ready .process-card:nth-child(4),
     .page-ready .project-card:nth-child(4),
-    .page-ready .sector-card:nth-child(4) { animation-delay: 1150ms; }
+    .page-ready .sector-card:nth-child(4) {
+      animation-delay: 1150ms;
+    }
 
     @keyframes page-content-in {
-      from { opacity: 0; filter: blur(8px); transform: translateY(18px) scale(0.985); }
-      to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        filter: blur(8px);
+        transform: translateY(18px) scale(0.985);
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0) scale(1);
+      }
     }
 
     @keyframes curtain-top {
-      to { opacity: 0; visibility: hidden; transform: translateY(-100%); }
+      to {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-100%);
+      }
     }
 
     @keyframes curtain-bottom {
-      to { opacity: 0; visibility: hidden; transform: translateY(100%); }
+      to {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(100%);
+      }
     }
 
     @keyframes entrance-up {
-      from { opacity: 0; filter: blur(5px); transform: translateY(22px) scale(0.98); }
-      to { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); }
+      from {
+        opacity: 0;
+        filter: blur(5px);
+        transform: translateY(22px) scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0) scale(1);
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      body::before,
-      body::after { display: none; }
 
-      body:not(.page-ready) > main,
-      body.page-ready > main,
+      body::before,
+      body::after {
+        display: none;
+      }
+
+      body:not(.page-ready)>main,
+      body.page-ready>main,
       .page-ready .hero-navbar,
       .page-ready .hero-copy,
       .page-ready .hero-copy h1,
@@ -3621,7 +3700,8 @@
           <div class="company-summary-row-copy">
             <span class="summary-kicker">Our approach</span>
             <h3>Built With Discipline</h3>
-            <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias.</p>
+            <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti
+              atque corrupti quos dolores et quas molestias.</p>
             <a class="summary-link" href="#services-section">Discover more</a>
           </div>
         </div>
@@ -3633,19 +3713,22 @@
           <div class="company-summary-row-copy">
             <span class="summary-kicker">Our people</span>
             <h3>One team, one standard</h3>
-            <p>From the first setting-out to the final finish, our people work with care, clarity, and a shared commitment to quality.</p>
+            <p>From the first setting-out to the final finish, our people work with care, clarity, and a shared
+              commitment to quality.</p>
             <a class="summary-link" href="#team-section">Meet the team</a>
           </div>
         </div>
 
         <div class="company-summary-row">
           <div class="company-summary-row-image">
-            <img src="/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg" alt="Completed construction project">
+            <img src="/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg"
+              alt="Completed construction project">
           </div>
           <div class="company-summary-row-copy">
             <span class="summary-kicker">Our promise</span>
             <h3>Delivered with confidence</h3>
-            <p>We coordinate every detail across the workfront so the result feels considered, resilient, and ready for the people who use it.</p>
+            <p>We coordinate every detail across the workfront so the result feels considered, resilient, and ready for
+              the people who use it.</p>
             <a class="summary-link" href="#projects-section">View our work</a>
           </div>
         </div>
