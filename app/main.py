@@ -20,7 +20,7 @@ app = FastAPI()
 
 app.mount("/static",StaticFiles(directory=BASE_DIR / "static"), name="static")
 
-# Base.metadata.drop_all(bind=engine)
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 
@@ -43,21 +43,5 @@ app.include_router(backup.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
-
-    admin = db.query(User).filter(User.role == "super_admin").first()
-    if not admin:
-        new_admin = User(
-            first_name="Admin",
-            last_name="Admin",
-            username="admin",
-            password=hash_password("123"),
-            role="super_admin",
-            is_active=True
-        )
-        db.add(new_admin)
-        db.flush()
-        for perm in preset_permissions["super_admin"]:
-            db.add(Permission(user_id=new_admin.id, type=perm))
-        db.commit()
 
     return templates.TemplateResponse("home.html", {"request": request})
