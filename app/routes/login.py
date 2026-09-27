@@ -36,8 +36,8 @@ async def login(userlogin: UserLogin,
         key="access_token",
         value=token,
         httponly=True,
-        samesite="lax",
-        secure=False,
+        samesite="none",
+        secure=True,
         path="/"
     )
     # for deployment
