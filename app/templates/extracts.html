@@ -28,10 +28,17 @@
 
 * { box-sizing: border-box; }
 
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
+  width: 100%;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88));
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -67,6 +74,7 @@ button { font-family: var(--font-body); cursor: pointer; }
 .site-header {
   position: relative;
   z-index: 20;
+  min-width: 0;
   background: #0B4D72;
   border-bottom: 0;
   box-shadow: 0 10px 28px rgba(11, 77, 114, 0.3);
@@ -85,6 +93,7 @@ button { font-family: var(--font-body); cursor: pointer; }
 
 .header-inner {
   max-width: 1240px;
+  min-width: 0;
   min-height: 148px;
   padding: 38px 32px;
   display: flex;
@@ -217,6 +226,7 @@ main {
   flex: 1;
   max-width: 1180px;
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
   padding: 48px 32px 96px;
 }
@@ -273,11 +283,14 @@ h1, h2, h3 { font-weight: 700; }
 .tabs-nav {
   display: flex;
   gap: 4px;
+  max-width: 100%;
+  overflow-x: auto;
   border-bottom: 1px solid var(--line-strong);
   margin-bottom: 36px;
 }
 
 .tab-btn {
+  flex: 0 0 auto;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -307,7 +320,9 @@ h1, h2, h3 { font-weight: 700; }
   display: flex;
   flex-direction: column;
   gap: 34px;
+  width: 100%;
   max-width: 980px;
+  min-width: 0;
   margin: 0 auto;
 }
 
@@ -315,24 +330,28 @@ h1, h2, h3 { font-weight: 700; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  width: 100%;
 }
 
 .field-row-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
+  width: 100%;
 }
 
 .field-row-5 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
+  width: 100%;
 }
 
 .field-row-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
+  width: 100%;
 }
 
 .add-extract-form label {
@@ -347,6 +366,8 @@ h1, h2, h3 { font-weight: 700; }
 .add-extract-form input[type="text"],
 .add-extract-form input[type="number"],
 .add-extract-form select {
+  width: 100%;
+  min-width: 0;
   font-family: var(--font-body);
   font-size: 18px;
   padding: 15px 16px;
@@ -537,6 +558,7 @@ h1, h2, h3 { font-weight: 700; }
   border: 1px solid var(--line-strong);
   background: var(--white);
   padding: 24px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -547,6 +569,7 @@ h1, h2, h3 { font-weight: 700; }
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
+  min-width: 0;
 }
 
 .category-header input[type="text"] {
@@ -595,6 +618,7 @@ h1, h2, h3 { font-weight: 700; }
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  min-width: 0;
 }
 
 .item-list-head {
@@ -653,6 +677,7 @@ h1, h2, h3 { font-weight: 700; }
   grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 16px 18px;
   align-items: start;
+  min-width: 0;
   margin-bottom: 28px;
   padding: 0 0 24px;
   border-bottom: 1px solid var(--line);
@@ -670,6 +695,8 @@ h1, h2, h3 { font-weight: 700; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .search-filter-header label,
@@ -690,6 +717,7 @@ h1, h2, h3 { font-weight: 700; }
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .search-row-input input {
@@ -757,6 +785,7 @@ h1, h2, h3 { font-weight: 700; }
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
   margin-bottom: 24px;
 }
 
@@ -847,11 +876,19 @@ h1, h2, h3 { font-weight: 700; }
 }
 
 @media (max-width: 760px) {
-  main { padding: 32px 18px 64px; }
+  main { padding: 32px 18px 64px; overflow-x: hidden; }
   .page-head h1 { font-size: 32px; }
   .tabs-nav { gap: 8px; margin-bottom: 28px; }
   .tab-btn { flex: 1; margin-right: 0; padding: 12px 8px; font-size: 17px; }
   .field-row, .field-row-3, .field-row-4, .field-row-5 { grid-template-columns: 1fr; }
+  .add-extract-form,
+  .field-row,
+  .field-row-3,
+  .field-row-4,
+  .field-row-5 {
+    width: 100%;
+    max-width: 100%;
+  }
   .add-extract-form { gap: 26px; }
   .subgroup { gap: 10px; padding-top: 18px; }
   .entry-row { grid-template-columns: minmax(0, 1fr) minmax(90px, 0.7fr) auto; gap: 8px; }
@@ -926,20 +963,6 @@ h1, h2, h3 { font-weight: 700; }
         </span>
       </div>
     </div>
-    <button class="header-nav-toggle" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false"
-      aria-controls="header-nav">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
-    <nav class="header-nav" id="header-nav" aria-label="التنقل الرئيسي">
-      <a href="/#top">الرئيسية</a>
-      <a href="/#company-summary">عن الشركة</a>
-      <a href="/#services-section">الخدمات</a>
-      <a href="/#projects-section">المشروعات</a>
-      <a href="/home/opportunities">الفرص</a>
-      <a href="/#contact">تواصل معنا</a>
-    </nav>
   </div>
 </header>
 

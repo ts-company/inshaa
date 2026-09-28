@@ -36,6 +36,8 @@
     body {
       margin: 0;
       min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
       background: linear-gradient(135deg, rgba(236, 234, 228, 0.94), rgba(246, 243, 236, 0.88)), url('/static/hero.jpg') center / cover fixed;
       color: var(--ink);
       font-family: var(--font-body);
@@ -147,6 +149,7 @@
       flex: 1;
       max-width: 1180px;
       width: 100%;
+      min-width: 0;
       margin: 0 auto;
       padding: 48px 32px 96px;
     }
@@ -191,6 +194,7 @@
       justify-content: flex-start;
       gap: 12px;
       flex-wrap: wrap;
+      min-width: 0;
       margin-bottom: 18px;
     }
 
@@ -222,6 +226,8 @@
       font-weight: 700;
       line-height: 1.2;
       letter-spacing: 0.02em;
+      max-width: 100%;
+      overflow-wrap: anywhere;
     }
 
     .prev-version-icon {
@@ -261,7 +267,8 @@
       display: grid;
       grid-template-columns: repeat(3, minmax(180px, 1fr));
       gap: 0;
-      min-width: min(100%, 780px);
+      width: 100%;
+      min-width: 0;
       border: 1px solid rgba(62, 84, 104, 0.18);
       background: rgba(255, 255, 255, 0.36);
       overflow: hidden;
@@ -1357,6 +1364,37 @@
     }
 
     @media (max-width: 600px) {
+      main {
+        padding: 28px 16px 64px;
+      }
+
+      .page-head {
+        gap: 16px;
+      }
+
+      .page-head > div,
+      .page-top-row,
+      .categories-column,
+      .category-block {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .editable-cell,
+      .category-head h2 {
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+
+      .category-edit-actions {
+        width: 100%;
+      }
+
+      .category-edit-actions .btn {
+        max-width: 100%;
+        white-space: normal;
+      }
+
       .inline-add-item-row {
         grid-template-columns: 1fr 1fr;
       }
@@ -1403,6 +1441,12 @@
         border-bottom: none;
         padding: 3px 0;
         text-align: left !important;
+        min-width: 0 !important;
+      }
+
+      .items-table thead th:first-child,
+      .items-table tbody td:first-child {
+        min-width: 0;
       }
 
       .items-table tbody td[data-label]:not([data-label=""])::before {

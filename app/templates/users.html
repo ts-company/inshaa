@@ -660,6 +660,17 @@ main {
   .add-user-form { grid-template-columns: 1fr; }
   .add-user-form label { grid-column: span 1; }
   .add-user-form .form-actions { grid-column: span 1; }
+  .row-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .row-actions .btn {
+    width: 100%;
+    padding: 11px 8px;
+    white-space: normal;
+    line-height: 1.2;
+  }
 }
 /* Shared public-site header */
 .site-header {
