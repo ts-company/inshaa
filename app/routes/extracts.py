@@ -970,7 +970,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         items_by_cat = {}
         for item in items:
             items_by_cat.setdefault(item.category_id, []).append(item)
-            
+
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 

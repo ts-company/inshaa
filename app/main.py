@@ -6,10 +6,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from app.database import engine, Base, get_db
-from app.models.users_model import User
-from app.models.permissions_model import Permission
-from app.core.security import hash_password
-from app.config import BASE_DIR, preset_permissions
+from app.config import BASE_DIR
 from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup
 
 load_dotenv()
