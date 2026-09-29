@@ -1245,7 +1245,7 @@ h1, h2, h3 { font-weight: 700; }
     <div class="modal-body">
       <label class="upload-field">
         <span>اختر ملف المستخلص</span>
-        <input type="file" id="xlsx-upload" accept=".xlsx,.xls" aria-label="Upload extract Excel file">
+        <input type="file" id="xlsx-upload" accept=".xlsx,.xls,.csv" aria-label="Upload extract Excel file">
       </label>
     </div>
   </div>
@@ -1496,12 +1496,28 @@ async function handleXlsxUpload(file) {
   if (!file) return;
 
   const fileName = file.name.toLowerCase();
-  if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
-    throw new Error('Please upload a valid Excel file (.xlsx or .xls).');
+  const isCsv = fileName.endsWith('.csv');
+  const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+  if (!isCsv && !isExcel) {
+    throw new Error('Please upload a valid file (.xlsx, .xls, or .csv).');
   }
 
   const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data, { type: 'array' });
+  let workbook;
+
+  if (isCsv) {
+    let text = new TextDecoder('utf-8').decode(data);
+    if (text.includes('\uFFFD')) {
+      text = new TextDecoder('windows-1256').decode(data);
+    }
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    workbook = XLSX.read(text, { type: 'string' });
+  } else {
+    workbook = XLSX.read(data, { type: 'array' });
+  }
+
   const firstSheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[firstSheetName];
   const parsed = parseExtractSheet(worksheet);
