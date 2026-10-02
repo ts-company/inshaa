@@ -1655,13 +1655,188 @@
     .footer-contact .info-block h3 {
       font-size: 15px;
       font-weight: 600;
-      color: var(--yellow);
+      color: var(--footer-accent);
       margin-bottom: 6px;
     }
 
     .footer-contact .info-block p {
       font-size: 15px;
       color: var(--concrete);
+    }
+
+    .footer-location {
+      flex: 0 1 370px;
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid rgba(215, 226, 230, 0.2);
+      background: #0D2939;
+      box-shadow: 0 14px 38px rgba(4, 20, 30, 0.18);
+      transition: opacity 780ms ease, transform 780ms ease, border-color 260ms ease, box-shadow 260ms ease;
+    }
+
+    .footer-location:hover {
+      border-color: rgba(225, 109, 103, 0.48);
+      box-shadow: 0 18px 42px rgba(4, 20, 30, 0.28), 0 0 24px rgba(225, 109, 103, 0.07);
+      transform: translateY(-3px);
+    }
+
+    .footer-location-map {
+      position: relative;
+      display: grid;
+      min-height: 142px;
+      overflow: hidden;
+      place-items: center;
+      isolation: isolate;
+      background-color: #102F40;
+      background-image:
+        radial-gradient(circle at 50% 52%, rgba(225, 109, 103, 0.16), transparent 31%),
+        linear-gradient(rgba(190, 213, 221, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(190, 213, 221, 0.055) 1px, transparent 1px);
+      background-size: auto, 25px 25px, 25px 25px;
+    }
+
+    .footer-location-map::before,
+    .footer-location-map::after {
+      position: absolute;
+      z-index: -1;
+      content: '';
+      pointer-events: none;
+    }
+
+    .footer-location-map::before {
+      inset: 0;
+      background: linear-gradient(135deg, transparent 25%, rgba(185, 209, 218, 0.08) 25.3%, transparent 25.8%, transparent 72%, rgba(185, 209, 218, 0.07) 72.3%, transparent 72.8%);
+    }
+
+    .footer-location-map::after {
+      width: 150%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(225, 109, 103, 0.34), transparent);
+      transform: rotate(-18deg);
+    }
+
+    .footer-location-pin {
+      position: relative;
+      display: grid;
+      width: 68px;
+      height: 68px;
+      place-items: center;
+      color: #E16D67;
+      filter: drop-shadow(0 4px 10px rgba(225, 109, 103, 0.22));
+    }
+
+    .footer-location-pin::before {
+      position: absolute;
+      z-index: -1;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(225, 109, 103, 0.5);
+      content: '';
+      filter: blur(14px);
+      animation: footer-location-glow 3.2s ease-in-out infinite;
+    }
+
+    .footer-location-pin svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    @keyframes footer-location-glow {
+      0%, 100% { opacity: 0.42; transform: scale(0.86); }
+      50% { opacity: 0.78; transform: scale(1.12); }
+    }
+
+    .footer-location-map-label {
+      position: absolute;
+      right: 14px;
+      bottom: 11px;
+      color: rgba(221, 233, 237, 0.7);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .footer-location-content {
+      padding: 19px 20px 20px;
+    }
+
+    .footer-location-heading {
+      margin-bottom: 9px;
+    }
+
+    .footer-location-kicker {
+      display: block;
+      color: #E16D67;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .footer-location .footer-location-address {
+      margin: 0 0 3px;
+      color: #F3F5F4;
+      font-size: 17px;
+      font-weight: 500;
+      line-height: 1.55;
+    }
+
+    .footer-location-city {
+      margin: 0 0 17px;
+      color: #B8CBD3;
+      font-size: 13px;
+    }
+
+    .footer-map-link {
+      display: flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 13px;
+      border: 1px solid rgba(225, 109, 103, 0.68);
+      background: rgba(225, 109, 103, 0.08);
+      color: #F08079;
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 220ms ease, background 220ms ease, border-color 220ms ease;
+    }
+
+    .footer-map-link:hover {
+      border-color: #E16D67;
+      background: #E16D67;
+      color: #10212B;
+    }
+
+    .footer-map-arrow {
+      font-size: 18px;
+      line-height: 1;
+      transition: transform 220ms ease;
+    }
+
+    .footer-map-link:hover .footer-map-arrow {
+      transform: translateX(4px);
+    }
+
+    @media (max-width: 860px) {
+      .footer-location-map {
+        min-height: 128px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-location {
+        flex: 1 1 100%;
+        width: 100%;
+      }
+
+      .footer-location-content {
+        padding: 18px;
+      }
+
+      .footer-location-map {
+        min-height: 120px;
+      }
     }
 
     .footer-bottom {
@@ -3648,6 +3823,295 @@
         opacity: 1 !important;
       }
     }
+
+    /* ===== Footer layout ===== */
+    .site-footer {
+      --footer-accent: #E16D67;
+      --footer-accent-rgb: 225, 109, 103;
+      margin-top: 72px;
+      background: #0B4D72;
+      color: #D7E2E6;
+    }
+
+    .footer-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.25fr) minmax(0, 0.82fr);
+      grid-template-areas: "brand location contact";
+      align-items: start;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 44px 32px 28px;
+      column-gap: clamp(44px, 5vw, 76px);
+      row-gap: 26px;
+    }
+
+    .footer-brand {
+      grid-area: brand;
+      max-width: 280px;
+    }
+
+    .footer-logo {
+      width: min(245px, 100%);
+    }
+
+    .footer-tag {
+      max-width: 30ch;
+      margin: 12px 0 0;
+      color: #B8CBD3;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .footer-contact {
+      grid-area: contact;
+      display: block;
+      min-width: 0;
+    }
+
+    .footer-section-title {
+      margin: 0 0 18px;
+      color: var(--footer-accent);
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .footer-contact-items {
+      display: grid;
+      gap: 16px;
+    }
+
+    .footer-contact .info-block h3 {
+      margin: 0 0 7px;
+      color: var(--footer-accent);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .footer-contact .info-block p {
+      margin: 0;
+      color: #F3F5F4;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .footer-contact-link {
+      color: inherit;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+      transition: color 180ms ease;
+    }
+
+    .footer-contact-link:hover {
+      color: #F08079;
+    }
+
+    .footer-location {
+      grid-area: location;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      flex: initial;
+      border: 1px solid rgba(215, 226, 230, 0.18);
+      border-radius: 4px;
+      background: #0A3F5C;
+      box-shadow: none;
+      transition: transform 280ms ease, border-color 280ms ease, box-shadow 280ms ease;
+    }
+
+    .footer-location:hover {
+      border-color: rgba(var(--footer-accent-rgb), 0.48);
+      box-shadow: 0 10px 24px rgba(4, 20, 30, 0.2), 0 0 20px rgba(var(--footer-accent-rgb), 0.06);
+      transform: translateY(-3px);
+    }
+
+    .footer-location-map {
+      min-height: 112px;
+      background-color: #082F46;
+      background-image:
+        radial-gradient(circle at 50% 52%, rgba(var(--footer-accent-rgb), 0.14), transparent 32%),
+        linear-gradient(rgba(190, 213, 221, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(190, 213, 221, 0.055) 1px, transparent 1px);
+    }
+
+    .footer-location-map::after {
+      background: linear-gradient(90deg, transparent, rgba(var(--footer-accent-rgb), 0.34), transparent);
+      animation: footer-map-drift 18s ease-in-out infinite alternate;
+    }
+
+    .footer-location-pin {
+      color: var(--footer-accent);
+      filter: drop-shadow(0 4px 10px rgba(var(--footer-accent-rgb), 0.22));
+    }
+
+    .footer-location-pin::before {
+      background: rgba(var(--footer-accent-rgb), 0.5);
+    }
+
+    @keyframes footer-map-drift {
+      from { opacity: 0.5; transform: translateX(-4%) rotate(-18deg); }
+      to { opacity: 0.9; transform: translateX(4%) rotate(-18deg); }
+    }
+
+    .footer-location-content {
+      padding: 14px 18px 16px;
+    }
+
+    .footer-location-heading {
+      margin-bottom: 6px;
+    }
+
+    .footer-location-kicker {
+      color: var(--footer-accent);
+      font-family: 'Barlow', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .footer-location .footer-location-address {
+      margin: 0 0 3px;
+      color: #F3F5F4;
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.55;
+      text-align: right;
+    }
+
+    .footer-location .footer-location-city {
+      margin: 0 0 10px;
+      color: #B8CBD3;
+      font-size: 13px;
+    }
+
+    .footer-map-link {
+      min-height: 38px;
+      padding: 7px 11px;
+      border: 1px solid rgba(var(--footer-accent-rgb), 0.7);
+      border-radius: 3px;
+      background: transparent;
+      color: #F08079;
+      font-size: 12px;
+      transition: color 220ms ease, background 220ms ease, border-color 220ms ease;
+    }
+
+    .footer-map-link:hover {
+      border-color: var(--footer-accent);
+      background: var(--footer-accent);
+      color: #10212B;
+    }
+
+    .footer-bottom {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 32px 14px;
+      border-top: 1px solid rgba(215, 226, 230, 0.15);
+      color: #B8CBD3;
+      font-size: 13px;
+    }
+
+    .floating-scroll-arrow {
+      right: 22px;
+      bottom: 22px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(225, 109, 103, 0.62);
+      background: #123F58;
+      color: #F08079;
+      font-size: 21px;
+      box-shadow: 0 8px 22px rgba(4, 20, 30, 0.24);
+      transition: transform 220ms ease, background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+    }
+
+    .floating-scroll-arrow:hover {
+      background: #0A344D;
+      color: #F08079;
+      box-shadow: 0 0 20px rgba(225, 109, 103, 0.2);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 900px) {
+      .footer-inner {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          "brand contact"
+          "location location";
+        padding: 40px 28px 28px;
+        column-gap: 36px;
+        row-gap: 24px;
+      }
+
+      .footer-location-map {
+        min-height: 108px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .site-footer {
+        margin-top: 64px;
+      }
+
+      .footer-inner {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+          "brand"
+          "contact"
+          "location";
+        padding: 32px 20px 24px;
+        row-gap: 22px;
+      }
+
+      .footer-brand {
+        max-width: none;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      .footer-logo {
+        width: min(230px, 100%);
+        margin: 0 auto;
+      }
+
+      .footer-tag {
+        margin: 10px auto 0;
+      }
+
+      .footer-contact {
+        width: 100%;
+      }
+
+      .footer-section-title {
+        margin-bottom: 14px;
+      }
+
+      .footer-contact-items {
+        gap: 18px;
+      }
+
+      .footer-location-map {
+        min-height: 96px;
+      }
+
+      .footer-location-content {
+        padding: 14px 16px 16px;
+      }
+
+      .footer-bottom {
+        padding: 11px 20px 14px;
+      }
+
+      .floating-scroll-arrow {
+        right: 16px;
+        bottom: 16px;
+        width: 42px;
+        height: 42px;
+        font-size: 19px;
+      }
+    }
   </style>
 </head>
 
@@ -3743,6 +4207,7 @@
         <span class="spec-value-wrap"><span class="spec-value" data-target="352">0</span><span
             class="spec-plus">+</span></span>
         <span class="spec-label">projects completed</span>
+        <span class="spec-label">Every one of them still speaks for us</span>
       </div>
     </div>
 
@@ -3751,22 +4216,22 @@
         <div class="process-title">Our Capabilities</div>
         <div class="process-grid">
           <div class="process-card">
-            <span class="process-number">1</span>
+            <span class="process-number"></span>
             <span class="process-name">Residential construction</span>
             <p>From the first stake in the ground to the day you get the keys, one team owns every detail. No hand-offs, no finger-pointing, just a home finished the way you pictured it.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">2</span>
+            <span class="process-number"></span>
             <span class="process-name">Commercial fit-out</span>
             <p>Every day your space sits empty costs you money. We plan the sequence around your business and drive it to the opening date, so you start trading, not waiting.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">3</span>
+            <span class="process-number"></span>
             <span class="process-name">Renovation & structural works</span>
             <p>Extensions, upgrades, and structural work done with engineering discipline. We respect what's already standing and make the new work feel like it was always part of it.</p>
           </div>
           <div class="process-card">
-            <span class="process-number">4</span>
+            <span class="process-number"></span>
             <span class="process-name">Project & site management</span>
             <p>Trades on time, materials on site, problems solved before they become delays. We lead the workfront so the design you approved is exactly what gets built</p>
           </div>
@@ -3809,10 +4274,7 @@
       <div class="sectors-rtl" dir="rtl">
         <div class="section-head">
           <h2>Built Over Years </h2>
-          <p>Insha'a Construction Company offers its expertise in the execution and management of advanced contracting
-            projects—spanning electromechanical works, construction, and finishing. We collaborate with our partners to
-            transform requirements into precise results, while remaining committed to quality, schedules, and
-            operational requirements.</p>
+          <p>Inshaa Minka delivers advanced contracting projects, from construction to finishing, with the precision our partners expect. We turn every requirement into a result that meets quality, schedule, and operational standards, without exception</p>
         </div>
 
         <div id="sectors-status" class="sectors-status"></div>
@@ -3824,7 +4286,7 @@
 
     <div class="marquee-section scroll-reveal" id="partners-section">
       <div class="section-head">
-        <h2>Trusted relationships</h2>
+        <h2>Established partnerships</h2>
       </div>
 
       <div class="marquee">
@@ -3845,7 +4307,7 @@
   </main>
 
   <footer class="site-footer" id="contact">
-    <div class="footer-inner">
+    <div class="footer-inner scroll-reveal">
       <div class="footer-brand">
         <a href="#top" aria-label="Back to top">
           <img class="footer-logo" src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
@@ -3853,19 +4315,41 @@
       </div>
 
       <div class="footer-contact">
-        <div class="info-block">
-          <h3>Visit us</h3>
-          <p>الميريلاند - روكسي - مصر الجديدة<br>Cairo, Egypt</p>
-        </div>
-        <div class="info-block">
-          <h3>Call us</h3>
-          <p>01068835403</p>
-        </div>
-        <div class="info-block">
-          <h3>Email us</h3>
-          <p>info@inshaa.example</p>
+        <h2 class="footer-section-title"></h2>
+        <div class="footer-contact-items">
+          <div class="info-block">
+            <h3>CALL US</h3>
+            <p><a class="footer-contact-link" href="tel:01068835403">01068835403</a></p>
+          </div>
+          <div class="info-block">
+            <h3>EMAIL US</h3>
+            <p><a class="footer-contact-link" href="mailto:info@inshaa.example">inshaa@inshaa-eg.com</a></p>
+          </div>
         </div>
       </div>
+
+      <div class="info-block footer-location">
+          <div class="footer-location-map" aria-hidden="true">
+            <span class="footer-location-pin">
+              <svg viewBox="0 0 48 48" fill="none">
+                <path d="M24 44s14-13.1 14-25a14 14 0 1 0-28 0c0 11.9 14 25 14 25Z" fill="currentColor"></path>
+                <circle cx="24" cy="19" r="5" fill="#102F40"></circle>
+              </svg>
+            </span>
+            <span class="footer-location-map-label">INSHAA · CAIRO</span>
+          </div>
+          <div class="footer-location-content">
+            <div class="footer-location-heading">
+              <span class="footer-location-kicker">OUR LOCATION</span>
+            </div>
+            <p class="footer-location-address" dir="rtl">الميريلاند - روكسي - مصر الجديدة</p>
+            <p class="footer-location-city">Cairo, Egypt</p>
+            <a class="footer-map-link" href="https://maps.app.goo.gl/cXHo4x5gdgRX6Lu57?g_st=ac" target="_blank" rel="noopener noreferrer">
+              <span>GET DIRECTIONS</span>
+              <span class="footer-map-arrow" aria-hidden="true">&#8594;</span>
+            </a>
+          </div>
+        </div>
     </div>
 
     <div class="footer-bottom">
@@ -4169,23 +4653,23 @@
     ];
 
     const SECTOR_BACKGROUND_IMAGES = [
-      'https://images.unsplash.com/photo-1565793298595-6a879b1d9492?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=900&q=70',
+      '/static/built/IMG-20260930-WA0009.jpg',
+      '/static/built/IMG-20260930-WA0003.jpg',
+      '/static/built/IMG-20260930-WA0006.jpg',
+      '/static/built/IMG-20260930-WA0007.jpg',
+      '/static/built/IMG-20260930-WA0004.jpg',
+      '/static/built/IMG-20260930-WA0008.jpg',
+      '/static/built/IMG-20260930-WA0005.jpg',
     ];
 
     const SECTOR_FRONT_BACKGROUND_IMAGES = [
-      'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=70',
-      'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=900&q=70',
+      '/static/built/IMG-20260930-WA0009.jpg',
+      '/static/built/IMG-20260930-WA0003.jpg',
+      '/static/built/IMG-20260930-WA0006.jpg',
+      '/static/built/IMG-20260930-WA0007.jpg',
+      '/static/built/IMG-20260930-WA0004.jpg',
+      '/static/built/IMG-20260930-WA0008.jpg',
+      '/static/built/IMG-20260930-WA0005.jpg',
     ];
 
     const STATIC_PROJECTS = [
