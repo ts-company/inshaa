@@ -4734,16 +4734,15 @@
       const heroVideo = document.getElementById('hero-video');
       if (!heroVideo) return;
 
-      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      const isSlowOrSaveData = connection && (connection.saveData || /2g/.test(connection.effectiveType || ''));
-      if (isSlowOrSaveData) return;
-
       const startLoad = () => {
-        heroVideo.load();
         heroVideo.muted = true;
         heroVideo.playsInline = true;
         heroVideo.loop = true;
-        heroVideo.play().catch(() => { });
+
+        heroVideo.play().catch(error => {
+          console.error('Hero video failed to play:', error);
+          heroVideo.style.opacity = '1';
+        });
       };
 
       if (document.readyState === 'complete') {
@@ -4754,117 +4753,137 @@
     })();
 
     (function setupCinematicHero() {
-      const heroWrap = document.querySelector('.hero-wrap');
-      const heroCover = document.querySelector('.hero-cover');
-      const heroVideo = document.getElementById('hero-video');
-      const heroCopy = document.querySelector('.hero-copy');
-      const heroKicker = document.querySelector('.hero-kicker');
-      const heroActions = document.querySelector('.hero-actions');
+    const heroWrap = document.querySelector('.hero-wrap');
+    const heroCover = document.querySelector('.hero-cover');
+    const heroVideo = document.getElementById('hero-video');
+    const heroCopy = document.querySelector('.hero-copy');
+    const heroKicker = document.querySelector('.hero-kicker');
+    const heroActions = document.querySelector('.hero-actions');
 
-      if (!heroWrap || !heroCover || !heroVideo || !heroCopy || !heroKicker || !heroActions) return;
+    if (!heroWrap || !heroCover || !heroVideo || !heroCopy || !heroKicker || !heroActions) return;
 
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const spotlight = document.createElement('span');
-      spotlight.className = 'hero-video-spotlight';
-      spotlight.setAttribute('aria-hidden', 'true');
-      heroCover.appendChild(spotlight);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      heroCover.classList.add('hero-cinematic-active');
+    const spotlight = document.createElement('span');
+    spotlight.className = 'hero-video-spotlight';
+    spotlight.setAttribute('aria-hidden', 'true');
+    heroCover.appendChild(spotlight);
 
-      const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    heroCover.classList.add('hero-cinematic-active');
 
-      if (reduceMotion) {
-        heroVideo.style.opacity = '1';
-        heroVideo.style.filter = 'blur(0) brightness(0.95) contrast(1.1)';
-        heroVideo.style.transform = 'scale(1.04)';
-        heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
-        return;
-      }
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
-      heroVideo.style.opacity = '0';
-      heroVideo.style.transform = 'scale(1.22) translate3d(0,0,0)';
-      heroVideo.style.filter = 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)';
-      heroVideo.style.clipPath = 'inset(10% round 0px)';
+    if (reduceMotion) {
+      heroVideo.style.opacity = '1';
+      heroVideo.style.filter = 'blur(0) brightness(0.95) contrast(1.1)';
+      heroVideo.style.transform = 'scale(1.04)';
+      heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
+      return;
+    }
 
-      const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
-      if (hasGsap) {
-        window.gsap.registerPlugin(window.ScrollTrigger);
+    heroVideo.style.opacity = '0';
+    heroVideo.style.transform = 'scale(1.22) translate3d(0,0,0)';
+    heroVideo.style.filter = 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)';
+    heroVideo.style.clipPath = 'inset(10% round 0px)';
 
-        const heroReveal = window.gsap.timeline({ defaults: { ease: 'power2.out' } });
+    const hasGsap = Boolean(window.gsap && window.ScrollTrigger);
 
-        heroReveal
-          .fromTo(heroVideo,
-            { opacity: 0, scale: 1.22, filter: 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)', clipPath: 'inset(10% round 0px)' },
-            { opacity: 1, scale: 1.10, filter: 'blur(0px) brightness(0.96) saturate(1.12) contrast(1.12)', clipPath: 'inset(0% round 0px)', duration: 1.3 }
-          );
+    if (hasGsap) {
+      window.gsap.registerPlugin(window.ScrollTrigger);
 
-        window.gsap.to(heroVideo, {
-          scale: 1.14,
-          yPercent: -4,
-          filter: 'blur(0px) brightness(0.94) contrast(1.14) saturate(1.08)',
+      const heroReveal = window.gsap.timeline({
+        defaults: { ease: 'power2.out' }
+      });
+
+      heroReveal.fromTo(
+        heroVideo,
+        {
+          opacity: 0,
+          scale: 1.22,
+          filter: 'blur(10px) brightness(0.78) saturate(1.1) contrast(1.12)',
+          clipPath: 'inset(10% round 0px)'
+        },
+        {
+          opacity: 1,
+          scale: 1.10,
+          filter: 'blur(0px) brightness(0.96) saturate(1.12) contrast(1.12)',
           clipPath: 'inset(0% round 0px)',
-          ease: 'none',
-          scrollTrigger: {
-            trigger: heroWrap,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 1.2
-          }
-        });
-
-        window.gsap.to(heroCopy, {
-          yPercent: -10,
-          xPercent: -1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: heroWrap,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 1.5
-          }
-        });
-
-        window.gsap.to(heroActions, {
-          yPercent: -8,
-          opacity: 0.96,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: heroWrap,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 1.2
-          }
-        });
-      } else {
-        heroVideo.style.opacity = '1';
-        heroVideo.style.filter = 'blur(0px) brightness(0.96) contrast(1.1)';
-        heroVideo.style.transform = 'scale(1.08)';
-        heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
-      }
-
-      let frame = null;
-
-      const updateScrollDepth = () => {
-        if (!heroCover || !heroVideo) return;
-
-        const rect = heroWrap.getBoundingClientRect();
-        const scrollY = clamp(Math.abs(rect.top) / Math.max(window.innerHeight, 1), 0, 1);
-
-        if (hasGsap) {
-          heroCover.style.filter = `blur(${Math.max(0, scrollY * 0.4)}px)`;
+          duration: 1.3
         }
-      };
+      );
 
-      window.addEventListener('scroll', () => {
-        if (frame) return;
-        frame = requestAnimationFrame(() => {
-          updateScrollDepth();
-          frame = null;
-        });
-      }, { passive: true });
+      window.gsap.to(heroVideo, {
+        scale: 1.14,
+        yPercent: -4,
+        filter: 'blur(0px) brightness(0.94) contrast(1.14) saturate(1.08)',
+        clipPath: 'inset(0% round 0px)',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroWrap,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2
+        }
+      });
 
-      heroCover.classList.add('exposed');
-    })();
+      window.gsap.to(heroCopy, {
+        yPercent: -10,
+        xPercent: -1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroWrap,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.5
+        }
+      });
+
+      window.gsap.to(heroActions, {
+        yPercent: -8,
+        opacity: 0.96,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: heroWrap,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1.2
+        }
+      });
+    } else {
+      heroVideo.style.opacity = '1';
+      heroVideo.style.filter = 'blur(0px) brightness(0.96) contrast(1.1)';
+      heroVideo.style.transform = 'scale(1.08)';
+      heroVideo.style.clipPath = 'inset(0 0 0 0 round 0px)';
+    }
+
+    let frame = null;
+
+    const updateScrollDepth = () => {
+      if (!heroCover || !heroVideo) return;
+
+      const rect = heroWrap.getBoundingClientRect();
+      const scrollY = clamp(
+        Math.abs(rect.top) / Math.max(window.innerHeight, 1),
+        0,
+        1
+      );
+
+      if (hasGsap) {
+        heroCover.style.filter = `blur(${Math.max(0, scrollY * 0.4)}px)`;
+      }
+    };
+
+    window.addEventListener('scroll', () => {
+      if (frame) return;
+
+      frame = requestAnimationFrame(() => {
+        updateScrollDepth();
+        frame = null;
+      });
+    }, { passive: true });
+
+    heroCover.classList.add('exposed');
+  })();
 
     const PARTNER_LOGOS = [
       { name: 'BMW', src: '/static/trusted logo/IMG-20260914-WA0001.jpg' },
