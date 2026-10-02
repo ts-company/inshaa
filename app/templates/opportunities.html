@@ -232,7 +232,8 @@
     input[type="email"],
     input[type="tel"],
     input[type="number"],
-    input[type="file"] {
+    input[type="file"],
+    select {
       width: 100%;
       padding: 14px 16px;
       border-radius: 10px;
@@ -243,6 +244,22 @@
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--steel) 50%),
+        linear-gradient(135deg, var(--steel) 50%, transparent 50%);
+      background-position:
+        calc(100% - 18px) calc(50% - 2px),
+        calc(100% - 13px) calc(50% - 2px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 42px;
+      cursor: pointer;
+    }
+
     input[type="file"] {
       padding: 12px 14px;
       padding: 11px 12px;
@@ -251,7 +268,8 @@
       cursor: pointer;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: none;
       border-color: var(--blue);
       box-shadow: 0 0 0 4px rgba(11, 77, 114, 0.12);
@@ -410,8 +428,14 @@
           </label>
 
           <label>
-            Age
-            <input type="number" name="age" id="age" min="18" required>
+            Opportunity type
+            <select name="opportunity_type" id="opportunity_type" required>
+              <option value="internship">Internship</option>
+              <option value="Graduate Trainee">Graduate Trainee</option>
+              <option value="Entry level position">Entry level position</option>
+              <option value="Experienced position">Experienced position</option>
+              <option value="Part-time / Freelance">Part-time / Freelance</option>
+            </select>
           </label>
         </div>
 

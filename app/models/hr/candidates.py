@@ -8,6 +8,6 @@ class Candidate(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(200), nullable=False)
     phone_number = Column(String(100), nullable=False)
-    age = Column(Integer, nullable=False)
+    opportunity_type = Column(String(100), nullable=False)
     picture_id = Column(String, nullable=True)
     cv_id = Column(String, nullable=True)

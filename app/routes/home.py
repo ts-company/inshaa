@@ -66,7 +66,7 @@ def apply(request: Request,
           name: str = Form(...),
           email: str = Form(...),
           phone_number: str = Form(...),
-          age: int = Form(...),
+          opportunity_type: str = Form(...),
           picture: UploadFile = File(...),
           cv: UploadFile = File(...),
           db: Session = Depends(get_db)):
@@ -83,7 +83,7 @@ def apply(request: Request,
             name=name,
             email=email,
             phone_number=phone_number,
-            age=age,
+            opportunity_type=opportunity_type,
             picture_id=picture_id,
             cv_id=cv_id
         )
