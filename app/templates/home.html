@@ -3681,7 +3681,7 @@
 
     <div class="hero-wrap">
       <div class="hero-cover">
-        <video id="hero-video"  preload="none" muted loop playsinline
+        <video id="hero-video" src="{{ hero_video_url }}" preload="none" muted loop playsinline
           aria-label="Inshaa building site under construction"></video>
         <div class="hero-cover-scrim" aria-hidden="true"></div>
         <div class="hero-cover-inner">
@@ -4255,7 +4255,6 @@
       if (isSlowOrSaveData) return;
 
       const startLoad = () => {
-        heroVideo.src = '/static/hero.mp4';
         heroVideo.load();
         heroVideo.muted = true;
         heroVideo.playsInline = true;
