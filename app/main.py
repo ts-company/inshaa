@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from app.database import engine, Base, get_db
 from app.config import BASE_DIR
+from app.utils import generate_url
 from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup
 
 load_dotenv()
@@ -41,4 +42,4 @@ app.include_router(backup.router)
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
 
-    return templates.TemplateResponse("home.html", {"request": request})
+    return templates.TemplateResponse("home.html", {"request": request, "hero_video_url": generate_url("hero", "video")})

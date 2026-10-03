@@ -28,7 +28,7 @@ def get_page(request: Request, db: Session = Depends(get_db)):
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    candidates = db.query(Candidate).all()
+    candidates = db.query(Candidate).order_by(Candidate.id.desc()).all()
 
     current_candidates = [
         {
@@ -36,7 +36,7 @@ def get_page(request: Request, db: Session = Depends(get_db)):
             "name": c.name,
             "email": c.email,
             "phone_number": c.phone_number,
-            "age": c.age,
+            "opportunity_type": c.opportunity_type,
             "picture_url": generate_url(c.picture_id, "/image"),
             "cv_url": generate_url(c.cv_id, "/image"),
         }
