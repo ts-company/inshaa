@@ -9,7 +9,7 @@ class Extract(Base):
     created_at = Column(DateTime, nullable=False)
     project_name = Column(String(500), nullable=False)
     contract = Column(String(500), nullable=False)
-    unit_number = Column(Integer, nullable=False)
+    unit_number = Column(String(100), nullable=False)
     contractor_name = Column(String(500), nullable=False)
     customer_name = Column(String(500), nullable=True)
     job_title = Column(String(500), nullable=False)

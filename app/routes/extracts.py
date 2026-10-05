@@ -39,7 +39,7 @@ def get_extracts(
     name: Optional[List[str]] = Query(None),
     contractor: Optional[List[str]] = Query(None),
     customer: Optional[List[str]] = Query(None),
-    unit: Optional[List[int]] = Query(None),
+    unit: Optional[List[str]] = Query(None),
     job_title: Optional[List[str]] = Query(None),
     db: Session = Depends(get_db)
 ):
@@ -65,7 +65,7 @@ def get_extracts(
         query = query.filter(or_(*[Extract.customer_name.ilike(f"%{c}%") for c in customer]))
 
     if unit:
-        query = query.filter(Extract.unit_number.in_(unit))
+        query = query.filter(or_(*[Extract.unit_number.ilike(f"%{u}%") for u in unit]))
 
     if job_title:
         query = query.filter(or_(*[Extract.job_title.ilike(f"%{j}%") for j in job_title]))

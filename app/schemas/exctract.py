@@ -35,7 +35,7 @@ class AddExtractCategories(BaseModel):
 class AddExtract(BaseModel):
     project_name: str
     contract: str
-    unit_number: int
+    unit_number: str
     contractor_name: str
     customer_name: str = None
     job_title: str

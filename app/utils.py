@@ -432,7 +432,7 @@ def generate_summary_pdf(extracts) -> BytesIO:
         table_data.append([
             Paragraph(f"{extract.total}", cell_style),
             Paragraph(f"{extract.sub_total}", cell_style),
-            Paragraph(f"{extract.unit_number}", cell_style),
+            Paragraph(ar(extract.unit_number), cell_style),
             Paragraph(ar(extract.job_title), cell_style),
             Paragraph(ar(extract.contractor_name or "-"), cell_style),
             Paragraph(ar(extract.project_name), cell_style),
