@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent
 preset_permissions = {
     "super_admin": ["manage users", "delete extracts",
                     "add extracts", "accounting", "generate pdf", "hr management", "approve extracts", "view edits",
-                    "edit extracts"],
+                    "edit extracts", "edit headers"],
 
     "eng_admin": ["delete extracts", "add extracts", "edit extracts"],
     "acc_admin": ["accounting"],

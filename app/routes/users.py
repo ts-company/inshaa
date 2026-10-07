@@ -168,7 +168,10 @@ def perms(request: Request, id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "manage users").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     permissions = db.query(Permission).filter(Permission.user_id == id).all()
     return [
@@ -188,7 +191,10 @@ def add_perm(request: Request, id: int, payload: AddPerm, db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "manage users").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     payload_type = payload.type.strip()
     if not payload_type:
@@ -215,7 +221,10 @@ def del_prem(request: Request, perm_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     if user.role != "super_admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "manage users").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     try:
         permission = db.query(Permission).filter(Permission.id == perm_id).first()

@@ -18,7 +18,7 @@ from app.models.extracts.history_category_item import ExtractCategoryItemHistory
 from app.models.extracts.taxes_history import ExtractTaxesHistory
 from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
-from app.schemas.exctract import AddExtract, AddExtractCategories, UpdateAccounting
+from app.schemas.exctract import AddExtract, AddExtractCategories, UpdateAccounting, EditExtractHeaders
 from app.core.auth import validate_user
 from app.utils import generate_extract_pdf, generate_summary_pdf
 from app.database import get_db
@@ -688,6 +688,41 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     return {"success": True}
+
+
+@router.patch("/edit_headers/{ext_id}")
+def add_cat(request: Request, ext_id: int, payload: EditExtractHeaders, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, user_role = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
+    if not extract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user_role != "super_admin":
+        if extract.created_by != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        else:
+            permission = db.query(Permission).filter(Permission.user_id == user_id, Permission.type == "edit headers").first()
+            if not permission:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    try:
+        extract.project_name = payload.project_name
+        extract.contract = payload.contract
+        extract.unit_number = payload.unit_number
+        extract.contractor_name = payload.contractor_name
+        extract.customer_name = payload.customer_name
+        extract.job_title = payload.job_title
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
 
 @router.delete("/del_extract/{ext_id}")
 def add_cat(request: Request, ext_id: int, db: Session = Depends(get_db)):

@@ -867,6 +867,7 @@ main {
           <option value="generate pdf">Generate PDF</option>
           <option value="hr management">HR Management</option>
           <option value="view edits">View Edits</option>
+          <option value="edit headers">Edit Headers</option>
         </select>
       </label>
       <button type="submit" class="btn btn-small">اضافة</button>
@@ -884,7 +885,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits'];
+const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits', 'edit headers'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');

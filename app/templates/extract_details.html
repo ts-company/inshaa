@@ -314,6 +314,57 @@
       word-break: break-word;
     }
 
+    .project-detail-input {
+      display: none;
+      width: 100%;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px var(--font-body);
+    }
+
+    body.is-header-edit-mode .project-detail-value {
+      display: none;
+    }
+
+    body.is-header-edit-mode .project-detail-input {
+      display: block;
+    }
+
+    .project-details-edit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .project-details-edit-buttons {
+      display: none;
+      gap: 10px;
+    }
+
+    body.is-header-edit-mode .project-details-edit-buttons {
+      display: flex;
+    }
+
+    body.is-header-edit-mode #btn-enter-header-edit {
+      display: none;
+    }
+
+    .header-edit-error {
+      display: none;
+      align-self: center;
+      color: var(--error);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .header-edit-error.is-visible {
+      display: block;
+    }
+
     .meta-row {
       display: flex;
       gap: 32px;
@@ -1505,30 +1556,46 @@
     <div class="page-head">
       <div>
 
+        {% if type != 'history' and (user_role == 'super_admin' or "edit headers" in permissions) %}
+        <div class="project-details-edit-actions">
+          <button type="button" class="btn btn-primary" id="btn-enter-header-edit">تعديل بيانات المستخلص</button>
+          <div class="project-details-edit-buttons">
+            <button type="button" class="btn btn-primary" id="btn-save-header-edit">حفظ</button>
+            <button type="button" class="btn btn-secondary" id="btn-cancel-header-edit">الغاء</button>
+          </div>
+          <p class="header-edit-error" id="header-edit-error" role="alert"></p>
+        </div>
+        {% endif %}
         <div class="project-details">
           <div class="project-detail">
             <span class="project-detail-label">اسم المشروع</span>
             <h1 class="project-detail-value">{{ extract.project_name }}</h1>
+            <input class="project-detail-input" data-header-field="project_name" aria-label="اسم المشروع" value="{{ extract.project_name }}" maxlength="500" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">العقد</span>
             <h1 class="project-detail-value">{{ extract.contract }}</h1>
+            <input class="project-detail-input" data-header-field="contract" aria-label="العقد" value="{{ extract.contract }}" maxlength="500" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">رقم الوحدة</span>
             <span class="project-detail-value">{{ extract.unit_number }}</span>
+            <input class="project-detail-input" data-header-field="unit_number" aria-label="رقم الوحدة" value="{{ extract.unit_number }}" maxlength="100" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">نوع العمل</span>
             <span class="project-detail-value">{{ extract.job_title }}</span>
+            <input class="project-detail-input" data-header-field="job_title" aria-label="نوع العمل" value="{{ extract.job_title }}" maxlength="500" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">اسم المقاول</span>
             <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
+            <input class="project-detail-input" data-header-field="contractor_name" aria-label="اسم المقاول" value="{{ extract.contractor_name }}" maxlength="500" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">اسم العميل</span>
             <span class="project-detail-value">{{ extract.customer_name if extract.customer_name else "—" }}</span>
+            <input class="project-detail-input" data-header-field="customer_name" aria-label="اسم العميل" value="{{ extract.customer_name or '' }}" maxlength="500">
           </div>
           {% if type == 'history' %}
           <div class="project-detail">
@@ -2452,6 +2519,75 @@
           clearError('edit-save-error');
           editSnapshot = categoriesColumn.innerHTML;
           setEditMode(true);
+        });
+      }
+
+      const headerFields = Array.from(document.querySelectorAll('[data-header-field]'));
+      const btnEnterHeaderEdit = document.getElementById('btn-enter-header-edit');
+      const btnSaveHeaderEdit = document.getElementById('btn-save-header-edit');
+      const btnCancelHeaderEdit = document.getElementById('btn-cancel-header-edit');
+      let headerEditSnapshot = null;
+
+      function clearHeaderEditError() {
+        const error = document.getElementById('header-edit-error');
+        if (!error) return;
+        error.textContent = '';
+        error.classList.remove('is-visible');
+      }
+
+      function showHeaderEditError(message) {
+        const error = document.getElementById('header-edit-error');
+        if (!error) return;
+        error.textContent = message;
+        error.classList.add('is-visible');
+      }
+
+      if (btnEnterHeaderEdit) {
+        btnEnterHeaderEdit.addEventListener('click', function () {
+          clearHeaderEditError();
+          headerEditSnapshot = headerFields.map(function (field) { return field.value; });
+          document.body.classList.add('is-header-edit-mode');
+        });
+      }
+
+      if (btnCancelHeaderEdit) {
+        btnCancelHeaderEdit.addEventListener('click', function () {
+          if (headerEditSnapshot !== null) {
+            headerFields.forEach(function (field, index) {
+              field.value = headerEditSnapshot[index];
+            });
+          }
+          headerEditSnapshot = null;
+          clearHeaderEditError();
+          document.body.classList.remove('is-header-edit-mode');
+        });
+      }
+
+      if (btnSaveHeaderEdit) {
+        btnSaveHeaderEdit.addEventListener('click', function () {
+          if (!document.body.classList.contains('is-header-edit-mode')) return;
+          const payload = {};
+          headerFields.forEach(function (field) {
+            payload[field.dataset.headerField] = field.value.trim();
+          });
+          const requiredHeaderFields = ['project_name', 'contract', 'unit_number', 'contractor_name', 'job_title'];
+          if (requiredHeaderFields.some(function (field) { return !payload[field]; })) {
+            showHeaderEditError('برجاء ملء جميع بيانات المشروع المطلوبة');
+            return;
+          }
+
+          clearHeaderEditError();
+          btnSaveHeaderEdit.disabled = true;
+          patchJSON(API_BASE + '/edit_headers/' + extractId, payload)
+            .then(function () {
+              window.location.reload();
+            })
+            .catch(function (err) {
+              btnSaveHeaderEdit.disabled = false;
+              showHeaderEditError(err.status === 403
+                ? 'غير مسموح بالتعديل'
+                : 'تعذر حفظ بيانات المشروع. ' + err.message);
+            });
         });
       }
 

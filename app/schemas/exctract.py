@@ -58,3 +58,11 @@ class UpdateAccounting(BaseModel):
     taxes: List[AddExtractTax]
     deductions: List[AddExtractDeduction]
     payments: List[PreviouslyPaid]
+
+class EditExtractHeaders(BaseModel):
+    project_name: str
+    contract: str
+    unit_number: str
+    contractor_name: str
+    customer_name: str
+    job_title: str
