@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f2ec">
+  <title>Villa 134 | Inshaa Minka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Marcellus&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink: #252b28;
+      --muted: #737a72;
+      --paper: #f5f2ec;
+      --surface: #fffefa;
+      --olive: #6f7357;
+      --line: #dddcd2;
+      --serif: 'Marcellus', Georgia, serif;
+      --sans: 'Barlow', Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .project-nav {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 22px clamp(24px, 6vw, 92px);
+      color: #fff;
+    }
+
+    .project-nav img {
+      display: block;
+      width: 148px;
+      max-height: 58px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    .project-nav a:last-child {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .project-nav a:last-child:hover {
+      text-decoration: underline;
+      text-underline-offset: 5px;
+    }
+
+    .project-hero {
+      position: relative;
+      display: flex;
+      min-height: min(760px, 86vh);
+      align-items: flex-end;
+      overflow: hidden;
+      background: #343b32;
+      color: #fff;
+    }
+
+    .project-hero::after {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(18, 23, 19, 0.62), rgba(18, 23, 19, 0.06) 85%),
+        linear-gradient(0deg, rgba(18, 23, 19, 0.45), transparent 58%);
+      content: '';
+    }
+
+    .project-hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 55%;
+    }
+
+    .project-hero-copy {
+      position: relative;
+      z-index: 1;
+      width: min(1220px, 100%);
+      margin: 0 auto;
+      padding: 120px 40px 110px;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2.4px;
+      text-transform: uppercase;
+    }
+
+    .project-hero h1 {
+      max-width: 760px;
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(54px, 9vw, 116px);
+      font-weight: 400;
+      letter-spacing: -2px;
+      line-height: 0.98;
+    }
+
+    .project-hero-location {
+      margin: 22px 0 0;
+      font-size: 16px;
+      letter-spacing: 0.4px;
+    }
+
+    .project-facts {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      width: min(1140px, calc(100% - 48px));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      margin: -44px auto 0;
+      padding: 0;
+      background: var(--surface);
+      box-shadow: 0 12px 36px rgba(31, 37, 31, 0.08);
+    }
+
+    .project-fact {
+      min-height: 112px;
+      padding: 24px 16px;
+      border-right: 1px solid var(--line);
+    }
+
+    .project-fact:last-child {
+      border-right: 0;
+    }
+
+    .project-fact dt {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+    }
+
+    .project-fact dd {
+      margin: 8px 0 0;
+      font-family: var(--serif);
+      font-size: clamp(16px, 2vw, 21px);
+      line-height: 1.2;
+    }
+
+    main {
+      overflow: hidden;
+    }
+
+    .page-section {
+      width: min(1140px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: clamp(88px, 11vw, 150px) 0;
+    }
+
+    .section-kicker {
+      margin: 0 0 18px;
+      color: var(--olive);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 56px);
+      font-weight: 400;
+      line-height: 1.15;
+    }
+
+    .about-project {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      align-items: start;
+      gap: clamp(44px, 9vw, 130px);
+    }
+
+    .about-project-copy {
+      display: grid;
+      gap: 22px;
+      color: #535b53;
+      font-size: 15px;
+    }
+
+    .about-project-copy p {
+      margin: 0;
+    }
+
+    .about-project-copy p:first-child {
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .room-section {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(40px, 8vw, 110px);
+      padding-top: clamp(74px, 9vw, 120px);
+      padding-bottom: clamp(74px, 9vw, 120px);
+      border-top: 1px solid var(--line);
+    }
+
+    .room-section.is-reversed .room-copy {
+      order: 2;
+    }
+
+    .room-section.is-reversed .room-gallery {
+      order: 1;
+    }
+
+    .room-copy h2 {
+      margin: 0 0 22px;
+      font-family: var(--serif);
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 400;
+      line-height: 1.17;
+    }
+
+    .room-copy > p:not(.section-kicker) {
+      max-width: 490px;
+      margin: 0 0 18px;
+      color: #535b53;
+      font-size: 15px;
+    }
+
+    .room-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin: 24px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .room-features li {
+      color: var(--olive);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .room-features li::before {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      margin: 0 8px 2px 0;
+      border-radius: 50%;
+      background: var(--olive);
+      content: '';
+    }
+
+    .room-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      align-self: stretch;
+      align-content: center;
+    }
+
+    .room-gallery figure {
+      min-width: 0;
+      margin: 0;
+    }
+
+    .room-gallery figure:first-child:nth-last-child(odd) {
+      grid-column: 1 / -1;
+    }
+
+    .room-gallery img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 180px;
+      max-height: 285px;
+      object-fit: cover;
+      background: #e8e5dc;
+    }
+
+    .room-gallery figure:first-child:nth-last-child(odd) img {
+      aspect-ratio: 1.6 / 1;
+    }
+
+    .room-gallery figcaption {
+      padding-top: 9px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .room-gallery .gallery-tall img {
+      min-height: 230px;
+      max-height: 340px;
+    }
+
+    .pool-section {
+      width: 100%;
+      padding: 0;
+      background: #eae9df;
+    }
+
+    .pool-section .room-section {
+      width: min(1140px, calc(100% - 48px));
+      margin: auto;
+      border-top: 0;
+    }
+
+    .project-cta {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 40px;
+      overflow: hidden;
+      min-height: 260px;
+      padding: clamp(32px, 6vw, 76px);
+      background: #414a3e;
+      color: #fff;
+    }
+
+    .project-cta::after {
+      position: absolute;
+      z-index: -1;
+      top: -180px;
+      right: 16%;
+      width: 430px;
+      height: 430px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 50%;
+      box-shadow: 0 0 0 52px rgba(255, 255, 255, 0.025), 0 0 0 104px rgba(255, 255, 255, 0.02);
+      content: '';
+      pointer-events: none;
+    }
+
+    .project-cta-copy {
+      max-width: 640px;
+    }
+
+    .project-cta-kicker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 18px;
+      color: #d9c89f;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .project-cta-kicker::before {
+      width: 24px;
+      height: 1px;
+      background: currentColor;
+      content: '';
+    }
+
+    .project-cta h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(32px, 4.6vw, 54px);
+      font-weight: 400;
+      line-height: 1.12;
+    }
+
+    .project-cta-copy > p:last-child {
+      max-width: 530px;
+      margin: 16px 0 0;
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 15px;
+    }
+
+    .project-cta-action {
+      display: grid;
+      flex: 0 0 auto;
+      justify-items: start;
+      gap: 13px;
+    }
+
+    .project-cta-action a {
+      display: inline-flex;
+      min-height: 56px;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 0 22px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .project-cta-action a:hover {
+      background: #fff;
+      color: var(--ink);
+      border-color: #fff;
+    }
+
+    .project-cta-action a:focus-visible {
+      outline-color: #fff;
+      outline-offset: 4px;
+    }
+
+    .project-cta-meta {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.58);
+      font-size: 11px;
+      letter-spacing: 0.7px;
+    }
+
+    .project-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px max(24px, calc((100% - 1140px) / 2));
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .project-footer strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .project-facts {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .project-fact:nth-child(3) {
+        border-right: 0;
+      }
+
+      .project-fact:nth-child(-n + 3) {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .about-project {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .room-section {
+        gap: 36px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .project-nav {
+        padding: 16px 20px;
+      }
+
+      .project-nav img {
+        width: 116px;
+      }
+
+      .project-nav a:last-child {
+        font-size: 10px;
+        letter-spacing: 0.8px;
+      }
+
+      .project-hero {
+        min-height: 650px;
+        min-height: 82svh;
+      }
+
+      .project-hero-copy {
+        padding: 100px 24px 80px;
+      }
+
+      .project-hero h1 {
+        font-size: clamp(56px, 16vw, 84px);
+      }
+
+      .project-facts,
+      .page-section,
+      .pool-section .room-section {
+        width: calc(100% - 32px);
+      }
+
+      .project-facts {
+        margin-top: -28px;
+      }
+
+      .project-fact {
+        min-height: 96px;
+        padding: 18px 12px;
+      }
+
+      .project-fact dt {
+        font-size: 9px;
+        letter-spacing: 1px;
+      }
+
+      .project-fact dd {
+        font-size: 16px;
+      }
+
+      .page-section {
+        padding-top: 76px;
+        padding-bottom: 76px;
+      }
+
+      .room-section {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        padding-top: 72px;
+        padding-bottom: 72px;
+      }
+
+      .room-section.is-reversed .room-copy,
+      .room-section.is-reversed .room-gallery {
+        order: initial;
+      }
+
+      .room-copy h2 {
+        font-size: 38px;
+      }
+
+      .room-gallery {
+        gap: 10px;
+      }
+
+      .room-gallery img {
+        min-height: 135px;
+        max-height: 230px;
+      }
+
+      .room-gallery .gallery-tall img {
+        min-height: 180px;
+        max-height: 260px;
+      }
+
+      .project-cta {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 28px;
+        min-height: 0;
+      }
+
+      .project-cta-action {
+        justify-items: stretch;
+        width: 100%;
+      }
+
+      .project-cta-action a {
+        width: 100%;
+      }
+
+      .project-footer {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="project-nav">
+    <a href="/" aria-label="Inshaa Minka home">
+      <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+    </a>
+    <a href="/#projects-section">Back to selected projects</a>
+  </header>
+
+  <section class="project-hero" aria-labelledby="project-title">
+    <img src="/static/villa-134/villa-134-45.jpg" alt="Villa 134 exterior in Mountain View 2" fetchpriority="high">
+    <div class="project-hero-copy">
+      <p class="eyebrow">Mountain View 2 · Completed project</p>
+      <h1 id="project-title">Villa 134</h1>
+      <p class="project-hero-location">A complete home, planned and finished by Inshaa Minka.</p>
+    </div>
+  </section>
+
+  <dl class="project-facts" aria-label="Project facts">
+    <div class="project-fact">
+      <dt>Location</dt>
+      <dd>Mountain View 2</dd>
+    </div>
+    <div class="project-fact">
+      <dt>Built area</dt>
+      <dd>550 m²</dd>
+    </div>
+    <div class="project-fact">
+      <dt>Land</dt>
+      <dd>600 m²</dd>
+    </div>
+    <div class="project-fact">
+      <dt>Levels</dt>
+      <dd>2 floors + roof</dd>
+    </div>
+    <div class="project-fact">
+      <dt>Bedrooms</dt>
+      <dd>4</dd>
+    </div>
+    <div class="project-fact">
+      <dt>Sleeps</dt>
+      <dd>7</dd>
+    </div>
+  </dl>
+
+  <main>
+    <section class="page-section about-project" aria-labelledby="about-title">
+      <div>
+        <p class="section-kicker">About the project</p>
+        <h2 class="section-title" id="about-title">One home, finished to a single standard</h2>
+      </div>
+      <div class="about-project-copy">
+        <p>Villa 134 shows the quality we deliver. Every space in the house, from the reception hall to the maid's room,
+          was designed and finished by our team as one complete project.</p>
+        <p>The house is built around a light palette of travertine, polished marble, natural oak and brushed brass.
+          Joinery is made to measure throughout: open shelving in the living room, full-height wardrobes in the
+          bedrooms, a library wall in the office and a walk-in closet in the master suite. Lighting is layered in every
+          room, with recessed spots, hidden cove strips and statement pendants, so each space works by day and feels
+          warm at night.</p>
+        <p>Across 550 m² on two floors and a roof level, set on a 600 m² plot, the villa holds a reception hall, a living
+          room, a formal dining room, a main kitchen, a home office, a master suite, two children's bedrooms, a guest
+          room, a maid's room, an upstairs kitchenette and a guest lounge on the roof.</p>
+      </div>
+    </section>
+
+    <section class="page-section room-section" aria-labelledby="reception-title">
+      <div class="room-copy">
+        <p class="section-kicker">Reception</p>
+        <h2 id="reception-title">An entrance hall built around the staircase</h2>
+        <p>The front door opens into a double-height hall lined in travertine, with bronze-framed display shelving on
+          either side. A floating stone staircase with a frameless glass balustrade rises through the house, and a
+          cascade of hand-blown glass globes hangs through all three levels of the stairwell.</p>
+        <p>A slatted oak screen frames the stair and lets you see through to the living room beyond, so the hall feels
+          open while still marking the arrival.</p>
+        <ul class="room-features">
+          <li>Travertine walls</li>
+          <li>Polished marble floor</li>
+          <li>Frameless glass balustrade</li>
+          <li>Glass globe chandelier</li>
+          <li>Oak slats</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-12.jpg" alt="Reception hall looking towards the living room"
+            loading="lazy">
+          <figcaption>The hall looking through to the living room</figcaption>
+        </figure>
+        <figure class="gallery-tall">
+          <img src="/static/villa-134/villa-134-14.jpg" alt="Floating staircase with a glass balustrade" loading="lazy">
+          <figcaption>Stone treads, glass and oak</figcaption>
+        </figure>
+        <figure class="gallery-tall">
+          <img src="/static/villa-134/villa-134-15.jpg" alt="Hand-blown glass globe chandelier" loading="lazy">
+          <figcaption>The globe chandelier through three levels</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section is-reversed" aria-labelledby="living-title">
+      <div class="room-copy">
+        <p class="section-kicker">Living room</p>
+        <h2 id="living-title">A long, bright room for the whole family</h2>
+        <p>The living room runs the depth of the house, with floor-to-ceiling sheer curtains along the garden side. At
+          one end, a travertine media wall sits between two bays of open oak shelving, each lit from within. A curved
+          bouclé sofa, button-back lounge chairs and a cluster of bronze hexagonal tables make a second seating area
+          closer to the stair.</p>
+        <p>Mirrored panels and slim bronze nesting tables keep the room feeling light, while the marble floor carries
+          through from the hall without a break.</p>
+        <ul class="room-features">
+          <li>Travertine media wall</li>
+          <li>Oak shelving</li>
+          <li>Bronze side tables</li>
+          <li>Sheer linen curtains</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-16.jpg" alt="Living room and dining area" loading="lazy">
+          <figcaption>The full length of the living room</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-17.jpg" alt="Media wall with open oak shelving" loading="lazy">
+          <figcaption>Media wall and oak shelving</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-18.jpg" alt="Family seating around the media wall" loading="lazy">
+          <figcaption>Seating around the media wall</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-22.jpg" alt="Living space opening towards the dining room"
+            loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section" aria-labelledby="dining-title">
+      <div class="room-copy">
+        <p class="section-kicker">Dining and kitchen</p>
+        <h2 id="dining-title">Formal dining and a working kitchen</h2>
+        <p>The dining room seats ten at a glass-topped table under a long linear crystal pendant. Sculpted metallic
+          mirrors and tall palms soften the room, and a walnut console holds serving pieces.</p>
+        <p>The main kitchen is made for everyday cooking. Handleless white cabinets run the full length of the room,
+          with warm oak upper units and lighting hidden underneath. A waterfall island with bar stools sits in the
+          middle, alongside a double-door refrigerator, built-in ovens and an induction hob.</p>
+        <ul class="room-features">
+          <li>Glass dining table</li>
+          <li>Linear crystal pendant</li>
+          <li>Waterfall island</li>
+          <li>Oak and white lacquer</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-19.jpg" alt="Formal dining room and glass dining table" loading="lazy">
+          <figcaption>The dining room</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-20.jpg" alt="Bright main kitchen with a waterfall island"
+            loading="lazy">
+          <figcaption>The main kitchen</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-21.jpg" alt="Kitchen cabinetry and built-in appliances" loading="lazy">
+          <figcaption>Oak upper units with hidden lighting</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section is-reversed" aria-labelledby="office-title">
+      <div class="room-copy">
+        <p class="section-kicker">Home office</p>
+        <h2 id="office-title">A quiet study with a library wall</h2>
+        <p>The office is set apart from the family rooms, with oak flooring, a dark executive desk and two curved guest
+          chairs. The back wall is a full-height oak bookcase with LED strips set into every upright, and a brass linear
+          pendant hangs over the desk.</p>
+        <p>A large abstract artwork and a fiddle-leaf fig give the room character without distracting from work.</p>
+        <ul class="room-features">
+          <li>Oak bookcase with LED</li>
+          <li>Brass pendant</li>
+          <li>Oak floor</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure class="gallery-tall">
+          <img src="/static/villa-134/villa-134-23.jpg" alt="Framed artwork and sculptural pendant in the study"
+            loading="lazy">
+          <figcaption>The study</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section" aria-labelledby="master-title">
+      <div class="room-copy">
+        <p class="section-kicker">Master suite</p>
+        <h2 id="master-title">A private suite with its own closet and bath</h2>
+        <p>The master bedroom is calm and soft: textured plaster walls, a padded headboard, oak bedside tables and
+          faceted crystal pendants on each side of the bed. An oak-framed mirror reflects the room back on itself.</p>
+        <p>A walk-in closet lined with smoked-glass wardrobes leads to the bathroom, which has a floating oak double
+          vanity, a whirlpool tub set on a teak deck under a lit cove, and a rain shower.</p>
+        <ul class="room-features">
+          <li>Textured plaster</li>
+          <li>Crystal pendants</li>
+          <li>Smoked-glass wardrobes</li>
+          <li>Whirlpool tub</li>
+          <li>Teak deck</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-24.jpg" alt="Master bedroom with pendant lights and feature wall"
+            loading="lazy">
+          <figcaption>The master bedroom</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-25.jpg" alt="Walk-in closet lined with smoked-glass wardrobes"
+            loading="lazy">
+          <figcaption>The walk-in closet</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-26.jpg" alt="Master bathroom with a double oak vanity" loading="lazy">
+          <figcaption>The master bathroom</figcaption>
+        </figure>
+        <figure class="gallery-tall">
+          <img src="/static/villa-134/villa-134-27.jpg" alt="Whirlpool tub set on a teak deck" loading="lazy">
+          <figcaption>Whirlpool tub on a teak deck</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section is-reversed" aria-labelledby="children-title">
+      <div class="room-copy">
+        <p class="section-kicker">Children's rooms</p>
+        <h2 id="children-title">Two bedrooms made for growing up</h2>
+        <p>Each child has a room shaped around their own taste. The daughter's room is in soft blush tones, with a
+          quilted headboard, glass globe pendants, a study desk and a dressing table with a lit Hollywood mirror.</p>
+        <p>The son's room is in calm neutrals, with a full wall of built-in wardrobes, a desk under floating oak shelves
+          and plenty of floor space to play. Both rooms have oak floors, sheer curtains and hidden cove lighting.</p>
+        <ul class="room-features">
+          <li>Built-in wardrobes</li>
+          <li>Study desks</li>
+          <li>Hollywood mirror</li>
+          <li>Oak floors</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-28.jpg" alt="Daughter's bedroom with blush details" loading="lazy">
+          <figcaption>The daughter's room</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-29.jpg" alt="Bedroom dressing area and Hollywood mirror" loading="lazy">
+          <figcaption>Dressing table with Hollywood mirror</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-30.jpg" alt="Children's room with a full wall of storage"
+            loading="lazy">
+          <figcaption>The son's room</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-31.jpg" alt="Built-in wardrobes and bedroom storage" loading="lazy">
+          <figcaption>A full wall of storage</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="page-section room-section" aria-labelledby="guest-title">
+      <div class="room-copy">
+        <p class="section-kicker">Guest room and roof lounge</p>
+        <h2 id="guest-title">Space for family and friends to stay</h2>
+        <p>The guest room is warm and simple, with oak wardrobes with black bar handles, an oak-panelled wall behind
+          the bed and a dressing table under a round mirror.</p>
+        <p>Up on the roof, the guest lounge has a slatted oak ceiling with warm cove lighting, a large screen and low
+          seating, making a relaxed place to gather away from the main floors.</p>
+        <ul class="room-features">
+          <li>Oak wardrobes</li>
+          <li>Slatted oak ceiling</li>
+          <li>Cove lighting</li>
+        </ul>
+      </div>
+      <div class="room-gallery">
+        <figure>
+          <img src="/static/villa-134/villa-134-32.jpg" alt="Guest lounge with a large screen and low seating"
+            loading="lazy">
+          <figcaption>The roof guest lounge</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-33.jpg" alt="Guest room wardrobes" loading="lazy">
+          <figcaption>Guest room wardrobes</figcaption>
+        </figure>
+        <figure>
+          <img src="/static/villa-134/villa-134-34.jpg" alt="Guest room dressing table and mirror" loading="lazy">
+          <figcaption>Guest room dressing table</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <div class="pool-section">
+      <section class="room-section is-reversed" aria-labelledby="kitchenette-title">
+        <div class="room-copy">
+          <p class="section-kicker">Upstairs kitchenette</p>
+          <h2 id="kitchenette-title">Breakfast without going downstairs</h2>
+          <p>On the bedroom floor, a compact kitchenette has oak and white cabinets, a wine fridge and a round
+            marble-topped table for four under a clear glass dome pendant. It opens onto the stair landing, so the
+            family can share a quick breakfast or a late coffee close to the bedrooms.</p>
+          <p>The bathrooms throughout the house follow the same calm palette, with large-format stone-look tiles,
+            glazed handmade-style wall tiles, built-in niches and matte black fittings.</p>
+        </div>
+        <div class="room-gallery">
+          <figure>
+            <img src="/static/villa-134/villa-134-35.jpg" alt="Kitchenette with marble table and oak cabinetry"
+              loading="lazy">
+            <figcaption>The kitchenette</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-36.jpg" alt="Stair landing beside the upstairs kitchenette"
+              loading="lazy">
+            <figcaption>Open to the stair landing</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-37.jpg" alt="One of the family bathrooms" loading="lazy">
+            <figcaption>One of the family bathrooms</figcaption>
+          </figure>
+        </div>
+      </section>
+      <section class="room-section" aria-labelledby="garden-title">
+        <div class="room-copy">
+          <p class="section-kicker">Pool and garden</p>
+          <h2 id="garden-title">Pool, pergola and planted paths</h2>
+          <p>The pool is finished in blue glass mosaic, with a built-in step and seating ledge for the children. A white
+            pergola with timber slats shades a lounge on the travertine deck, and outdoor sofas and parasols sit along
+            the water's edge.</p>
+          <p>Along the side of the house, stepping-stone paths run through lawn and dense planting under a row of timber
+            portal frames with built-in lights, turning a service passage into a garden walk.</p>
+          <ul class="room-features">
+            <li>Glass mosaic pool</li>
+            <li>Travertine deck</li>
+            <li>Timber pergola</li>
+            <li>Lit timber portals</li>
+          </ul>
+        </div>
+        <div class="room-gallery">
+          <figure>
+            <img src="/static/villa-134/villa-134-38.jpg" alt="Swimming pool beside the villa" loading="lazy">
+            <figcaption>The glass-walled pool and the back of the villa</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-39.jpg" alt="Timber pergola and pool steps" loading="lazy">
+            <figcaption>Pergola and pool steps</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-40.jpg" alt="Outdoor lounge beside the pool" loading="lazy">
+            <figcaption>Lounge by the water</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-41.jpg" alt="Timber portal frames above the garden path"
+              loading="lazy">
+            <figcaption>Timber portals over the garden path</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-42.jpg" alt="Side garden walkway with stepping stones" loading="lazy">
+            <figcaption>The side garden</figcaption>
+          </figure>
+          <figure>
+            <img src="/static/villa-134/villa-134-52.jpg" alt="Swimming pool and garden seating" loading="lazy">
+          </figure>
+        </div>
+      </section>
+    </div>
+
+    <section class="page-section">
+      <div class="project-cta">
+        <div class="project-cta-copy">
+          <p class="project-cta-kicker">Virtual tour</p>
+          <h2>Have a walk inside</h2>
+          <p>Step inside Villa 134 and explore the home at your own pace.</p>
+        </div>
+        <div class="project-cta-action">
+          <a href="https://realsee.ai/WgwwEgwb" target="_blank" rel="noopener noreferrer">
+            <span>Start the tour</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="project-cta">
+        <div class="project-cta-copy">
+          <p class="project-cta-kicker">Villa 134 · Project portfolio</p>
+          <h2>Discover the complete project</h2>
+          <p>Explore the spaces, materials and details in the full Villa 134 portfolio.</p>
+        </div>
+        <div class="project-cta-action">
+          <a href="/static/Villa-134-2.pdf" target="_blank" rel="noopener noreferrer">
+            <span>Open brochure</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="project-footer">
+    <span><strong>Inshaa Minka</strong> · Villa 134 · Mountain View 2</span>
+    <a href="/#projects-section">Back to selected projects</a>
+  </footer>
+</body>
+
+</html>

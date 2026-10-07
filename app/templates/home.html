@@ -885,8 +885,7 @@
 
     .project-card {
       width: 100%;
-      min-height: 360px;
-      height: 100%;
+      height: auto;
       padding: 0;
       border: none;
       background: none;
@@ -895,21 +894,52 @@
       display: flex;
     }
 
+    .project-card-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .project-page-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      align-self: center;
+      gap: 9px;
+      min-height: 42px;
+      margin-top: 14px;
+      padding: 0 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: 24px;
+      background: var(--surface);
+      color: var(--steel-dark);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .project-page-link:hover {
+      background: var(--yellow);
+      color: var(--ink);
+      border-color: var(--yellow);
+    }
+
+    .project-page-link svg {
+      width: 21px;
+      height: 21px;
+      flex: 0 0 auto;
+    }
+
     .project-card-inner {
       position: relative;
       display: grid;
-      min-height: 360px;
-      height: 100%;
+      height: auto;
       width: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.6s ease;
       border-radius: 8px;
       box-shadow: 0 10px 26px rgba(42, 58, 71, 0.08);
-    }
-
-    .project-card:hover .project-card-inner,
-    .project-card:focus-visible .project-card-inner {
-      transform: rotateX(180deg);
     }
 
     .project-card-face {
@@ -918,16 +948,6 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      backface-visibility: hidden;
-    }
-
-    .project-card-back {
-      justify-content: center;
-      padding: 28px;
-      background: var(--steel-dark);
-      color: var(--paper);
-      transform: rotateX(180deg);
-      border-radius: 8px;
     }
 
     .project-card-thumb {
@@ -990,56 +1010,17 @@
       font-size: 13px;
     }
 
-    .project-card-body {
-      text-align: center;
-    }
-
-    .project-card-body h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 16px 4px 6px;
-      transition: color 0.15s ease;
-    }
-
-    .project-card:hover .project-card-body h3 {
-      color: var(--steel);
-    }
-
-    .project-card-body p {
-      margin: 0 4px;
-      font-size: 14.5px;
-      color: var(--steel-dark);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .project-card-front .project-card-body p {
-      display: none;
-    }
-
-    .project-card-back h3 {
-      color: var(--paper);
-      font-size: 22px;
-      margin-bottom: 10px;
-    }
-
-    .project-card-back p {
-      color: var(--concrete);
-      font-size: 15px;
-      line-height: 1.55;
-    }
-
     .project-card-skeleton .project-card-thumb {
       background: var(--line);
     }
 
-    .project-card-skeleton h3,
-    .project-card-skeleton p {
+    .project-card-skeleton .project-skeleton-action {
+      width: 130px;
+      height: 42px;
+      align-self: center;
+      margin-top: 14px;
+      border-radius: 24px;
       background: var(--line);
-      border-radius: 2px;
-      color: transparent;
     }
 
     .empty-projects {
@@ -1047,17 +1028,6 @@
       color: var(--steel-dark);
       font-size: 15px;
       grid-column: 1 / -1;
-    }
-
-    .projects-more-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 40px;
-    }
-
-    .projects-more-wrap .btn:hover {
-      background: var(--ink);
-      color: var(--paper);
     }
 
     /* ---- Lightbox ---- */
@@ -2199,33 +2169,8 @@
       box-shadow: 0 14px 30px rgba(16, 33, 46, 0.1);
     }
 
-    .project-card-back {
-      background: var(--paper);
-      padding: 32px;
-    }
-
-    .project-card-back h3 {
-      font-size: 26px;
-    }
-
-    .project-card-back h3 {
-      color: var(--ink);
-    }
-
-    .project-card-back p {
-      color: var(--steel-dark);
-    }
-
     .project-card-thumb {
       border-radius: 10px;
-    }
-
-    .project-card-body h3 {
-      font-size: 23px;
-    }
-
-    .project-card-body p {
-      color: var(--steel);
     }
 
     .team-photo {
@@ -2417,9 +2362,6 @@
         font-size: 36px;
       }
 
-      .project-card-back {
-        padding: 24px;
-      }
     }
 
     /* ===== Reference-inspired construction layout ===== */
@@ -3133,19 +3075,6 @@
       border-radius: 0;
     }
 
-    .project-card-back {
-      border-radius: 0;
-      background: var(--paper);
-    }
-
-    .project-card-body h3 {
-      font-size: 25px;
-    }
-
-    .project-card-body p {
-      color: var(--steel);
-    }
-
     .team-photo {
       border-radius: 0;
       box-shadow: none;
@@ -3730,19 +3659,19 @@
     }
 
     .page-ready .process-card:nth-child(2),
-    .page-ready .project-card:nth-child(2),
+    .page-ready .project-card-container:nth-child(2) .project-card,
     .page-ready .sector-card:nth-child(2) {
       animation-delay: 1010ms;
     }
 
     .page-ready .process-card:nth-child(3),
-    .page-ready .project-card:nth-child(3),
+    .page-ready .project-card-container:nth-child(3) .project-card,
     .page-ready .sector-card:nth-child(3) {
       animation-delay: 1080ms;
     }
 
     .page-ready .process-card:nth-child(4),
-    .page-ready .project-card:nth-child(4),
+    .page-ready .project-card-container:nth-child(4) .project-card,
     .page-ready .sector-card:nth-child(4) {
       animation-delay: 1150ms;
     }
@@ -4239,7 +4168,7 @@
       </div>
     </div>
 
-    <!-- <div class="projects scroll-reveal" id="projects-section">
+    <div class="projects scroll-reveal" id="projects-section">
       <div class="section-head">
         <h2>Selected projects</h2>
         <p>Recent work where disciplined planning, skilled execution and clear communication shaped the final result.
@@ -4248,10 +4177,6 @@
 
       <div id="projects-status" class="projects-status"></div>
       <div class="projects-grid" id="projects-grid"></div>
-
-      <div class="projects-more-wrap">
-        <button type="button" class="btn btn-ghost" id="projects-more-btn">View more</button>
-      </div>
     </div>
 
     <div class="team scroll-reveal" id="team-section">
@@ -4267,7 +4192,7 @@
       <p class="team-summary">Our core team brings together engineers, site supervisors and finishing specialists with
         long-standing experience working side by side. Each project has a dedicated manager from mobilization to
         handover, supported by a trusted network of trade partners and specialists.</p>
-    </div> -->
+    </div>
 
     <div class="sectors scroll-reveal" id="cv-section">
 
@@ -4580,9 +4505,7 @@
     })();
 
     const API_BASE = '';
-    const PROJECTS_ENDPOINT = `${API_BASE}/home/projects`;
     const CV_ENDPOINT = `${API_BASE}/home/cv`;
-    const PROJECTS_INITIAL_COUNT = 6;
 
     const PDF_CV_CARDS = [
       {
@@ -4674,14 +4597,17 @@
 
     const STATIC_PROJECTS = [
       {
-        title: 'Residential Community',
-        description: 'A coordinated residential construction project with finished site delivery.',
+        title: 'Villa 134',
+        description: 'A completed home in Mountain View 2, designed and finished to a single standard.',
+        detail_page: 'villa-134',
         media_urls: [
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0005.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0006.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0007.jpg',
+          '/static/villa-134/villa-134-cover.png',
+          '/static/villa-134/villa-134-12.jpg',
+          '/static/villa-134/villa-134-16.jpg',
+          '/static/villa-134/villa-134-38.jpg',
         ]
       },
+      /*
       {
         title: 'Urban Commercial Build',
         description: 'Commercial project for a visible urban construction and fit-out program.',
@@ -4727,6 +4653,7 @@
           '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0034.jpg',
         ]
       }
+      */
     ];
 
     // ===== Hero video: cinematic load + scroll + pointer depth =====
@@ -5126,8 +5053,6 @@
     // ===== Projects grid + lightbox =====
     const statusEl = document.getElementById('projects-status');
     const gridEl = document.getElementById('projects-grid');
-    const moreWrapEl = document.getElementById('projects-more-wrap');
-    const moreBtn = document.getElementById('projects-more-btn');
 
     const lightboxEl = document.getElementById('lightbox');
     const lightboxMediaEl = document.getElementById('lightbox-media');
@@ -5140,7 +5065,6 @@
     let projectsCache = [];
     let activeProjectIndex = null;
     let activeMediaIndex = 0;
-    let projectsExpanded = false;
 
     const VIDEO_EXT = /\.(mp4|webm|mov|m4v|ogg)(\?|$)/i;
     function looksLikeVideo(url) {
@@ -5149,22 +5073,8 @@
 
     loadProjects();
 
-    async function loadProjects() {
-      projectsExpanded = false;
-
-      try {
-        const response = await fetch(PROJECTS_ENDPOINT);
-        if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
-
-        const storedProjects = await response.json();
-        projectsCache = [
-          ...STATIC_PROJECTS,
-          ...(Array.isArray(storedProjects) ? storedProjects : []),
-        ];
-      } catch (error) {
-        projectsCache = STATIC_PROJECTS;
-      }
-
+    function loadProjects() {
+      projectsCache = STATIC_PROJECTS;
       renderProjectsGrid();
     }
 
@@ -5172,16 +5082,13 @@
       gridEl.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const card = document.createElement('div');
-        card.className = 'project-card project-card-skeleton';
-        card.innerHTML = `<div class="project-card-thumb"></div><div class="project-card-body"><h3>Loading</h3><p>Loading</p></div>`;
+        card.className = 'project-card-container project-card-skeleton';
+        card.innerHTML = `<div class="project-card"><div class="project-card-inner"><div class="project-card-face"><div class="project-card-thumb"></div></div></div></div><div class="project-skeleton-action"></div>`;
         gridEl.appendChild(card);
       }
     }
 
     function renderProjectsGrid() {
-      gridEl.querySelectorAll('.project-card[data-carousel-timer]').forEach((card) => {
-        clearInterval(Number(card.dataset.carouselTimer));
-      });
       gridEl.innerHTML = '';
       statusEl.textContent = '';
 
@@ -5191,41 +5098,21 @@
         empty.className = 'empty-projects';
         empty.textContent = 'No projects to show yet.';
         gridEl.appendChild(empty);
-        moreWrapEl.hidden = true;
         return;
       }
 
-      const visibleCount = projectsExpanded ? projectsCache.length : Math.min(PROJECTS_INITIAL_COUNT, projectsCache.length);
-
-      projectsCache.slice(0, visibleCount).forEach((project, index) => {
+      projectsCache.forEach((project, index) => {
         gridEl.appendChild(buildProjectCard(project, index));
       });
-
-      const hasMore = projectsCache.length > PROJECTS_INITIAL_COUNT;
-      moreWrapEl.hidden = !hasMore;
-      moreBtn.textContent = projectsExpanded ? 'View less' : 'View more';
-      moreBtn.setAttribute('aria-expanded', String(projectsExpanded));
     }
 
-    moreBtn.addEventListener('click', () => {
-      const wasExpanded = projectsExpanded;
-      projectsExpanded = !projectsExpanded;
-      renderProjectsGrid();
-
-      if (wasExpanded && !projectsExpanded) {
-        requestAnimationFrame(() => {
-          document.getElementById('projects-section')?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        });
-      }
-    });
-
     function buildProjectCard(project, index) {
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'project-card';
+      const card = document.createElement('div');
+      card.className = 'project-card-container';
+
+      const cardButton = document.createElement('button');
+      cardButton.type = 'button';
+      cardButton.className = 'project-card';
 
       const urls = Array.isArray(project.media_urls) ? project.media_urls.filter(Boolean) : [];
 
@@ -5239,27 +5126,11 @@
       thumb.className = 'project-card-thumb';
       const imageUrls = urls.filter((url) => !looksLikeVideo(url));
       if (imageUrls.length > 0) {
-        const mediaTrack = document.createElement('div');
-        mediaTrack.className = 'project-card-media-track';
-
-        imageUrls.forEach((url, mediaIndex) => {
-          const img = document.createElement('img');
-          img.src = url;
-          img.alt = '';
-          img.loading = mediaIndex === 0 ? 'eager' : 'lazy';
-          mediaTrack.appendChild(img);
-        });
-
-        thumb.appendChild(mediaTrack);
-
-        if (imageUrls.length > 1) {
-          let currentMediaIndex = 0;
-          const carouselTimer = window.setInterval(() => {
-            currentMediaIndex = (currentMediaIndex + 1) % imageUrls.length;
-            mediaTrack.style.transform = `translateX(-${currentMediaIndex * 100}%)`;
-          }, 3500);
-          card.dataset.carouselTimer = String(carouselTimer);
-        }
+        const img = document.createElement('img');
+        img.src = imageUrls[0];
+        img.alt = '';
+        img.loading = 'eager';
+        thumb.appendChild(img);
       } else if (urls.length > 0) {
         const label = document.createElement('span');
         label.className = 'project-card-thumb-empty';
@@ -5272,37 +5143,30 @@
         thumb.appendChild(label);
       }
 
-      const body = document.createElement('div');
-      body.className = 'project-card-body';
-
-      const title = document.createElement('h3');
-      title.textContent = project.title || 'Untitled project';
-
-      const desc = document.createElement('p');
-      desc.textContent = project.description || '';
-
-      body.appendChild(title);
-      body.appendChild(desc);
-
       front.appendChild(thumb);
-      front.appendChild(body);
 
-      const back = document.createElement('span');
-      back.className = 'project-card-face project-card-back';
-
-      const backTitle = document.createElement('h3');
-      backTitle.textContent = project.title || 'Untitled project';
-
-      const backDesc = document.createElement('p');
-      backDesc.textContent = project.description || 'No description available.';
-
-      back.appendChild(backTitle);
-      back.appendChild(backDesc);
       inner.appendChild(front);
-      inner.appendChild(back);
-      card.appendChild(inner);
+      cardButton.appendChild(inner);
 
-      card.addEventListener('click', () => openLightbox(index));
+      const pageLink = document.createElement('a');
+      pageLink.className = 'project-page-link';
+      if (project.detail_page === 'villa-134') {
+        pageLink.href = '/home/project-details/villa-134';
+      } else {
+        const pageParams = new URLSearchParams({
+          title: project.title || 'Untitled project',
+          description: project.description || '',
+          image: imageUrls[0] || ''
+        });
+        pageLink.href = `/home/project-details?${pageParams.toString()}`;
+      }
+      pageLink.setAttribute('aria-label', 'Open project');
+      pageLink.textContent = 'Open project';
+
+      card.appendChild(cardButton);
+      card.appendChild(pageLink);
+
+      cardButton.addEventListener('click', () => openLightbox(index));
 
       return card;
     }

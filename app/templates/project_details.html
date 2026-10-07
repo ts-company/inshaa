@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} | Inshaa Minka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1C1F22;
+      --concrete: #E7E2D8;
+      --paper: #F6F3EC;
+      --surface: #FFFFFF;
+      --steel: #3E5468;
+      --steel-dark: #2A3A47;
+      --yellow: #D99A18;
+      --line: #E1E7EA;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Barlow', sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .project-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px max(24px, calc((100% - 1180px) / 2));
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 18px rgba(42, 58, 71, 0.05);
+    }
+
+    .project-header img {
+      display: block;
+      width: 150px;
+      max-height: 64px;
+      object-fit: contain;
+    }
+
+    .project-back-link {
+      color: var(--steel-dark);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .project-back-link:hover {
+      color: var(--yellow);
+    }
+
+    main {
+      width: min(1080px, calc(100% - 48px));
+      margin: 64px auto;
+    }
+
+    .project-content {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      min-height: 420px;
+      overflow: hidden;
+      background: var(--surface);
+      border-radius: 10px;
+      box-shadow: 0 14px 36px rgba(42, 58, 71, 0.1);
+    }
+
+    .project-content.has-no-image .project-copy {
+      grid-column: 1 / -1;
+      max-width: 800px;
+    }
+
+    .project-image {
+      min-height: 420px;
+      background: var(--concrete);
+    }
+
+    .project-image img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      object-fit: cover;
+    }
+
+    .project-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      padding: clamp(28px, 5vw, 64px);
+    }
+
+    .project-kicker {
+      color: var(--yellow);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(34px, 5vw, 52px);
+      font-weight: 600;
+      line-height: 1.05;
+    }
+
+    .project-description {
+      color: var(--steel-dark);
+      font-size: 17px;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 700px) {
+      .project-header {
+        padding: 12px 20px;
+      }
+
+      .project-header img {
+        width: 120px;
+      }
+
+      main {
+        width: min(100% - 32px, 520px);
+        margin: 32px auto;
+      }
+
+      .project-content {
+        grid-template-columns: 1fr;
+      }
+
+      .project-image,
+      .project-image img {
+        min-height: 260px;
+        max-height: 360px;
+      }
+
+      .project-copy {
+        padding: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="project-header">
+    <a href="/" aria-label="Inshaa Minka home">
+      <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+    </a>
+    <a class="project-back-link" href="/#projects-section">Back to projects</a>
+  </header>
+  <main>
+    <article class="project-content{% if not image %} has-no-image{% endif %}">
+      {% if image %}
+      <div class="project-image">
+        <img src="{{ image }}" alt="{{ title }}">
+      </div>
+      {% endif %}
+      <div class="project-copy">
+        <p class="project-kicker">Selected project</p>
+        <h1>{{ title }}</h1>
+        {% if description %}
+        <p class="project-description">{{ description }}</p>
+        {% endif %}
+      </div>
+    </article>
+  </main>
+</body>
+
+</html>
