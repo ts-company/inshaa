@@ -23,7 +23,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
     ports:
-      - "8003:8000"
+      - "8000:8000"
     env_file:
       - .env
     volumes:

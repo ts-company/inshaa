@@ -36,26 +36,10 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
         for p in projects
     ]
 
-@router.get("/project-details")
-def project_details(
-    request: Request,
-    title: str = "Selected project",
-    description: str = "",
-    image: str = "",
-):
-    return templates.TemplateResponse(
-        "project_details.html",
-        {
-            "request": request,
-            "title": title,
-            "description": description,
-            "image": image,
-        },
-    )
-
 @router.get("/project-details/villa-134")
 def villa_134_project_details(request: Request):
     return templates.TemplateResponse("villa_134.html", {"request": request})
+
 
 @router.get("/cv")
 def get_cv(request: Request, db: Session = Depends(get_db)):
