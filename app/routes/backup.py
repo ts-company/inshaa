@@ -14,9 +14,9 @@ from starlette.background import BackgroundTask
 
 router = APIRouter(prefix="/system")
 
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "admin"
-POSTGRES_DB = "inshaa_db"
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_HOST = "db"
 
 @router.get("/db_backup")
