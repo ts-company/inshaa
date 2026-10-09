@@ -856,6 +856,94 @@
       font-weight: 600;
     }
 
+    .history-compare-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    .history-compare-controls select {
+      min-width: 180px;
+      max-width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+    }
+
+    .history-diff-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin: 0 0 16px;
+      color: var(--steel-dark);
+      font-size: 12px;
+    }
+
+    .history-diff-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .history-diff-legend i {
+      width: 11px;
+      height: 11px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+    }
+
+    .history-diff-error {
+      display: none;
+      margin: 0 0 12px;
+      color: var(--error);
+      font-size: 13px;
+    }
+
+    .history-diff-error.is-visible {
+      display: block;
+    }
+
+    .items-table tbody tr.diff-added td {
+      background: rgba(46, 125, 50, 0.13);
+    }
+
+    .items-table tbody tr.diff-changed td {
+      background: rgba(33, 150, 243, 0.15);
+    }
+
+    .items-table tbody tr.diff-removed-row td {
+      background: rgba(215, 25, 32, 0.13);
+      color: #8f151a;
+      text-decoration: line-through;
+    }
+
+    .summary-line.diff-added {
+      background: rgba(46, 125, 50, 0.13);
+    }
+
+    .summary-line.diff-changed {
+      background: rgba(33, 150, 243, 0.15);
+    }
+
+    .summary-line.diff-removed-row {
+      background: rgba(215, 25, 32, 0.13);
+      color: #8f151a;
+      text-decoration: line-through;
+    }
+
+    .category-block.diff-added-category {
+      border-color: rgba(46, 125, 50, 0.75);
+    }
+
+    .category-block.diff-removed-category {
+      border-color: rgba(215, 25, 32, 0.75);
+      background: rgba(215, 25, 32, 0.035);
+    }
+
     .empty-items {
       padding: 16px 0;
       color: var(--steel-dark);
@@ -1733,6 +1821,21 @@
         {% if (user_role == 'super_admin' or "view edits" in permissions) and type != 'history' %}
         <aside class="history-panel" id="extract-history-panel">
           <h2>التعديلات</h2>
+          <div class="history-compare-controls">
+            <label for="history-compare-version">مقارنة مع النسخة:</label>
+            <select id="history-compare-version" disabled>
+              <option value="">اختر نسخة سابقة</option>
+            </select>
+            <button type="button" class="btn btn-primary" id="btn-toggle-history-diff" aria-pressed="false" disabled>
+              عرض الفروقات
+            </button>
+          </div>
+          <div class="history-diff-legend" aria-label="دليل ألوان الفروقات">
+            <span><i style="background: rgba(33, 150, 243, 0.15); color: #2196f3;"></i>تعديل</span>
+            <span><i style="background: rgba(46, 125, 50, 0.13); color: #2e7d32;"></i>اضافة</span>
+            <span><i style="background: rgba(215, 25, 32, 0.13); color: #d71920;"></i>حذف</span>
+          </div>
+          <p class="history-diff-error" id="history-diff-error" role="alert"></p>
           <div class="history-list" id="extract-history-list">
             <p class="history-state">Loading history...</p>
           </div>
@@ -2048,8 +2151,335 @@
 
       const historyList = document.getElementById('extract-history-list');
       const historyPanel = document.getElementById('extract-history-panel');
+      const historyCompareVersion = document.getElementById('history-compare-version');
+      const toggleHistoryDiffButton = document.getElementById('btn-toggle-history-diff');
+      const historyDiffError = document.getElementById('history-diff-error');
       const previousVersionList = document.getElementById('extract-previous-version-list');
       const previousVersionPanel = document.getElementById('extract-previous-version-panel');
+      let historyDiffActive = false;
+
+      function normalizeDiffTitle(value) {
+        return String(value || '').trim().toLocaleLowerCase();
+      }
+
+      function currentItemValue(row, field) {
+        const cell = row.querySelector('[data-edit-field="' + field + '"]');
+        if (!cell) return '';
+        if (field === 'title' || field === 'unit_type') {
+          return cell.querySelector('.editable-value').textContent.trim();
+        }
+        return cell.dataset.editValue;
+      }
+
+      function valuesDiffer(current, historical, numeric) {
+        if (numeric) {
+          const currentNumber = Number(current);
+          const historicalNumber = Number(historical);
+          return !Number.isFinite(currentNumber) || !Number.isFinite(historicalNumber) ||
+            Math.abs(currentNumber - historicalNumber) > 0.000001;
+        }
+        return String(current || '').trim() !== String(historical || '').trim();
+      }
+
+      function createDiffTable(categoryBlock) {
+        let table = categoryBlock.querySelector('.items-table');
+        if (table) return table;
+
+        table = document.createElement('table');
+        table.className = 'items-table';
+        table.dataset.diffCreatedTable = 'true';
+        table.innerHTML =
+          '<thead><tr><th>بند فرعي</th><th>نوع الوحدة</th><th class="is-numeric">الكمية</th>' +
+          '<th class="is-numeric">الفئة</th><th class="is-numeric">نسبة الانجاز</th>' +
+          '<th class="is-numeric">الاجمالي</th><th class="is-actions"></th></tr></thead><tbody></tbody>';
+        const emptyItems = categoryBlock.querySelector('.empty-items');
+        if (emptyItems) emptyItems.hidden = true;
+        const categoryHead = categoryBlock.querySelector('.category-head');
+        categoryHead.insertAdjacentElement('afterend', table);
+        return table;
+      }
+
+      function createRemovedItemRow(item) {
+        const row = document.createElement('tr');
+        row.className = 'diff-removed-row';
+        const completion = Number(item.completion_perc || 0);
+        const values = [
+          ['بند فرعي', item.title],
+          ['نوع الوحدة', item.unit_type],
+          ['الكمية', formatAmount(item.amount)],
+          ['الفئة', formatAmount(item.currency)],
+          ['نسبة الانجاز', String(completion) + '%'],
+          ['الاجمالي', formatAmount(item.total)],
+          ['', ''],
+        ];
+        values.forEach(function (value, index) {
+          const cell = document.createElement('td');
+          cell.dataset.label = value[0];
+          if (index >= 2 && index <= 5) cell.classList.add('is-numeric');
+          if (index === 6) cell.classList.add('is-actions');
+          cell.textContent = value[1] == null ? '' : String(value[1]);
+          row.appendChild(cell);
+        });
+        return row;
+      }
+
+      function accountingTitle(row, type) {
+        return type === 'payment' ? row.dataset.accountingDetails : row.dataset.accountingTitle;
+      }
+
+      function accountingRows(type) {
+        const selector = type === 'tax' ? '#taxes-display [data-accounting-title]' :
+          type === 'deduction' ? '#deductions-display [data-accounting-title]' :
+            '#payments-display [data-accounting-details]';
+        return Array.from(document.querySelectorAll(selector));
+      }
+
+      function nullableNumbersDiffer(first, second) {
+        if (first === null || first === undefined || first === '' ||
+            second === null || second === undefined || second === '') {
+          return !(first === null || first === undefined || first === '') ||
+            !(second === null || second === undefined || second === '');
+        }
+        return valuesDiffer(first, second, true);
+      }
+
+      function displayedMoney(row) {
+        const amount = row.querySelector('.tax-amount');
+        const text = amount ? amount.textContent : row.lastElementChild.textContent;
+        const numeric = Number(String(text).replace(/[^0-9.-]/g, ''));
+        return Number.isFinite(numeric) ? numeric : null;
+      }
+
+      function createRemovedAccountingRow(type, record, history) {
+        const row = document.createElement('div');
+        row.className = 'summary-line summary-line-removable diff-removed-row';
+        row.dataset.diffAccounting = 'true';
+        const title = document.createElement('span');
+        const details = type === 'payment' ? record.details : record.title;
+        title.textContent = details || '';
+        const values = document.createElement('span');
+
+        if (type === 'tax') {
+          const rate = document.createElement('span');
+          rate.className = 'tax-rate';
+          rate.textContent = formatRateDisplay(record.rate) + '%';
+          const amount = document.createElement('span');
+          amount.className = 'tax-amount';
+          amount.textContent = 'EGP ' + formatAmount(record.amount);
+          values.appendChild(rate);
+          values.appendChild(amount);
+        } else if (type === 'deduction' && record.rate !== null && record.rate !== undefined) {
+          const rate = document.createElement('span');
+          rate.className = 'tax-rate';
+          rate.textContent = formatRateDisplay(record.rate) + '%';
+          const amount = document.createElement('span');
+          amount.className = 'tax-amount';
+          amount.textContent = 'EGP ' + formatAmount(Number(record.rate) * Number(history.sub_total || 0));
+          values.appendChild(rate);
+          values.appendChild(amount);
+        } else {
+          values.textContent = 'EGP ' + formatAmount(record.amount);
+        }
+
+        if (type === 'payment') {
+          row.dataset.accountingDetails = details || '';
+          row.dataset.accountingAmount = record.amount;
+        } else {
+          row.dataset.accountingTitle = details || '';
+          row.dataset.accountingRate = record.rate == null ? '' : record.rate;
+          if (type === 'deduction') row.dataset.accountingAmount = record.amount == null ? '' : record.amount;
+        }
+        row.appendChild(title);
+        row.appendChild(values);
+        return row;
+      }
+
+      function applyAccountingHistoryDiff(history, type, records) {
+        const displayId = type === 'tax' ? 'taxes-display' :
+          type === 'deduction' ? 'deductions-display' : 'payments-display';
+        const display = document.getElementById(displayId);
+        const currentRows = accountingRows(type);
+        const currentByTitle = new Map();
+        currentRows.forEach(function (row) {
+          const title = normalizeDiffTitle(accountingTitle(row, type));
+          if (!currentByTitle.has(title)) currentByTitle.set(title, []);
+          currentByTitle.get(title).push(row);
+        });
+
+        (records || []).forEach(function (historical) {
+          const title = normalizeDiffTitle(type === 'payment' ? historical.details : historical.title);
+          const matches = currentByTitle.get(title);
+          const current = matches && matches.shift();
+          if (!current) {
+            const emptyState = display.querySelector('.summary-empty');
+            if (emptyState) {
+              emptyState.hidden = true;
+              emptyState.dataset.diffHidden = 'true';
+            }
+            display.appendChild(createRemovedAccountingRow(type, historical, history));
+            return;
+          }
+
+          let changed;
+          if (type === 'tax') {
+            changed = nullableNumbersDiffer(current.dataset.accountingRate, historical.rate) ||
+              nullableNumbersDiffer(displayedMoney(current), historical.amount);
+          } else if (type === 'deduction') {
+            changed = nullableNumbersDiffer(current.dataset.accountingRate, historical.rate) ||
+              (historical.rate == null
+                ? nullableNumbersDiffer(current.dataset.accountingAmount, historical.amount)
+                : nullableNumbersDiffer(displayedMoney(current), Number(historical.rate) * Number(history.sub_total || 0)));
+          } else {
+            changed = nullableNumbersDiffer(current.dataset.accountingAmount, historical.amount);
+          }
+          if (changed) current.classList.add('diff-changed');
+        });
+
+        currentByTitle.forEach(function (rows) {
+          rows.forEach(function (row) { row.classList.add('diff-added'); });
+        });
+      }
+
+      function applyHistoryDiff(history) {
+        const categoriesColumn = document.querySelector('.categories-column');
+        const currentCategories = Array.from(categoriesColumn.querySelectorAll(':scope > .category-block'));
+        const categoriesByTitle = new Map();
+        currentCategories.forEach(function (category) {
+          const title = normalizeDiffTitle(category.querySelector('.category-head h2 .editable-value').textContent);
+          if (!categoriesByTitle.has(title)) categoriesByTitle.set(title, category);
+        });
+
+        const matchedCategories = new Set();
+        (history.categories || []).forEach(function (historicalCategory) {
+          const categoryTitle = normalizeDiffTitle(historicalCategory.title);
+          let category = categoriesByTitle.get(categoryTitle);
+
+          if (!category) {
+            category = document.createElement('div');
+            category.className = 'category-block diff-removed-category';
+            const heading = document.createElement('div');
+            heading.className = 'category-head';
+            const title = document.createElement('h2');
+            title.textContent = historicalCategory.title || '';
+            heading.appendChild(title);
+            category.appendChild(heading);
+            categoriesColumn.appendChild(category);
+          } else {
+            matchedCategories.add(category);
+          }
+
+          const table = createDiffTable(category);
+          const body = table.querySelector('tbody');
+          const currentRows = Array.from(body.querySelectorAll('tr:not(.diff-removed-row)'));
+          const currentItemsByTitle = new Map();
+          currentRows.forEach(function (row) {
+            const title = normalizeDiffTitle(currentItemValue(row, 'title'));
+            if (!currentItemsByTitle.has(title)) currentItemsByTitle.set(title, []);
+            currentItemsByTitle.get(title).push(row);
+          });
+
+          (historicalCategory.items || []).forEach(function (historicalItem) {
+            const title = normalizeDiffTitle(historicalItem.title);
+            const matches = currentItemsByTitle.get(title);
+            const row = matches && matches.shift();
+            if (!row) {
+              body.appendChild(createRemovedItemRow(historicalItem));
+              return;
+            }
+
+            const changed =
+              valuesDiffer(currentItemValue(row, 'unit_type'), historicalItem.unit_type, false) ||
+              valuesDiffer(currentItemValue(row, 'amount'), historicalItem.amount, true) ||
+              valuesDiffer(currentItemValue(row, 'currency'), historicalItem.currency, true) ||
+              valuesDiffer(currentItemValue(row, 'completion'), historicalItem.completion_perc, true);
+            if (changed) row.classList.add('diff-changed');
+          });
+
+          currentItemsByTitle.forEach(function (rows) {
+            rows.forEach(function (row) { row.classList.add('diff-added'); });
+          });
+        });
+
+        currentCategories.forEach(function (category) {
+          if (matchedCategories.has(category)) return;
+          category.classList.add('diff-added-category');
+          category.querySelectorAll('.items-table tbody tr').forEach(function (row) {
+            row.classList.add('diff-added');
+          });
+        });
+
+        applyAccountingHistoryDiff(history, 'tax', history.taxes);
+        applyAccountingHistoryDiff(history, 'deduction', history.deductions);
+        applyAccountingHistoryDiff(history, 'payment', history.previously_paid);
+      }
+
+      function clearHistoryDiff() {
+        document.querySelectorAll('.diff-removed-category').forEach(function (category) { category.remove(); });
+        document.querySelectorAll('.diff-added, .diff-changed, .diff-added-category, .diff-removed-category')
+          .forEach(function (element) {
+            element.classList.remove('diff-added', 'diff-changed', 'diff-added-category', 'diff-removed-category');
+          });
+        document.querySelectorAll('.diff-removed-row').forEach(function (row) { row.remove(); });
+        document.querySelectorAll('[data-diff-hidden="true"]').forEach(function (element) {
+          element.hidden = false;
+          delete element.dataset.diffHidden;
+        });
+        document.querySelectorAll('[data-diff-created-table="true"]').forEach(function (table) {
+          const category = table.closest('.category-block');
+          table.remove();
+          const emptyItems = category && category.querySelector('.empty-items');
+          if (emptyItems) emptyItems.hidden = false;
+        });
+        historyDiffActive = false;
+        if (toggleHistoryDiffButton) {
+          toggleHistoryDiffButton.textContent = 'عرض الفروقات';
+          toggleHistoryDiffButton.setAttribute('aria-pressed', 'false');
+        }
+      }
+
+      if (historyCompareVersion && toggleHistoryDiffButton) {
+        historyCompareVersion.addEventListener('change', function () {
+          if (historyDiffActive) clearHistoryDiff();
+        });
+
+        toggleHistoryDiffButton.addEventListener('click', function () {
+          if (historyDiffActive) {
+            clearHistoryDiff();
+            historyDiffError.textContent = '';
+            historyDiffError.classList.remove('is-visible');
+            return;
+          }
+
+          const historyId = historyCompareVersion.value;
+          if (!historyId) return;
+          toggleHistoryDiffButton.disabled = true;
+          historyCompareVersion.disabled = true;
+          historyDiffError.textContent = '';
+          historyDiffError.classList.remove('is-visible');
+          fetch(API_BASE + '/details_hist/' + encodeURIComponent(historyId) + '?query=values', {
+            credentials: 'include',
+          })
+            .then(function (res) {
+              if (!res.ok) throw new Error('Request failed with status ' + res.status);
+              return res.json();
+            })
+            .then(function (history) {
+              applyHistoryDiff(history);
+              historyDiffActive = true;
+              toggleHistoryDiffButton.textContent = 'إخفاء الفروقات';
+              toggleHistoryDiffButton.setAttribute('aria-pressed', 'true');
+            })
+            .catch(function () {
+              clearHistoryDiff();
+              historyDiffError.textContent = 'تعذر تحميل بيانات النسخة للمقارنة.';
+              historyDiffError.classList.add('is-visible');
+            })
+            .finally(function () {
+              toggleHistoryDiffButton.disabled = false;
+              historyCompareVersion.disabled = false;
+            });
+        });
+      }
 
       if (previousVersionList) {
         fetch(API_BASE + '/old_ver/' + extractId, { credentials: 'include' })
@@ -2118,6 +2548,7 @@
             if (!histories) return;
             historyList.innerHTML = '';
             if (!histories.length) {
+              if (historyCompareVersion) historyCompareVersion.disabled = true;
               const emptyState = document.createElement('p');
               emptyState.className = 'history-state';
               emptyState.textContent = 'لا توجد تعديلات سابقة.';
@@ -2126,9 +2557,18 @@
             }
 
             histories.forEach(function (historyItem) {
+              if (historyCompareVersion) {
+                const option = document.createElement('option');
+                option.value = historyItem.id;
+                option.textContent = (historyItem.updated_at || '') + ' — ' + (historyItem.updated_by || 'غير معروف');
+                historyCompareVersion.appendChild(option);
+                historyCompareVersion.disabled = false;
+                if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = false;
+              }
+
               const link = document.createElement('a');
               link.className = 'history-link';
-              link.href = '/system/extracts/details_hist/' + historyItem.id;
+              link.href = '/system/extracts/details_hist/' + historyItem.id + '?query=template';
 
               const user = document.createElement('span');
               user.className = 'history-link-user';
@@ -2144,6 +2584,7 @@
             });
           })
           .catch(function () {
+            if (historyCompareVersion) historyCompareVersion.disabled = true;
             historyList.innerHTML = '';
             const errorState = document.createElement('p');
             errorState.className = 'history-state';
@@ -2204,6 +2645,7 @@
       }
 
       function setEditMode(enabled) {
+        if (enabled && historyDiffActive) clearHistoryDiff();
         editMode = enabled;
         document.body.classList.toggle('is-edit-mode', enabled);
         const btnSaveEdit = document.getElementById('btn-save-edit');
@@ -2928,6 +3370,7 @@
       const btnEnterAccountingEdit = document.getElementById('btn-enter-accounting-edit');
       if (btnEnterAccountingEdit) {
         btnEnterAccountingEdit.addEventListener('click', function () {
+          if (historyDiffActive) clearHistoryDiff();
           accountingEditMode = true;
           document.body.classList.add('is-accounting-edit-mode');
           accountingError('');

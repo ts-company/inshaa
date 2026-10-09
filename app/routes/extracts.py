@@ -211,7 +211,7 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/details_hist/{history_id}")
-def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db)):
+def get_extracts(request: Request, history_id: int, query: str, db: Session = Depends(get_db)):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -312,7 +312,14 @@ def get_extracts(request: Request, history_id: int, db: Session = Depends(get_db
             "deductions": deductions
         }
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types, "user_role": user_role})
+    if query == "values":
+        return extract
+    elif query == "template":
+        return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types, "user_role": user_role})
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 @router.get("/histories/{ext_id}")
