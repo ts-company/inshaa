@@ -215,13 +215,16 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
 
 
     proj_col_width = 9 * cm
+    proj_details_data = [
+        [Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style)],
+        [Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style), Paragraph(f"{ar(extract.contract or '-')} : {ar('العقد')}", normal_style)],
+        [Paragraph(f"{ar(extract.job_title)} : {ar('نوع العمل')}", normal_style), Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style)],
+    ]
+    if type != "history":
+        proj_details_data.append([Paragraph(f"{ar(extract.approval_date.astimezone(ZoneInfo('Africa/Cairo')).strftime('%Y/%m/%d'))} {ar('تمت الموافقة في')}", normal_style)])
+
     proj_details_table = Table(
-        [
-            [Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style)],
-            [Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style), Paragraph(f"{ar(extract.contract or '-')} : {ar('العقد')}", normal_style)],
-            [Paragraph(f"{ar(extract.job_title)} : {ar('نوع العمل')}", normal_style), Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style)],
-            [Paragraph(f"{ar(extract.approval_date.astimezone(ZoneInfo('Africa/Cairo')).strftime('%Y/%m/%d'))} {ar('تمت الموافقة في')}", normal_style)],
-        ],
+        proj_details_data,
         colWidths=[proj_col_width, proj_col_width],
         hAlign="CENTER",
     )
