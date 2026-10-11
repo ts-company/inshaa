@@ -1259,148 +1259,254 @@ h1, h2, h3 { font-weight: 700; }
 <script>
 const EXTRACTS_BASE = `/system/extracts`;
 
+/**
+ * Parser for the standard invoice input sheet (xlsx / xls / csv).
+ *
+ * Expected layout (header spans two rows, data follows, ends at "اجمالى المستخلص"):
+ *
+ *   A: رقم البند | B: بند رئيسى (merged, only on first row of a block) | C: بند فرعى
+ *   D: الوحدة    | E: الكمية | F: فئة | G: نسبة الإنجاز | H: جمله المستحق (ignored)
+ *
+ * Requires SheetJS loaded globally as `XLSX`.
+ *
+ * Returns { categories, taxes, deductions, payments, warnings } where
+ *   - completion_perc is a PERCENT (0-100), ready for the percent inputs in the form
+ *   - amount / currency are plain numbers
+ *   - warnings lists values that could not be read (so the preview can flag them)
+ */
+
+// ---------- text helpers ----------------------------------------------------
+
 function normalize(value) {
   if (value === null || value === undefined) return '';
   return String(value).trim().replace(/\s+/g, ' ');
 }
 
-function toNumber(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
+/** For matching labels only: folds Arabic spelling variants (أ/إ/آ→ا, ى→ي, ة→ه, strips tashkeel). */
+function foldArabic(value) {
+  return normalize(value)
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .toLowerCase();
 }
 
-function parsePercentValue(value) {
-  if (value === null || value === undefined || value === '') return null;
+// ---------- number helpers --------------------------------------------------
 
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
+/** Plain numbers only. Handles real numbers, "4,500", "4500.5", Arabic-Indic digits and a decimal comma. */
+function toNumber(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (value === null || value === undefined) return null;
 
-    const percentMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
-    if (percentMatch) {
-      const numericValue = Number(percentMatch[1]);
-      return Number.isFinite(numericValue) ? numericValue : null;
+  let text = String(value).trim();
+  if (!text) return null;
+
+  text = text
+    .replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .replace(/٫/g, '.')
+    .replace(/[٬\s]/g, '');
+
+  if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(text)) text = text.replace(/,/g, ''); // 4,500
+  else if (/^-?\d+,\d+$/.test(text)) text = text.replace(',', '.');             // 0,5
+
+  return /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : null;
+}
+
+const round4 = (n) => Number(n.toFixed(4));
+
+/**
+ * Completion -> percent (0-100).
+ *   0.5 / "50%" / 50  ->  50        1 -> 100        0.8 -> 80
+ * Excel stores a "0%" formatted cell as a fraction, so values <= 1 are treated as fractions.
+ */
+function parseCompletion(value) {
+  if (typeof value === 'string' && /[%٪]/.test(value)) {
+    const n = toNumber(value.replace(/[%٪]/g, ''));
+    return n === null ? null : round4(n);
+  }
+  const n = toNumber(value);
+  if (n === null) return null;
+  return round4(n <= 1 ? n * 100 : n);
+}
+
+// ---------- sheet reading ---------------------------------------------------
+
+/** Raw cell values (not formatted text), 2D array, null for empty cells. */
+function sheetToGrid(worksheet) {
+  const ref = worksheet['!ref'];
+  if (!ref) return { rows: [], firstRow: 0 };
+  const range = XLSX.utils.decode_range(ref);
+  const rows = [];
+  for (let r = range.s.r; r <= range.e.r; r += 1) {
+    const row = [];
+    for (let c = range.s.c; c <= range.e.c; c += 1) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r, c })];
+      row.push(cell && cell.v !== undefined ? cell.v : null);
     }
+    rows.push(row);
+  }
+  return { rows, firstRow: range.s.r };
+}
 
-    const plainNumber = Number(trimmed.replace(/%/g, '').replace(/,/g, ''));
-    if (Number.isFinite(plainNumber)) {
-      return plainNumber;
-    }
+const isEmpty = (v) => v === null || v === undefined || String(v).trim() === '';
+
+function findHeaderRow(rows) {
+  const unit = foldArabic('الوحدة');
+  const amount = foldArabic('الكمية');
+  const statement = foldArabic('بيان');
+  for (let i = 0; i < Math.min(rows.length, 30); i += 1) {
+    const text = rows[i].map(foldArabic).join(' ');
+    if (text.includes(unit) && (text.includes(amount) || text.includes(statement))) return i;
+  }
+  return -1;
+}
+
+/** Maps each field to a column index by header text; falls back to the standard layout's position. */
+function mapColumns(rows, headerIdx) {
+  const sub = rows[headerIdx + 1] || [];
+  const subText = sub.map(foldArabic).join(' ');
+  const hasSubHeader = ['فرعي', 'رئيسي', 'جنيه'].some((k) => subText.includes(foldArabic(k)));
+
+  const width = Math.max(rows[headerIdx].length, sub.length);
+  const labels = [];
+  for (let c = 0; c < width; c += 1) {
+    labels.push(foldArabic(`${rows[headerIdx][c] ?? ''} ${hasSubHeader ? (sub[c] ?? '') : ''}`));
   }
 
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : null;
+  const find = (keywords, fallback) => {
+    const wanted = keywords.map(foldArabic);
+    const idx = labels.findIndex((label) => wanted.every((k) => label.includes(k)));
+    return idx !== -1 ? idx : fallback;
+  };
+
+  return {
+    columns: {
+      category: find(['رئيسي'], 1),
+      title: find(['فرعي'], 2),
+      unit: find(['الوحدة'], 3),
+      amount: find(['الكمية'], 4),
+      rate: find(['فئة'], 5),
+      completion: find(['نسبة', 'انجاز'], 6),
+    },
+    dataStart: headerIdx + (hasSubHeader ? 2 : 1),
+  };
 }
 
-function getCellValueFromRef(worksheet, rowIndex, colIndex) {
-  const ref = XLSX.utils.encode_cell({ c: colIndex, r: rowIndex });
-  const cell = worksheet[ref];
-  return cell ? cell.v : undefined;
-}
+const TOTAL_LABEL = foldArabic('اجمالي المستخلص');
+const isTotalRow = (row) => row.slice(0, 3).some((cell) => foldArabic(cell).includes(TOTAL_LABEL));
+
+// ---------- main parser -----------------------------------------------------
 
 function parseExtractSheet(worksheet) {
-  if (!worksheet) {
-    throw new Error('The selected file does not contain a readable sheet.');
-  }
+  if (!worksheet) throw new Error('The selected file does not contain a readable sheet.');
 
-  const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' });
-  const maxRow = rows.length;
-  if (!maxRow) {
-    throw new Error('The uploaded file is empty.');
-  }
+  const { rows, firstRow } = sheetToGrid(worksheet);
+  if (!rows.length) throw new Error('The uploaded file is empty.');
 
-  let headerRowIdx = null;
-  for (let rowIdx = 0; rowIdx < Math.min(maxRow, 30); rowIdx += 1) {
-    const rowText = (rows[rowIdx] || []).map((cell) => normalize(cell)).join(' ');
-    if (rowText.includes('الوحدة') && (rowText.includes('الكمية') || rowText.includes('بيان'))) {
-      headerRowIdx = rowIdx;
-      break;
-    }
-  }
+  const headerIdx = findHeaderRow(rows);
+  if (headerIdx === -1) throw new Error("Couldn't locate the items table header row.");
 
-  if (headerRowIdx === null) {
-    throw new Error("Couldn't locate the items table header row.");
-  }
+  const { columns, dataStart } = mapColumns(rows, headerIdx);
+  const excelRow = (idx) => firstRow + idx + 1; // real row number as shown in Excel
 
-  const dataStart = headerRowIdx + 2;
-
-  const categories = {};
+  const categories = new Map(); // Map keeps insertion order (plain objects reorder numeric-looking keys)
+  const warnings = [];
   let currentCategory = null;
   let stopRow = null;
 
-  for (let rowIdx = dataStart; rowIdx < maxRow; rowIdx += 1) {
-    const row = rows[rowIdx] || [];
-    if (!row.length) continue;
+  for (let i = dataStart; i < rows.length; i += 1) {
+    const row = rows[i];
+    if (isTotalRow(row)) { stopRow = i; break; }
 
-    const firstCellText = normalize(row[0]);
-    if (firstCellText.includes('اجمالى المستخلص') || row.slice(0, 3).some((cell) => normalize(cell).includes('اجمالى المستخلص'))) {
-      stopRow = rowIdx;
-      break;
-    }
+    // Column B is merged: only the first row of a block has text, the rest inherit it.
+    const categoryText = normalize(row[columns.category]);
+    if (categoryText) currentCategory = categoryText;
 
-    // Column B = "بند رئيسى". For merged cells only the first row of the block
-    // has a value; rows with an empty B keep the previous category.
-    const categoryCell = normalize(row[1]);
-    if (categoryCell) currentCategory = categoryCell;
-
-    const title = normalize(row[2]);
+    const title = normalize(row[columns.title]);
     if (!title) continue;
 
-    const categoryTitle = currentCategory || 'بدون بند رئيسي';
-    const unitType = normalize(row[3]);
-    const amount = toNumber(row[6]);
-    const rate = toNumber(row[7]);
-    const completion = parsePercentValue(row[8]);
+    const amountRaw = row[columns.amount];
+    const rateRaw = row[columns.rate];
+    const completionRaw = row[columns.completion];
 
-    const item = {
+    const amount = toNumber(amountRaw);
+    const rate = toNumber(rateRaw);
+    const completion = parseCompletion(completionRaw);
+
+    if (amount === null) {
+      warnings.push({ row: excelRow(i), field: 'amount', value: amountRaw, title });
+    }
+    if (rate === null && !isEmpty(rateRaw)) {
+      warnings.push({ row: excelRow(i), field: 'currency', value: rateRaw, title });
+    }
+    if (completion === null && !isEmpty(completionRaw)) {
+      warnings.push({ row: excelRow(i), field: 'completion_perc', value: completionRaw, title });
+    }
+
+    const categoryTitle = currentCategory || 'بدون بند رئيسي';
+    if (!categories.has(categoryTitle)) categories.set(categoryTitle, []);
+    categories.get(categoryTitle).push({
       title,
-      unit_type: unitType,
+      unit_type: normalize(row[columns.unit]),
       amount: amount !== null ? amount : 0,
       currency: rate !== null ? rate : 1,
-      completion_perc: completion !== null ? completion : 1,
-    };
-
-    if (!categories[categoryTitle]) categories[categoryTitle] = [];
-    categories[categoryTitle].push(item);
+      completion_perc: completion !== null ? completion : 100, // blank completion = fully complete
+    });
   }
 
   if (stopRow === null) {
-    throw new Error("Couldn't find the 'اجمالى المستخلص' totals row to know where the item table ends.");
-  }
-
-  const taxes = [];
-  const deductions = [];
-  const payments = [];
-  const stopLabels = ['اجمالى الاستقطاعات', 'صافى المستخلص'];
-
-  for (let rowIdx = stopRow + 1; rowIdx < maxRow; rowIdx += 1) {
-    const row = rows[rowIdx] || [];
-    let label = null;
-    let value = null;
-
-    for (let cIdx = row.length - 1; cIdx >= 0; cIdx -= 1) {
-      const cellValue = row[cIdx];
-      const cellNumber = toNumber(cellValue);
-      const cellText = normalize(cellValue);
-
-      if (cellNumber !== null && value === null) {
-        value = cellNumber;
-      } else if (cellText && label === null && cellNumber === null) {
-        label = cellText;
-      }
-    }
-
-    if (!label) continue;
-    if (stopLabels.some((stopLabel) => label.includes(stopLabel))) break;
+    warnings.push({ row: null, field: 'total_row', value: null, title: "Couldn't find the 'اجمالى المستخلص' row; read every row below the header." });
   }
 
   return {
-    categories: Object.entries(categories).map(([title, items]) => ({ title, items })),
-    taxes,
-    deductions,
-    payments,
+    categories: Array.from(categories, ([title, items]) => ({ title, items })),
+    taxes: [],
+    deductions: [],
+    payments: [],
+    warnings,
   };
+}
+
+// ---------- file reading (xlsx / xls / csv) ---------------------------------
+
+/**
+ * CSV must be decoded as text, otherwise Arabic is garbled. Excel on Arabic Windows
+ * often saves CSV as windows-1256 instead of UTF-8, so try UTF-8 first and fall back.
+ */
+async function readWorkbook(file) {
+  const buffer = await file.arrayBuffer();
+  const name = (file.name || '').toLowerCase();
+
+  if (name.endsWith('.csv') || name.endsWith('.txt')) {
+    let text;
+    try {
+      text = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+    } catch (err) {
+      text = new TextDecoder('windows-1256').decode(buffer);
+    }
+    return XLSX.read(text.replace(/^\uFEFF/, ''), { type: 'string' });
+  }
+  return XLSX.read(buffer, { type: 'array' });
+}
+
+/** Tries each sheet until one has the invoice header. */
+async function parseExtractFile(file) {
+  const workbook = await readWorkbook(file);
+  let firstError = null;
+  for (const sheetName of workbook.SheetNames) {
+    try {
+      return parseExtractSheet(workbook.Sheets[sheetName]);
+    } catch (err) {
+      firstError = firstError || err;
+    }
+  }
+  throw firstError || new Error('The uploaded file does not contain a readable sheet.');
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { parseExtractSheet, parseExtractFile, readWorkbook, toNumber, parseCompletion, foldArabic, normalize };
 }
 
 function clearCategories() {
@@ -1593,7 +1699,7 @@ document.querySelector('.extracts-table')?.addEventListener('click', async (even
 
   const row = event.target.closest('tbody tr[data-extract-id]');
   if (!row || event.target.closest('a, button, input, select, textarea')) return;
-  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;
+  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}?query=template`;
 });
 
 document.querySelector('.extracts-table')?.addEventListener('keydown', (event) => {
@@ -1601,7 +1707,7 @@ document.querySelector('.extracts-table')?.addEventListener('keydown', (event) =
   const row = event.target.closest('tbody tr[data-extract-id]');
   if (!row) return;
   event.preventDefault();
-  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}`;
+  window.location.href = `${EXTRACTS_BASE}/details/${row.dataset.extractId}?query=template`;
 });
 
 /* ==========================================================

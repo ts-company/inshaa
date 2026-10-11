@@ -1841,6 +1841,18 @@
       <div class="side-panels-stack">
         {% if type != 'history' %}
         <aside class="previous-version-panel" id="extract-previous-version-panel">
+          <div class="history-compare-controls">
+            <span>مقارنة مع النسخة السابقة:</span>
+            <button type="button" class="btn btn-primary" id="btn-toggle-previous-version-diff" aria-pressed="false" disabled>
+              عرض الفروقات
+            </button>
+          </div>
+          <div class="history-diff-legend" aria-label="دليل ألوان الفروقات">
+            <span><i style="background: rgba(33, 150, 243, 0.15); color: #2196f3;"></i>تعديل</span>
+            <span><i style="background: rgba(46, 125, 50, 0.13); color: #2e7d32;"></i>اضافة</span>
+            <span><i style="background: rgba(215, 25, 32, 0.13); color: #d71920;"></i>حذف</span>
+          </div>
+          <p class="history-diff-error" id="previous-version-diff-error" role="alert"></p>
           <div class="previous-version-layout">
             <div class="previous-version-column">
               <div class="previous-version-list" id="extract-previous-version-list">
@@ -1849,7 +1861,7 @@
             </div>
             <div class="previous-version-column">
               {% if extract.parent_id %}
-              <a class="previous-version-link previous-version-link--next" href="/system/extracts/details/{{ extract.parent_id }}">
+              <a class="previous-version-link previous-version-link--next" href="/system/extracts/details/{{ extract.parent_id }}?query=template">
                 <span class="previous-version-link-title">النسخة التالية</span>
                 <span class="previous-version-link-subtotal">عرض النسخة التالية</span>
               </a>
@@ -2197,9 +2209,14 @@
       const historyCompareVersion = document.getElementById('history-compare-version');
       const toggleHistoryDiffButton = document.getElementById('btn-toggle-history-diff');
       const historyDiffError = document.getElementById('history-diff-error');
+      const togglePreviousVersionDiffButton = document.getElementById('btn-toggle-previous-version-diff');
+      const previousVersionDiffError = document.getElementById('previous-version-diff-error');
       const previousVersionList = document.getElementById('extract-previous-version-list');
       const previousVersionPanel = document.getElementById('extract-previous-version-panel');
-      let historyDiffActive = false;
+      let activeDiffButton = null;
+      let previousVersionId = null;
+      let hasHistoryVersions = false;
+      let comparisonLoading = false;
 
       function normalizeDiffTitle(value) {
         return String(value || '').trim().toLocaleLowerCase();
@@ -2573,54 +2590,90 @@
           const emptyItems = category && category.querySelector('.empty-items');
           if (emptyItems) emptyItems.hidden = false;
         });
-        historyDiffActive = false;
+        activeDiffButton = null;
         if (toggleHistoryDiffButton) {
           toggleHistoryDiffButton.textContent = 'عرض الفروقات';
           toggleHistoryDiffButton.setAttribute('aria-pressed', 'false');
         }
+        if (togglePreviousVersionDiffButton) {
+          togglePreviousVersionDiffButton.textContent = 'عرض الفروقات';
+          togglePreviousVersionDiffButton.setAttribute('aria-pressed', 'false');
+        }
+      }
+
+      function toggleComparison(button, error, versionId, endpoint, selector) {
+        if (activeDiffButton === button) {
+          clearHistoryDiff();
+          error.textContent = '';
+          error.classList.remove('is-visible');
+          return;
+        }
+        if (!versionId || comparisonLoading) return;
+
+        if (activeDiffButton) clearHistoryDiff();
+        if (historyDiffError) {
+          historyDiffError.textContent = '';
+          historyDiffError.classList.remove('is-visible');
+        }
+        if (previousVersionDiffError) {
+          previousVersionDiffError.textContent = '';
+          previousVersionDiffError.classList.remove('is-visible');
+        }
+        comparisonLoading = true;
+        if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = true;
+        if (togglePreviousVersionDiffButton) togglePreviousVersionDiffButton.disabled = true;
+        if (selector) selector.disabled = true;
+        fetch(endpoint, {
+          credentials: 'include',
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error('Request failed with status ' + res.status);
+            return res.json();
+          })
+          .then(function (version) {
+            applyHistoryDiff(version);
+            activeDiffButton = button;
+            button.textContent = 'إخفاء الفروقات';
+            button.setAttribute('aria-pressed', 'true');
+          })
+          .catch(function () {
+            clearHistoryDiff();
+            error.textContent = 'تعذر تحميل بيانات النسخة للمقارنة.';
+            error.classList.add('is-visible');
+          })
+          .finally(function () {
+            comparisonLoading = false;
+            if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = !hasHistoryVersions;
+            if (togglePreviousVersionDiffButton) togglePreviousVersionDiffButton.disabled = !previousVersionId;
+            if (selector) selector.disabled = !hasHistoryVersions;
+          });
       }
 
       if (historyCompareVersion && toggleHistoryDiffButton) {
         historyCompareVersion.addEventListener('change', function () {
-          if (historyDiffActive) clearHistoryDiff();
+          if (activeDiffButton) clearHistoryDiff();
         });
-
         toggleHistoryDiffButton.addEventListener('click', function () {
-          if (historyDiffActive) {
-            clearHistoryDiff();
-            historyDiffError.textContent = '';
-            historyDiffError.classList.remove('is-visible');
-            return;
-          }
-
           const historyId = historyCompareVersion.value;
-          if (!historyId) return;
-          toggleHistoryDiffButton.disabled = true;
-          historyCompareVersion.disabled = true;
-          historyDiffError.textContent = '';
-          historyDiffError.classList.remove('is-visible');
-          fetch(API_BASE + '/details_hist/' + encodeURIComponent(historyId) + '?query=values', {
-            credentials: 'include',
-          })
-            .then(function (res) {
-              if (!res.ok) throw new Error('Request failed with status ' + res.status);
-              return res.json();
-            })
-            .then(function (history) {
-              applyHistoryDiff(history);
-              historyDiffActive = true;
-              toggleHistoryDiffButton.textContent = 'إخفاء الفروقات';
-              toggleHistoryDiffButton.setAttribute('aria-pressed', 'true');
-            })
-            .catch(function () {
-              clearHistoryDiff();
-              historyDiffError.textContent = 'تعذر تحميل بيانات النسخة للمقارنة.';
-              historyDiffError.classList.add('is-visible');
-            })
-            .finally(function () {
-              toggleHistoryDiffButton.disabled = false;
-              historyCompareVersion.disabled = false;
-            });
+          toggleComparison(
+            toggleHistoryDiffButton,
+            historyDiffError,
+            historyId,
+            API_BASE + '/details_hist/' + encodeURIComponent(historyId) + '?query=values',
+            historyCompareVersion
+          );
+        });
+      }
+
+      if (togglePreviousVersionDiffButton) {
+        togglePreviousVersionDiffButton.addEventListener('click', function () {
+          if (!previousVersionId) return;
+          toggleComparison(
+            togglePreviousVersionDiffButton,
+            previousVersionDiffError,
+            previousVersionId,
+            API_BASE + '/details/' + encodeURIComponent(previousVersionId) + '?query=values'
+          );
         });
       }
 
@@ -2650,10 +2703,12 @@
               return;
             }
 
+            previousVersionId = previousVersion.id;
+            if (togglePreviousVersionDiffButton) togglePreviousVersionDiffButton.disabled = false;
             previousVersionList.innerHTML = '';
             const link = document.createElement('a');
             link.className = 'previous-version-link';
-            link.href = '/system/extracts/details/' + previousVersion.id;
+            link.href = '/system/extracts/details/' + previousVersion.id + '?query=template';
 
             const title = document.createElement('span');
             title.className = 'previous-version-link-title';
@@ -2692,6 +2747,8 @@
             historyList.innerHTML = '';
             if (!histories.length) {
               if (historyCompareVersion) historyCompareVersion.disabled = true;
+              hasHistoryVersions = false;
+              if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = true;
               const emptyState = document.createElement('p');
               emptyState.className = 'history-state';
               emptyState.textContent = 'لا توجد تعديلات سابقة.';
@@ -2705,8 +2762,6 @@
                 option.value = historyItem.id;
                 option.textContent = (historyItem.updated_at || '') + ' — ' + (historyItem.updated_by || 'غير معروف');
                 historyCompareVersion.appendChild(option);
-                historyCompareVersion.disabled = false;
-                if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = false;
               }
 
               const link = document.createElement('a');
@@ -2725,9 +2780,14 @@
               link.appendChild(date);
               historyList.appendChild(link);
             });
+            hasHistoryVersions = true;
+            if (historyCompareVersion) historyCompareVersion.disabled = false;
+            if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = false;
           })
           .catch(function () {
+            hasHistoryVersions = false;
             if (historyCompareVersion) historyCompareVersion.disabled = true;
+            if (toggleHistoryDiffButton) toggleHistoryDiffButton.disabled = true;
             historyList.innerHTML = '';
             const errorState = document.createElement('p');
             errorState.className = 'history-state';
@@ -2788,7 +2848,7 @@
       }
 
       function setEditMode(enabled) {
-        if (enabled && historyDiffActive) clearHistoryDiff();
+        if (enabled && activeDiffButton) clearHistoryDiff();
         editMode = enabled;
         document.body.classList.toggle('is-edit-mode', enabled);
         const btnSaveEdit = document.getElementById('btn-save-edit');
@@ -3513,7 +3573,7 @@
       const btnEnterAccountingEdit = document.getElementById('btn-enter-accounting-edit');
       if (btnEnterAccountingEdit) {
         btnEnterAccountingEdit.addEventListener('click', function () {
-          if (historyDiffActive) clearHistoryDiff();
+          if (activeDiffButton) clearHistoryDiff();
           accountingEditMode = true;
           document.body.classList.add('is-accounting-edit-mode');
           accountingError('');

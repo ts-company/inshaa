@@ -90,7 +90,7 @@ def get_extracts(
 
 
 @router.post("/get_summary")
-def get_extracts(request: Request, ext_ids: List[int] = Body(...), db: Session = Depends(get_db)):
+def get_summary(request: Request, ext_ids: List[int] = Body(...), db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
     user = db.query(User).filter(User.id == user_id).first()
@@ -115,7 +115,7 @@ def get_extracts(request: Request, ext_ids: List[int] = Body(...), db: Session =
     )
 
 @router.get("/details/{ext_id}")
-def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
+def get_details(request: Request, ext_id: int, query: str, db: Session = Depends(get_db)):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -183,7 +183,6 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
         for d in db.query(ExtractDeduction).filter(ExtractDeduction.extract_id == extract.id).all()
     ]
 
-
     output = {
             "id": extract.id,
             "project_name": extract.project_name,
@@ -205,13 +204,19 @@ def get_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
             "approval_date": extract.approval_date.astimezone(ZoneInfo("Africa/Cairo")).strftime('%Y/%m/%d') if extract.approval_date is not None else None,
             "parent_id": extract.parent_id
         }
+
     type = "active" if extract.parent_id is None else "prev_version"
 
-    return templates.TemplateResponse("extract_details.html", {"request": request, "extract": output, "type": type, "permissions": permission_types, "user_role": user_role})
+    if query == "values":
+        return output
+    elif query == "template":
+        return templates.TemplateResponse("extract_details.html", {"request": request, "extract": output, "type": type, "permissions": permission_types, "user_role": user_role})
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @router.get("/details_hist/{history_id}")
-def get_extracts(request: Request, history_id: int, query: str, db: Session = Depends(get_db)):
+def get_hist_details(request: Request, history_id: int, query: str, db: Session = Depends(get_db)):
 
     token = request.cookies.get("access_token")
     user_id, user_role = validate_user(token)
@@ -540,7 +545,7 @@ def add_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    return RedirectResponse(url=f"/system/extracts/details/{new_ver.id}")
+    return RedirectResponse(url=f"/system/extracts/details/{new_ver.id}?query=template")
 
 @router.get("/old_ver/{ext_id}")
 def get_old_vers(request: Request, ext_id: int, db: Session = Depends(get_db)):
