@@ -1554,6 +1554,18 @@
       filter: grayscale(0.15);
     }
 
+    #partners-section .partner-logo,
+    #countries-section .partner-logo {
+      filter: none;
+      opacity: 1;
+      transition: none;
+    }
+
+    #countries-section .partner-logo[src$="/l.png"],
+    #countries-section .partner-logo[src$="/m.png"] {
+      height: 68px;
+    }
+
     .country-chip {
       flex-shrink: 0;
       display: flex;
@@ -4795,30 +4807,45 @@
     })();
 
     const PARTNER_LOGOS = [
-      { name: 'BMW', src: '/static/trusted logo/IMG-20260914-WA0001.jpg' },
-      { name: 'KIA', src: '/static/trusted logo/IMG-20260914-WA0002.jpg' },
-      { name: 'FORD', src: '/static/trusted logo/IMG-20260914-WA0003.jpg' },
-      { name: 'JEEP', src: '/static/trusted logo/IMG-20260914-WA0004.jpg' },
-      { name: 'CHEVROLET', src: '/static/trusted logo/IMG-20260914-WA0005.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0006.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0007.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0008.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0009.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0010.jpg' },
-      { name: 'MAZDA', src: '/static/trusted logo/IMG-20260914-WA0011.jpg' },
+      { name: 'partner', src: '/static/trusted logo/1.png' },
+      { name: 'partner', src: '/static/trusted logo/2.png' },
+      { name: 'partner', src: '/static/trusted logo/3.png' },
+      { name: 'partner', src: '/static/trusted logo/4.png' },
+      { name: 'partner', src: '/static/trusted logo/5.png' },
+      { name: 'partner', src: '/static/trusted logo/6.png' },
+      { name: 'partner', src: '/static/trusted logo/7.png' },
+      { name: 'partner', src: '/static/trusted logo/8.png' },
+      { name: 'partner', src: '/static/trusted logo/9.png' },
+      { name: 'partner', src: '/static/trusted logo/10.png' },
+      { name: 'partner', src: '/static/trusted logo/11.png' },
+      { name: 'partner', src: '/static/trusted logo/12.png' },
+      { name: 'partner', src: '/static/trusted logo/13.png' },
+      { name: 'partner', src: '/static/trusted logo/15.png' },
+      { name: 'partner', src: '/static/trusted logo/16.png' },
+      { name: 'partner', src: '/static/trusted logo/17.png' },
+      { name: 'partner', src: '/static/trusted logo/18.png' },
+      { name: 'partner', src: '/static/trusted logo/19.png' },
     ];
 
     const VENDOR_LOGOS = [
-      { name: 'a', src: '/static/vonders%20logo/a.jpg' },
-      { name: 'b', src: '/static/vonders%20logo/b.jpg' },
-      { name: 'd', src: '/static/vonders%20logo/d.jpg' },
-      { name: 'e', src: '/static/vonders%20logo/e.jpg' },
-      { name: 'f', src: '/static/vonders%20logo/f.jpg' },
-      { name: 'g', src: '/static/vonders%20logo/g.jpg' },
-      { name: 'h', src: '/static/vonders%20logo/h.jpg' },
-      { name: 'j', src: '/static/vonders%20logo/j.jpg' },
-      { name: 'k', src: '/static/vonders%20logo/k.jpg' },
-      { name: 'l', src: '/static/vonders%20logo/l.jpg' },
+      { name: 'b', src: '/static/vonders%20logo/b.png' },
+      { name: 'a', src: '/static/vonders%20logo/a.png' },
+      { name: 'd', src: '/static/vonders%20logo/c.png' },
+      { name: 'e', src: '/static/vonders%20logo/d.png' },
+      { name: 'f', src: '/static/vonders%20logo/e.png' },
+      { name: 'g', src: '/static/vonders%20logo/f.png' },
+      { name: 'h', src: '/static/vonders%20logo/g.png' },
+      { name: 'j', src: '/static/vonders%20logo/h.png' },
+      { name: 'j', src: '/static/vonders%20logo/i.png' },
+      { name: 'k', src: '/static/vonders%20logo/j.png' },
+      { name: 'l', src: '/static/vonders%20logo/k.png' },
+      { name: 'l', src: '/static/vonders%20logo/l.png' },
+      { name: 'l', src: '/static/vonders%20logo/m.png' },
+      { name: 'l', src: '/static/vonders%20logo/n.png' },
+      { name: 'l', src: '/static/vonders%20logo/o.png' },
+      { name: 'l', src: '/static/vonders%20logo/q.png' },
+      { name: 'l', src: '/static/vonders%20logo/r.png' },
+      { name: 'l', src: '/static/vonders%20logo/t.png' },
     ];
 
     function setupMarquee(trackId, items, renderItem) {
