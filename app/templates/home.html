@@ -5282,7 +5282,7 @@
       if (isSlowOrSaveData) return;
 
       const startLoad = () => {
-        heroVideo.src = '/static/hero.mp4';
+        heroVideo.src = "{{ hero_video_url }}";
         heroVideo.load();
         heroVideo.muted = true;
         heroVideo.playsInline = true;
