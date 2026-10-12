@@ -40,6 +40,10 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
 def villa_134_project_details(request: Request):
     return templates.TemplateResponse("villa_134.html", {"request": request})
 
+@router.get("/project-details/kinda")
+def kinda_project_details(request: Request):
+    return templates.TemplateResponse("kinda.html", {"request": request})
+
 
 @router.get("/cv")
 def get_cv(request: Request, db: Session = Depends(get_db)):

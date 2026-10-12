@@ -1226,34 +1226,6 @@
       white-space: nowrap;
     }
 
-    /* ===== Team ===== */
-    .team {
-      margin-top: 84px;
-    }
-
-    .team-photo {
-      width: 100%;
-      aspect-ratio: 21 / 8;
-      min-height: 260px;
-      overflow: hidden;
-      border-radius: 4px;
-      background: var(--concrete);
-    }
-
-    .team-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .team-summary {
-      margin-top: 28px;
-      max-width: 760px;
-      font-size: 16.5px;
-      color: var(--steel-dark);
-    }
-
     /* ===== Sectors / track record ===== */
     .sectors {
       margin-top: 84px;
@@ -1582,7 +1554,7 @@
 
     .partners-track {
       gap: 56px;
-      animation-duration: 26s;
+      animation-duration: 34s;
       padding: 8px 0;
     }
 
@@ -2241,19 +2213,6 @@
 
     .project-card-thumb {
       border-radius: 10px;
-    }
-
-    .team-photo {
-      min-height: 320px;
-      border-radius: 14px;
-      box-shadow: 0 20px 44px rgba(16, 33, 46, 0.12);
-    }
-
-    .team-summary {
-      max-width: 820px;
-      margin-top: 34px;
-      font-size: 18px;
-      line-height: 1.7;
     }
 
     .sector-grid {
@@ -3143,18 +3102,6 @@
 
     .project-card-thumb {
       border-radius: 0;
-    }
-
-    .team-photo {
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .team-summary {
-      margin-left: auto;
-      margin-right: auto;
-      text-align: center;
-      color: var(--steel);
     }
 
     .sector-grid {
@@ -4133,8 +4080,8 @@
       margin-left: calc(50% - 50vw);
       margin-right: calc(50% - 50vw);
       padding: 80px 24px 88px;
-      background: #1b1f21;
-      color: #f2f0e9;
+      background: #0B4D72;
+      color: #D7E2E6;
     }
 
     #company-summary .company-summary-row,
@@ -4145,12 +4092,6 @@
       margin: 0;
       padding: 60px 0;
       border-top: 1px solid rgba(230, 230, 220, 0.15);
-    }
-
-    .company-summary-followup .company-summary-row.is-people {
-      order: 1;
-      padding-top: 0;
-      border-top: 0;
     }
 
     .company-summary-followup .company-summary-row.is-promise {
@@ -4164,7 +4105,7 @@
       width: 100%;
       padding: 64px 0;
       color: #1b1f21;
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr);
       column-gap: clamp(40px, 7vw, 80px);
       row-gap: 48px;
       border-top: 0;
@@ -4219,6 +4160,7 @@
       grid-column: 1;
       grid-row: 1;
       align-self: start;
+      max-width: 640px;
     }
 
     #company-summary .company-summary-row.is-approach .summary-kicker,
@@ -4231,13 +4173,27 @@
     }
 
     #company-summary .company-summary-row.is-approach .company-summary-row-copy h3 {
-      font-size: clamp(32px, 3.5vw, 42px);
+      margin-bottom: 26px;
+      font-size: clamp(40px, 5vw, 52px);
+      font-weight: 700;
+      line-height: 0.98;
     }
 
     #company-summary .company-summary-row.is-approach .company-summary-row-copy p {
       color: #494843;
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    #company-summary .company-summary-row.is-approach .company-summary-row-copy p.approach-lead {
+      margin-bottom: 20px;
+      color: #292929;
+      font-size: clamp(20px, 2.3vw, 23px);
+      line-height: 1.42;
+    }
+
+    #company-summary .company-summary-row.is-approach .company-summary-row-copy p.approach-lead + p {
+      margin-top: 0;
     }
 
     #company-summary .summary-stages {
@@ -4304,20 +4260,20 @@
 
     .company-summary-followup .company-summary-row-copy .summary-kicker {
       margin-bottom: 14px;
-      color: #b99b67;
+      color: #F08079;
       font-size: 10px;
       letter-spacing: 2.5px;
     }
 
     .company-summary-followup .company-summary-row-copy h3 {
       margin-bottom: 16px;
-      color: #f2f0e9;
+      color: #FFFFFF;
       font-size: clamp(32px, 3.5vw, 44px);
       line-height: 1.02;
     }
 
     .company-summary-followup .company-summary-row-copy p {
-      color: #c2c2bd;
+      color: #D7E2E6;
       font-size: 15px;
       line-height: 1.65;
     }
@@ -4328,7 +4284,7 @@
 
     .company-summary-followup .company-summary-row.is-promise h3 {
       margin: 0;
-      color: #f2f0e9;
+      color: #FFFFFF;
       font-size: clamp(58px, 8vw, 104px);
       line-height: 0.9;
       letter-spacing: -1px;
@@ -4336,7 +4292,7 @@
 
     .company-summary-followup .company-summary-row.is-promise h3 span {
       display: block;
-      color: #e8b653;
+      color: #F08079;
     }
 
     .company-summary-followup .company-summary-row.is-promise {
@@ -4388,13 +4344,13 @@
     .company-summary-followup .summary-promises li {
       min-width: 0;
       padding-top: 14px;
-      border-top: 2px solid #b99650;
+      border-top: 2px solid #E16D67;
     }
 
     .company-summary-followup .summary-promises strong {
       display: block;
       margin-bottom: 6px;
-      color: #f2f0e9;
+      color: #FFFFFF;
       font-family: 'Barlow Condensed', sans-serif;
       font-size: 19px;
       line-height: 1.1;
@@ -4402,56 +4358,23 @@
     }
 
     .company-summary-followup .summary-promises span {
-      color: #aeadab;
+      color: #B8CBD3;
       font-size: 14px;
       line-height: 1.55;
-    }
-
-    .company-summary-followup .summary-roles {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      margin: 22px 0 0;
-      padding: 0;
-      border: 1px solid rgba(230, 230, 220, 0.2);
-      list-style: none;
-    }
-
-    .company-summary-followup .summary-roles li {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      min-width: 0;
-      padding: 14px 12px;
-    }
-
-    .company-summary-followup .summary-roles li + li {
-      border-left: 1px solid rgba(230, 230, 220, 0.2);
-    }
-
-    .company-summary-followup .summary-roles strong {
-      color: #f2f0e9;
-      font-size: 12px;
-      text-transform: uppercase;
-    }
-
-    .company-summary-followup .summary-roles span {
-      color: #aeadab;
-      font-size: 11px;
-      line-height: 1.4;
     }
 
     .company-summary-followup .company-summary-row-copy .summary-link {
       padding: 0;
       border: 0;
       background: transparent;
-      color: #c7aa75;
+      color: #F08079;
       font-size: 12px;
     }
 
     .company-summary-followup .company-summary-row-copy .summary-link:hover {
       border: 0;
       background: transparent;
-      color: #f2f0e9;
+      color: #FFFFFF;
     }
 
     @media (max-width: 700px) {
@@ -4471,14 +4394,18 @@
         padding: 42px 0;
       }
 
-      .company-summary-followup .company-summary-row.is-people {
-        padding-top: 0;
-      }
-
       #company-summary .company-summary-row.is-approach {
         grid-template-columns: minmax(0, 1fr);
         row-gap: 28px;
         padding: 44px 0;
+      }
+
+      #company-summary .company-summary-row.is-approach .company-summary-row-copy h3 {
+        font-size: clamp(38px, 9vw, 46px);
+      }
+
+      #company-summary .company-summary-row.is-approach .company-summary-row-copy p.approach-lead {
+        font-size: 20px;
       }
 
       #company-summary .company-summary-row.is-approach .company-summary-row-copy,
@@ -4545,17 +4472,6 @@
         padding-left: 20px;
       }
 
-      .company-summary-followup .summary-roles li {
-        padding: 11px 8px;
-      }
-
-      .company-summary-followup .summary-roles strong {
-        font-size: 10px;
-      }
-
-      .company-summary-followup .summary-roles span {
-        font-size: 10px;
-      }
     }
 
     .careers-section {
@@ -4689,7 +4605,7 @@
       <a href="#company-summary">About</a>
       <a href="#services-section">Services</a>
       <a href="#projects-section">Our work</a>
-      <a href="#team-section">People</a>
+      <a href="#promise-section">Our promise</a>
       <a href="#careers-section">Careers</a>
       <a href="#contact">Contact</a>
       <a class="hero-navbar-login" href="/system/" aria-label="Login" title="Login">
@@ -4723,14 +4639,14 @@
     <section class="company-summary scroll-reveal" id="company-summary">
       <div class="company-summary-grid">
         <div class="company-summary-row is-approach">
-          <figure class="company-summary-row-image">
+          <!-- <figure class="company-summary-row-image">
             <img src="/static/edit.jpg" alt="Interior construction project">
             <figcaption>Glass and oak staircase, Villa 134</figcaption>
-          </figure>
+          </figure> -->
           <div class="company-summary-row-copy">
             <span class="summary-kicker">Our approach</span>
-            <h3>Every project starts with a plan and ends with a promise kept.</h3>
-            <p>Before anyone breaks ground, we agree the programme, the budget and the specification with you, in writing and in detail. That plan becomes the standard we hold ourselves to on site every day.</p>
+            <h3>Every project starts<br>with a plan and ends<br>with a promise kept.</h3>
+            <p class="approach-lead">Before anyone breaks ground, we agree the programme, the budget and the specification with you, in writing and in detail. That plan becomes the standard we hold ourselves to on site every day.</p>
             <p>You always know where your project stands. We report progress as it happens, flag any change on site before it becomes a problem, and take responsibility for the work from the first site setup to the day we hand you the keys.</p>
             <p>Quality is checked as we build, not at the end. Each trade is inspected before the next one covers it, so what you see at handover is what was built underneath.</p>
           </div>
@@ -4761,6 +4677,40 @@
       </div>
     </section>
 
+    <section class="company-summary company-summary-followup scroll-reveal" id="promise-section">
+      <div class="company-summary-grid">
+        <div class="company-summary-row is-promise">
+          <figure class="company-summary-row-image">
+            <img src="/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg"
+              alt="Completed construction project">
+          </figure>
+          <div class="company-summary-row-copy">
+            <span class="summary-kicker">Our promise</span>
+            <h3>What we say is<span>what you get.</span></h3>
+            <a class="summary-link" href="#projects-section">View Our Work</a>
+          </div>
+          <ul class="summary-promises" aria-label="Our commitments">
+            <li>
+              <strong>On schedule</strong>
+              <span>We commit to a programme and report against it, week by week.</span>
+            </li>
+            <li>
+              <strong>On budget</strong>
+              <span>The price we quote is the price we work to. Changes are agreed before they are built.</span>
+            </li>
+            <li>
+              <strong>To specification</strong>
+              <span>Materials and finishes match what was signed off, checked at every stage.</span>
+            </li>
+            <li>
+              <strong>No surprises</strong>
+              <span>When something changes on site, you hear it from us first, with a solution.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <div class="spec-strip scroll-reveal">
       <div class="spec-item">
         <span class="spec-value-wrap"><span class="spec-value" data-target="352">0</span><span
@@ -4774,7 +4724,7 @@
       <div class="process-panel">
         <div class="process-title">
           <div class="process-heading">
-            <span class="process-eyebrow">What we do</span>
+            <span class="process-eyebrow">What We Do</span>
             <h2>Four capabilities,<br>one contractor.</h2>
           </div>
           <p class="process-intro">Whether it is a single villa, a full compound or an office floor, one Inshaa team carries the work from structure to final finish, so nothing falls between contractors.</p>
@@ -4830,7 +4780,7 @@
 
     <div class="projects scroll-reveal" id="projects-section">
       <div class="section-head">
-        <h2>Selected projects</h2>
+        <h2>Selected Projects</h2>
         <p>Recent work where disciplined planning, skilled execution and clear communication shaped the final result.
         </p>
       </div>
@@ -4854,9 +4804,22 @@
       </div>
     </div>
 
+    <section class="careers-section" id="careers-section" aria-labelledby="careers-title">
+      <div class="careers-inner">
+        <span class="careers-kicker">Careers</span>
+        <h2 class="careers-title" id="careers-title">Build what matters.</h2>
+        <p class="careers-lead">We are looking for motivated people who want to build with us, from students on their first site visit to experienced engineers ready to run a project.</p>
+        <p class="careers-description">Send your details and CV through our application form. Our team reviews every application.</p>
+        <a class="careers-apply" href="/home/opportunities">
+          Apply now
+          <span class="careers-apply-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </section>
+
     <div class="marquee-section scroll-reveal" id="partners-section">
       <div class="section-head">
-        <h2>Established partnerships</h2>
+        <h2>Established Partnerships</h2>
       </div>
 
       <div class="marquee">
@@ -4873,70 +4836,6 @@
         <div class="marquee-track countries-track" id="countries-track"></div>
       </div>
     </div>
-
-    <section class="company-summary company-summary-followup scroll-reveal" id="team-section">
-      <div class="company-summary-grid">
-        <div class="company-summary-row is-people">
-          <div class="company-summary-row-image">
-            <img src="/static/team.jpg" alt="Inshaa team on site">
-          </div>
-          <div class="company-summary-row-copy">
-            <span class="summary-kicker">Our people</span>
-            <h3>The people who make the promise real</h3>
-            <p>Our engineers, site supervisors, and finishing specialists have worked side by side for years, and it shows in how smoothly a project runs. Every project has a dedicated manager from mobilization to handover, so you always know who is responsible and who to call.</p>
-            <p>Behind them stands a trusted network of trade partners and specialists, chosen for their skill and their reliability.</p>
-            <ul class="summary-roles" aria-label="Our team roles">
-              <li><strong>Engineers</strong><span>Civil, structural &amp; MEP</span></li>
-              <li><strong>Supervisors</strong><span>On site every working day</span></li>
-              <li><strong>Specialists</strong><span>Finishing &amp; joinery</span></li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="company-summary-row is-promise">
-          <figure class="company-summary-row-image">
-            <img src="/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg"
-              alt="Completed construction project">
-          </figure>
-          <div class="company-summary-row-copy">
-            <span class="summary-kicker">Our promise</span>
-            <h3>What we say is<span>what you get.</span></h3>
-            <a class="summary-link" href="#projects-section">View our work</a>
-          </div>
-          <ul class="summary-promises" aria-label="Our commitments">
-            <li>
-              <strong>On schedule</strong>
-              <span>We commit to a programme and report against it, week by week.</span>
-            </li>
-            <li>
-              <strong>On budget</strong>
-              <span>The price we quote is the price we work to. Changes are agreed before they are built.</span>
-            </li>
-            <li>
-              <strong>To specification</strong>
-              <span>Materials and finishes match what was signed off, checked at every stage.</span>
-            </li>
-            <li>
-              <strong>No surprises</strong>
-              <span>When something changes on site, you hear it from us first, with a solution.</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="careers-section" id="careers-section" aria-labelledby="careers-title">
-      <div class="careers-inner">
-        <span class="careers-kicker">Careers</span>
-        <h2 class="careers-title" id="careers-title">Build what matters.</h2>
-        <p class="careers-lead">We are looking for motivated people who want to build with us, from students on their first site visit to experienced engineers ready to run a project.</p>
-        <p class="careers-description">Send your details and CV through our application form. Our team reviews every application.</p>
-        <a class="careers-apply" href="/home/opportunities">
-          Apply now
-          <span class="careers-apply-arrow" aria-hidden="true">&rarr;</span>
-        </a>
-      </div>
-    </section>
 
   </main>
 
@@ -5218,6 +5117,14 @@
 
     const PDF_CV_CARDS = [
       {
+        title: 'Concrete and Finishing Works',
+        sub_categories: [
+          'Kinda Compound - Taj City',
+          'Number 84 Villas in Canada Compound - Taj City',
+          'Number 12 Buildings in Canada Compound - Taj City',
+        ],
+      },
+      {
         title: 'Petroleum sector',
         sub_categories: [
           'Schlumberger headquarters in Maadi',
@@ -5274,34 +5181,26 @@
         title: 'Religious projects',
         sub_categories: ['Al-Nusayr Mosque in Tripoli'],
       },
-      {
-        title: 'Concrete and Finishing Works',
-        sub_categories: [
-          'Kinda Compound - Taj City',
-          'Number 84 Villas in Canada Compound - Taj City',
-          'Number 12 Buildings in Canada Compound - Taj City',
-        ],
-      },
     ];
 
     const SECTOR_BACKGROUND_IMAGES = [
+      '/static/built/IMG-20260930-WA0009.jpg',
       '/static/built/IMG-20260930-WA0005.jpg',
       '/static/built/IMG-20260930-WA0003.jpg',
       '/static/built/IMG-20260930-WA0006.jpg',
       '/static/built/IMG-20260930-WA0007.jpg',
       '/static/built/IMG-20260930-WA0004.jpg',
       '/static/built/IMG-20260930-WA0008.jpg',
-      '/static/built/IMG-20260930-WA0009.jpg',
     ];
 
     const SECTOR_FRONT_BACKGROUND_IMAGES = [
+      '/static/built/IMG-20260930-WA0009.jpg',
       '/static/built/IMG-20260930-WA0005.jpg',
       '/static/built/IMG-20260930-WA0003.jpg',
       '/static/built/IMG-20260930-WA0006.jpg',
       '/static/built/IMG-20260930-WA0007.jpg',
       '/static/built/IMG-20260930-WA0004.jpg',
       '/static/built/IMG-20260930-WA0008.jpg',
-      '/static/built/IMG-20260930-WA0009.jpg',
     ];
 
     const STATIC_PROJECTS = [
@@ -5314,6 +5213,14 @@
           '/static/villa-134/villa-134-12.jpg',
           '/static/villa-134/villa-134-16.jpg',
           '/static/villa-134/villa-134-38.jpg',
+        ]
+      },
+      {
+        title: 'Kinda Compound',
+        description: 'Concrete and finishing works at Kinda Compound, Taj City.',
+        detail_page: 'kinda',
+        media_urls: [
+          '/static/kinda/kinda-cover.jpg',
         ]
       },
       /*
@@ -5876,6 +5783,8 @@
       pageLink.className = 'project-page-link';
       if (project.detail_page === 'villa-134') {
         pageLink.href = '/home/project-details/villa-134';
+      } else if (project.detail_page === 'kinda') {
+        pageLink.href = '/home/project-details/kinda';
       } else {
         const pageParams = new URLSearchParams({
           title: project.title || 'Untitled project',
