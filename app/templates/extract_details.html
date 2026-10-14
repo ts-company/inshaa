@@ -1811,7 +1811,7 @@
               <td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-item-id="{{ item.id }}" data-edit-field="completion"
                 data-edit-value="{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}" data-edit-step="0.01" data-edit-min="1"
                 data-edit-max="100">
-                <span class="editable-value">{{ item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc }}%</span>
+                <span class="editable-value">{{ "%.1f"|format(item.completion_perc * 100 if item.completion_perc <= 1 else item.completion_perc) }}%</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
               </td>
               <td class="is-numeric item-total" data-label="الاجمالي">{{ "{:,.2f}".format(item.total) }}</td>
@@ -2259,7 +2259,7 @@
         if (field === 'completion') {
           const numericValue = Number(value);
           const completedPercent = completionPercentage(numericValue);
-          return Number.isFinite(completedPercent) ? String(completedPercent) + '%' : '';
+          return Number.isFinite(completedPercent) ? completedPercent.toFixed(1) + '%' : '';
         }
         return String(value == null ? '' : value).trim();
       }
@@ -2929,7 +2929,7 @@
         cells[3].dataset.editValue = item.currency;
         cells[3].querySelector('.editable-value').textContent = formatAmount(item.currency);
         cells[4].dataset.editValue = completionPercent;
-        cells[4].querySelector('.editable-value').textContent = completionPercent + '%';
+        cells[4].querySelector('.editable-value').textContent = completionPercent.toFixed(1) + '%';
         cells[5].textContent = formatAmount(total);
         cells[6].querySelector('.btn-delete-item').dataset.itemId = '';
         cells[6].querySelector('.btn-delete-item').dataset.itemTitle = item.title;
@@ -3066,7 +3066,7 @@
           const displayValue = document.createElement('span');
           displayValue.className = 'editable-value';
           displayValue.textContent = field === 'completion'
-            ? newValue + '%'
+            ? Number(newValue).toFixed(1) + '%'
             : isText ? newValue : formatAmount(newValue);
           const trigger = document.createElement('button');
           trigger.type = 'button';
