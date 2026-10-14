@@ -20,7 +20,7 @@ from app.models.extracts.deductions_history import ExtractDeductionHistory
 from app.models.extracts.payments_history import ExtractPreviouslyPaidHistory
 from app.schemas.exctract import AddExtract, AddExtractCategories, UpdateAccounting, EditExtractHeaders
 from app.core.auth import validate_user
-from app.utils import generate_extract_pdf, generate_summary_pdf
+from app.utils import generate_extract_pdf, generate_summary_pdf, format_rate
 from app.database import get_db
 from app.config import BASE_DIR
 from decimal import Decimal
@@ -141,7 +141,7 @@ def get_details(request: Request, ext_id: int, query: str, db: Session = Depends
             "unit_type": item.unit_type,
             "amount": item.amount,
             "currency": item.currency,
-            "completion_perc": item.completion_perc,
+            "completion_perc": format_rate(item.completion_perc),
             "total": item.total
         })
 
@@ -253,7 +253,7 @@ def get_hist_details(request: Request, history_id: int, query: str, db: Session 
             "unit_type": item.unit_type,
             "amount": item.amount,
             "currency": item.currency,
-            "completion_perc": item.completion_perc,
+            "completion_perc": format_rate(item.completion_perc),
             "total": item.total
         })
 
