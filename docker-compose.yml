@@ -28,5 +28,6 @@ services:
       - .env
     volumes:
       - ./app/static:/app/static
+      - ./app/templates:/app/app/templates
 volumes:
   postgres_data:

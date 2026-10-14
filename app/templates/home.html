@@ -1025,10 +1025,6 @@
       transition: transform 0.35s ease;
     }
 
-    .project-card-thumb {
-      position: relative;
-    }
-
     .project-card-media-track {
       display: flex;
       width: 100%;
@@ -4096,6 +4092,7 @@
 
     .company-summary-followup .company-summary-row.is-promise {
       order: 2;
+      grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.08fr);
     }
 
     #company-summary .company-summary-row.is-approach {
@@ -5125,15 +5122,6 @@
         ],
       },
       {
-        title: 'Petroleum sector',
-        sub_categories: [
-          'Schlumberger headquarters in Maadi',
-          'Schlumberger Laboratories in Kattameya',
-          'Schlumberger Administrative Headquarters and Central Workshops in Tripoli',
-          'Petrogas Company Headquarters in Tripoli',
-        ],
-      },
-      {
         title: 'Offices and administrative buildings',
         sub_categories: [
           'Season Trading Company Headquarters',
@@ -5148,13 +5136,6 @@
           'Administrative Headquarters of Minka Wotrawi Company',
           'Mall and apartments at Canada Compound',
           'Entrance to the Madinet Masr company headquarters in the Nasr City district.',
-        ],
-      },
-      {
-        title: 'Hospitals',
-        sub_categories: [
-          'Medical Center 11 June for Oil in Tripoli',
-          'Sakina Elderly Care Facility, Jeddah'
         ],
       },
       {
@@ -5181,26 +5162,42 @@
         title: 'Religious projects',
         sub_categories: ['Al-Nusayr Mosque in Tripoli'],
       },
+      {
+        title: 'Hospitals',
+        sub_categories: [
+          'Medical Center 11 June for Oil in Tripoli',
+          'Sakina Elderly Care Facility, Jeddah'
+        ],
+      },
+      {
+        title: 'Petroleum sector',
+        sub_categories: [
+          'Schlumberger headquarters in Maadi',
+          'Schlumberger Laboratories in Kattameya',
+          'Schlumberger Administrative Headquarters and Central Workshops in Tripoli',
+          'Petrogas Company Headquarters in Tripoli',
+        ],
+      },
     ];
 
     const SECTOR_BACKGROUND_IMAGES = [
       '/static/built/IMG-20260930-WA0009.jpg',
-      '/static/built/IMG-20260930-WA0005.jpg',
       '/static/built/IMG-20260930-WA0003.jpg',
-      '/static/built/IMG-20260930-WA0006.jpg',
       '/static/built/IMG-20260930-WA0007.jpg',
       '/static/built/IMG-20260930-WA0004.jpg',
       '/static/built/IMG-20260930-WA0008.jpg',
+      '/static/built/IMG-20260930-WA0006.jpg',
+      '/static/built/IMG-20260930-WA0005.jpg',
     ];
 
     const SECTOR_FRONT_BACKGROUND_IMAGES = [
       '/static/built/IMG-20260930-WA0009.jpg',
-      '/static/built/IMG-20260930-WA0005.jpg',
       '/static/built/IMG-20260930-WA0003.jpg',
-      '/static/built/IMG-20260930-WA0006.jpg',
       '/static/built/IMG-20260930-WA0007.jpg',
       '/static/built/IMG-20260930-WA0004.jpg',
       '/static/built/IMG-20260930-WA0008.jpg',
+      '/static/built/IMG-20260930-WA0006.jpg',
+      '/static/built/IMG-20260930-WA0005.jpg',
     ];
 
     const STATIC_PROJECTS = [
@@ -5220,56 +5217,10 @@
         description: 'Concrete and finishing works at Kinda Compound, Taj City.',
         detail_page: 'kinda',
         media_urls: [
-          '/static/kinda/kinda-cover.jpg',
+          '/static/kinda.jpg',
         ]
       },
-      /*
-      {
-        title: 'Urban Commercial Build',
-        description: 'Commercial project for a visible urban construction and fit-out program.',
-        media_urls: [
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0008.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0009.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0010.jpg',
-        ]
-      },
-      {
-        title: 'Site Development',
-        description: 'Groundworks and infrastructure development for a disciplined project sequence.',
-        media_urls: [
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0011.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0012.jpg',
-          '/static/project1-20260902T162231Z-1-001/project1/IMG-20260902-WA0013.jpg',
-        ]
-      },
-      {
-        title: 'Executive Housing',
-        description: 'A private residential and building delivery project with high standards.',
-        media_urls: [
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0026.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0027.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0028.jpg',
-        ]
-      },
-      {
-        title: 'Construction Operations',
-        description: 'Project coordination and construction progression across multiple work fronts.',
-        media_urls: [
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0029.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0030.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0031.jpg',
-        ]
-      },
-      {
-        title: 'Building Progress',
-        description: 'Integrated site delivery with strong finish and quality control focus.',
-        media_urls: [
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0032.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0033.jpg',
-          '/static/project2-20260902T162232Z-1-001/project2/IMG-20260902-WA0034.jpg',
-        ]
-      }
-      */
+
     ];
 
     // ===== Hero video: cinematic load + scroll + pointer depth =====

@@ -4,34 +4,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f5f2ec">
+  <meta name="theme-color" content="#242521">
+  <meta name="description"
+    content="Explore the complete Kinda project portfolio in Taj City, New Cairo, including its architecture, homes, interiors and community.">
   <title>Kinda Compound | Inshaa Minka</title>
   <style>
     * {
       box-sizing: border-box;
     }
 
-    html,
     body {
-      width: 100%;
-      min-height: 100%;
       margin: 0;
-      background: #f5f2ec;
+      background: #242521;
+      color: #fff;
+      font-family: Arial, sans-serif;
     }
 
-    .kinda-brochure {
+    .project-nav {
+      position: absolute;
+      inset: 0 0 auto;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      padding: 22px clamp(24px, 6vw, 92px);
+    }
+
+    .project-nav img {
+      display: block;
+      width: 148px;
+      max-height: 58px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    .portfolio-artwork {
       display: block;
       width: 100%;
       height: auto;
+    }
+
+    .site-footer {
+      display: flex;
+      width: min(1100px, calc(100% - 64px));
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 0 auto;
+      padding: 26px 0 32px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 12px;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 800px) {
+      .site-footer {
+        width: calc(100% - 40px);
+      }
+
+      .site-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .site-footer {
+        width: calc(100% - 32px);
+      }
     }
   </style>
 </head>
 
 <body>
-  <main>
-    <img class="kinda-brochure" src="/static/kinda/kinda-page.svg"
-      alt="Kinda Compound project portfolio, reproduced from the supplied brochure">
+  <header class="project-nav">
+    <a href="/" aria-label="Inshaa Minka home">
+      <img src="/static/logo.png" alt="Inshaa Minka Building &amp; Construction">
+    </a>
+  </header>
+  <main id="top">
+    <section class="brochure" aria-label="Complete Kinda project portfolio">
+      <img class="portfolio-artwork" src="/static/kinda/kinda-page.svg?v=20261014-4"
+        alt="Complete Kinda portfolio with the original design, homes, interior photographs, community and project team"
+        width="1080" height="9999" fetchpriority="high">
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <span>Kinda · Taj City, New Cairo</span>
+    <div class="footer-links">
+      <a href="/">Inshaa Minka home</a>
+      <a href="/#projects-section">Back to projects</a>
+      <a href="/static/kinda/kinda-page.svg" target="_blank" rel="noopener">Open full portfolio</a>
+    </div>
+  </footer>
 </body>
 
 </html>
