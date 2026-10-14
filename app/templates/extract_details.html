@@ -2890,7 +2890,9 @@
       }
 
       function completionFraction(percentage) {
-        return String(Number(percentage) / 100);
+        if (percentage === null || percentage === undefined || String(percentage).trim() === '') return null;
+        const numericPercentage = Number(percentage);
+        return Number.isFinite(numericPercentage) ? String(numericPercentage / 100) : null;
       }
 
       function decimalString(value) {
@@ -2964,12 +2966,11 @@
         };
       }
 
-      function validateItem(item) {
-        const completion = parseFloat(item.completion_perc);
+      function hasRequiredItemFields(item) {
         return Boolean(item.title && item.unit_type &&
-          item.amount !== null && item.currency !== null &&
-          !Number.isNaN(completion) && completion >= 0.01 && completion <= 1 &&
-          Number(item.amount) >= 0);
+          item.amount !== null && String(item.amount).trim() !== '' &&
+          item.currency !== null && String(item.currency).trim() !== '' &&
+          item.completion_perc !== null && String(item.completion_perc).trim() !== '');
       }
 
       function serializeCategories() {
@@ -3255,7 +3256,7 @@
           const categories = serializeCategories();
           const hasInvalidCategory = categories.some(function (category) {
             return !category.title || category.items.some(function (item) {
-              return !validateItem(item);
+              return !hasRequiredItemFields(item);
             });
           });
           if (hasInvalidCategory) {
@@ -3322,12 +3323,18 @@
         btnStageCategory.addEventListener('click', function () {
           clearError('add-category-error');
           const title = document.getElementById('cat-title').value.trim();
-          const items = Array.from(rowsContainer.querySelectorAll('.item-row')).map(readItemFields);
-          if (!title || !items.length || items.some(function (item) { return !validateItem(item); })) {
+          const itemRows = Array.from(rowsContainer.querySelectorAll('.item-row'));
+          const hasEmptyItemField = itemRows.some(function (row) {
+            return Array.from(row.querySelectorAll('[data-field]')).some(function (field) {
+              return !field.value.trim();
+            });
+          });
+          if (!title || !itemRows.length || hasEmptyItemField) {
             showError('add-category-error', 'برجاء إكمال اسم البند الرئيسي وجميع البنود الفرعية قبل إضافته للتعديل.');
             return;
           }
 
+          const items = itemRows.map(readItemFields);
           categoriesColumn.querySelector('.empty-categories')?.remove();
           categoriesColumn.appendChild(createCategoryBlock(title, items));
           closeModal('modal-add-category');

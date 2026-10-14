@@ -141,7 +141,7 @@ def get_details(request: Request, ext_id: int, query: str, db: Session = Depends
             "unit_type": item.unit_type,
             "amount": item.amount,
             "currency": item.currency,
-            "completion_perc": int(item.completion_perc * 100),
+            "completion_perc": item.completion_perc,
             "total": item.total
         })
 
@@ -253,7 +253,7 @@ def get_hist_details(request: Request, history_id: int, query: str, db: Session 
             "unit_type": item.unit_type,
             "amount": item.amount,
             "currency": item.currency,
-            "completion_perc": int(item.completion_perc * 100),
+            "completion_perc": item.completion_perc,
             "total": item.total
         })
 
