@@ -149,7 +149,7 @@ def ar_wrap(text, font_name="Arabic", font_size=9, max_width=100) -> str:
     return "<br/>".join(ar(line) for line in lines)
 
 
-def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
+def generate_extract_pdf(extract, project_name, project_code, contractor_name, contractor_code, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -194,15 +194,8 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
 
-    if type == "active":
-        header_text = Paragraph(f"{extract.id} {ar('مستخلص')}", title_style)
-    elif type == "history":
-        header_text = Paragraph(f"{extract.id} {ar('نسخة تم تعديلها')}", title_style)
-    else:
-        header_text = Paragraph(f"{extract.id} {ar('نسخة قديمة')}", title_style)
-
     header_table = Table(
-        [[logo, header_text]],
+        [[logo]],
         colWidths=[4 * cm, 12 * cm]
     )
     header_table.setStyle(TableStyle([
@@ -216,7 +209,8 @@ def generate_extract_pdf(extract, type, categories, items_by_cat, taxes, dedutio
 
     proj_col_width = 9 * cm
     proj_details_data = [
-        [Paragraph(f"{ar(extract.contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(extract.project_name)} : {ar('اسم المشروع')}", normal_style)],
+        [Paragraph(f"{ar(contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(contractor_code)} : {ar('كود المقاول')}", normal_style)],
+        [Paragraph(f"{ar(project_name or '-')} : {ar('اسم المشروع')}", normal_style), Paragraph(f"{ar(project_code)} : {ar('كود المشروع')}", normal_style)],
         [Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style), Paragraph(f"{ar(extract.contract or '-')} : {ar('العقد')}", normal_style)],
         [Paragraph(f"{ar(extract.job_title)} : {ar('نوع العمل')}", normal_style), Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style)],
     ]
@@ -428,23 +422,25 @@ def generate_summary_pdf(extracts) -> BytesIO:
     story.append(header_table)
     story.append(Spacer(1, 16))
 
-    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "اسم المقاول", "اسم المشروع", "ID"]
+    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "كود المقاول",  "اسم المقاول", "كود المشروع", "اسم المشروع", "ID"]
     table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
-    for extract in extracts:
+    for row in extracts:
         table_data.append([
-            Paragraph(f"{extract.total}", cell_style),
-            Paragraph(f"{extract.sub_total}", cell_style),
-            Paragraph(ar(extract.unit_number), cell_style),
-            Paragraph(ar(extract.job_title), cell_style),
-            Paragraph(ar(extract.contractor_name or "-"), cell_style),
-            Paragraph(ar(extract.project_name), cell_style),
-            Paragraph(f"{extract.id}", cell_style),
+            Paragraph(f"{row.Extract.total}", cell_style),
+            Paragraph(f"{row.Extract.sub_total}", cell_style),
+            Paragraph(ar(row.Extract.unit_number), cell_style),
+            Paragraph(ar(row.Extract.job_title), cell_style),
+            Paragraph(ar(row.contractor_code or "-"), cell_style),
+            Paragraph(ar(row.contractor_name or "-"), cell_style),
+            Paragraph(ar(row.project_code or "-"), cell_style),
+            Paragraph(ar(row.project_name or "-"), cell_style),
+            Paragraph(f"{row.Extract.id}", cell_style),
         ])
 
     table = Table(
         table_data,
-        colWidths=[2.5 * cm, 2.5 * cm, 2 * cm, 3 * cm, 3 * cm, 3 * cm, 1.5 * cm],
+        colWidths=[2.5 * cm, 2.5 * cm, 2 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm, 1.5 * cm],
         repeatRows=1,
         hAlign="CENTER"
     )

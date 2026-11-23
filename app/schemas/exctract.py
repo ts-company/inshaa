@@ -33,10 +33,10 @@ class AddExtractCategories(BaseModel):
     categories: List[AddExtractCategory]
 
 class AddExtract(BaseModel):
-    project_name: str
+    project_id: int
     contract: str
     unit_number: str
-    contractor_name: str
+    contractor_id: int
     customer_name: str = None
     job_title: str
     categories: List[AddExtractCategory]
@@ -60,9 +60,9 @@ class UpdateAccounting(BaseModel):
     payments: List[PreviouslyPaid]
 
 class EditExtractHeaders(BaseModel):
-    project_name: str
+    project_id: int = None
     contract: str
     unit_number: str
-    contractor_name: str
+    contractor_id: int = None
     customer_name: str
     job_title: str

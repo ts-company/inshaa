@@ -6,9 +6,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from app.database import engine, Base, get_db
+from app.core.security import hash_password
 from app.config import BASE_DIR
+from app.models.users_model import User
 from app.utils import generate_url
-from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup
+from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup, codes
 
 load_dotenv()
 
@@ -38,8 +40,22 @@ app.include_router(users.router)
 app.include_router(extracts.router)
 app.include_router(hr_management.router)
 app.include_router(backup.router)
+app.include_router(codes.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
+
+    admin = db.query(User).filter(User.role == "super_admin").first()
+    if not admin:
+        admin = User(
+            first_name="Ahmed",
+            last_name="Tarek",
+            username="admin",
+            password=hash_password("123"),
+            role="super_admin",
+            is_active=True
+        )
+        db.add(admin)
+        db.commit()
 
     return templates.TemplateResponse("home.html", {"request": request, "hero_video_url": generate_url("hero", "video")})

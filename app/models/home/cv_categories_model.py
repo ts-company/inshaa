@@ -4,5 +4,5 @@ from app.database import Base
 class CvCategory(Base):
     __tablename__ = "cv_categories"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     title = Column(String(50), nullable=False)

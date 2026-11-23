@@ -4,8 +4,8 @@ from app.database import Base
 class ExtractCategoryItemHistory(Base):
     __tablename__ = "extract_category_item_histories"
 
-    id = Column(Integer, primary_key=True, index=True)
-    extract_category_history_id = Column(Integer, ForeignKey("extract_category_histories.id", ondelete="CASCADE"), nullable=False)
+    id = Column(Integer, primary_key=True)
+    extract_category_history_id = Column(Integer, ForeignKey("extract_category_histories.id", ondelete="CASCADE"), nullable=False, index=True)
     title = Column(String(500), nullable=False)
     unit_type = Column(String(50), nullable=False)
     amount = Column(Numeric(9, 2), nullable=False)

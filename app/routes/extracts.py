@@ -3,7 +3,9 @@ from fastapi.responses import StreamingResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
+from app.models.extracts.contranctors import Contractor
+from app.models.extracts.projects import Project
 from app.models.users_model import User
 from app.models.permissions_model import Permission
 from app.models.extracts.extracts import Extract
@@ -36,8 +38,10 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 def get_extracts(
     request: Request,
     id: Optional[List[int]] = Query(None),
-    name: Optional[List[str]] = Query(None),
-    contractor: Optional[List[str]] = Query(None),
+    project_name: Optional[List[str]] = Query(None),
+    project_code: Optional[List[str]] = Query(None),
+    contractor_name: Optional[List[str]] = Query(None),
+    contractor_code: Optional[List[str]] = Query(None),
     customer: Optional[List[str]] = Query(None),
     unit: Optional[List[str]] = Query(None),
     job_title: Optional[List[str]] = Query(None),
@@ -50,16 +54,33 @@ def get_extracts(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    query = db.query(Extract).filter(Extract.is_active.is_(True))
+    query = (
+        db.query(
+            Extract,
+            Project.name.label("project_name"),
+            Project.code.label("project_code"),
+            Contractor.name.label("contractor_name"),
+            Contractor.code.label("contractor_code"),
+        )
+        .outerjoin(Project, Extract.project_id == Project.id)
+        .outerjoin(Contractor, Extract.contractor_id == Contractor.id)
+        .filter(Extract.is_active.is_(True))
+    )
 
     if id:
         query = query.filter(Extract.id.in_(id))
 
-    if name:
-        query = query.filter(or_(*[Extract.project_name.ilike(f"%{n}%") for n in name]))
+    if project_name:
+        query = query.filter(or_(*[Project.name.ilike(f"%{n}%") for n in project_name]))
 
-    if contractor:
-        query = query.filter(or_(*[Extract.contractor_name.ilike(f"%{c}%") for c in contractor]))
+    if project_code:
+        query = query.filter(or_(*[Project.code.ilike(f"%{n}%") for n in project_code]))
+
+    if contractor_name:
+        query = query.filter(or_(*[Contractor.name.ilike(f"%{c}%") for c in contractor_name]))
+
+    if contractor_code:
+        query = query.filter(or_(*[Contractor.code.ilike(f"%{c}%") for c in contractor_code]))
 
     if customer:
         query = query.filter(or_(*[Extract.customer_name.ilike(f"%{c}%") for c in customer]))
@@ -72,20 +93,23 @@ def get_extracts(
 
     extracts = [
         {
-            "id": e.id,
-            "project_name": e.project_name,
-            "unit_number": e.unit_number,
-            "contractor_name": e.contractor_name,
-            "customer_name": e.customer_name,
-            "job_title": e.job_title,
-            "sub_total": e.sub_total,
-            "total_taxes": e.total_taxes,
-            "total_deductions": e.total_deductions,
-            "total_payments": e.total_payments,
-            "total": e.total
+            "id": row.Extract.id,
+            "project_name": row.project_name,
+            "project_code": row.project_code,
+            "unit_number": row.Extract.unit_number,
+            "contractor_name": row.contractor_name,
+            "contractor_code": row.contractor_code,
+            "customer_name": row.Extract.customer_name,
+            "job_title": row.Extract.job_title,
+            "sub_total": row.Extract.sub_total,
+            "total_taxes": row.Extract.total_taxes,
+            "total_deductions": row.Extract.total_deductions,
+            "total_payments": row.Extract.total_payments,
+            "total": row.Extract.total,
         }
-        for e in query.order_by(Extract.id.desc()).all()
+        for row in query.order_by(Extract.id.desc()).all()
     ]
+
     return templates.TemplateResponse("extracts.html", {"request": request, "extracts": extracts})
 
 
@@ -102,7 +126,21 @@ def get_summary(request: Request, ext_ids: List[int] = Body(...), db: Session = 
         if "generate pdf" not in permission_types:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    extracts = db.query(Extract).filter(Extract.id.in_(ext_ids)).order_by(Extract.id).all()
+    extracts = (
+        db.query(
+            Extract,
+            Project.name.label("project_name"),
+            Project.code.label("project_code"),
+            Contractor.name.label("contractor_name"),
+            Contractor.code.label("contractor_code"),
+        )
+        .outerjoin(Project, Extract.project_id == Project.id)
+        .outerjoin(Contractor, Extract.contractor_id == Contractor.id)
+        .filter(Extract.id.in_(ext_ids))
+        .order_by(Extract.id)
+        .all()
+    )
+
     try:
         pdf_buffer = generate_summary_pdf(extracts)
     except RuntimeError:
@@ -125,7 +163,13 @@ def get_details(request: Request, ext_id: int, query: str, db: Session = Depends
 
     permission_types = [p.type for p in db.query(Permission).filter(Permission.user_id == user_id).all()]
 
-    extract = db.query(Extract).filter(Extract.id == ext_id).first()
+    extract_result = (db.query(Extract, Contractor, Project)
+               .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
+               .outerjoin(Project, Project.id == Extract.project_id)
+               .filter(Extract.id == ext_id).first())
+
+    extract, contractor, project = extract_result
+
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -185,10 +229,12 @@ def get_details(request: Request, ext_id: int, query: str, db: Session = Depends
 
     output = {
             "id": extract.id,
-            "project_name": extract.project_name,
+            "project_name": project.name if project is not None else None,
+            "project_code": project.code if project is not None else None,
             "contract": extract.contract,
             "unit_number": extract.unit_number,
-            "contractor_name": extract.contractor_name,
+            "contractor_name": contractor.name if contractor is not None else None,
+            "contractor_code": contractor.code if contractor is not None else None,
             "customer_name": extract.customer_name,
             "job_title": extract.job_title,
             "sub_total": extract.sub_total,
@@ -299,9 +345,11 @@ def get_hist_details(request: Request, history_id: int, query: str, db: Session 
     extract = {
             "id": extract.id,
             "project_name": extract.project_name,
+            "project_code": extract.project_code,
             "contract": extract.contract,
             "unit_number": extract.unit_number,
             "contractor_name": extract.contractor_name,
+            "contractor_code": extract.contractor_code,
             "customer_name": extract.customer_name,
             "updated_by": updated_by_name,
             "updated_at": extract.updated_at.astimezone(ZoneInfo("Africa/Cairo")).strftime("%B %d, %Y"),
@@ -323,8 +371,6 @@ def get_hist_details(request: Request, history_id: int, query: str, db: Session 
         return templates.TemplateResponse("extract_details.html", {"request": request, "extract": extract, "type": "history", "permissions": permission_types, "user_role": user_role})
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 @router.get("/histories/{ext_id}")
@@ -376,13 +422,20 @@ def add_extracts(request: Request, payload: AddExtract, db: Session = Depends(ge
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     try:
+
+        project = db.query(Project).filter(Project.id == payload.project_id).first()
+        contractor = db.query(Contractor).filter(Contractor.id == payload.contractor_id).first()
+        if not project or not contractor:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contractor or project not found")
+
+
         new_extract = Extract(
             created_by=user_id,
             created_at=datetime.now(timezone.utc),
-            project_name=payload.project_name,
+            project_id=project.id,
             contract=payload.contract,
             unit_number=payload.unit_number,
-            contractor_name=payload.contractor_name,
+            contractor_id=contractor.id,
             customer_name=payload.customer_name,
             job_title=payload.job_title,
             sub_total=0,
@@ -494,10 +547,10 @@ def add_extracts(request: Request, ext_id: int, db: Session = Depends(get_db)):
         new_ver = Extract(
             created_by=user_id,
             created_at=datetime.now(timezone.utc),
-            project_name=extract.project_name,
+            project_id=extract.project_id,
             contract=extract.contract,
             unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
+            contractor_id=extract.contractor_id,
             customer_name=extract.customer_name,
             job_title=extract.job_title,
             sub_total=extract.sub_total,
@@ -576,7 +629,13 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
-    extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
+    extract_result = (db.query(Extract, Contractor, Project)
+               .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
+               .outerjoin(Project, Project.id == Extract.project_id)
+               .filter(Extract.id == ext_id).with_for_update()
+               .first())
+    extract, contractor, project = extract_result
+
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -590,6 +649,7 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
 
     if extract.approved or extract.parent_id is not None:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
 
     old_cats = db.query(ExtractCategory).filter(ExtractCategory.extract_id == extract.id).all()
     old_cats_ids = [cat.id for cat in old_cats]
@@ -608,10 +668,12 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
             extract_id=extract.id,
             updated_at=datetime.now(timezone.utc),
             updated_by=user_id,
-            project_name=extract.project_name,
+            project_name=project.name if project is not None else None,
+            project_code=project.code if project is not None else None,
             contract=extract.contract,
             unit_number=extract.unit_number,
-            contractor_name=extract.contractor_name,
+            contractor_name=contractor.name if contractor is not None else None,
+            contractor_code=contractor.code if contractor is not None else None,
             customer_name=extract.customer_name,
             job_title=extract.job_title,
             sub_total=extract.sub_total,
@@ -723,10 +785,10 @@ def add_cat(request: Request, ext_id: int, payload: EditExtractHeaders, db: Sess
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     try:
-        extract.project_name = payload.project_name
+        extract.project_id = payload.project_id if payload.project_id else None
         extract.contract = payload.contract
         extract.unit_number = payload.unit_number
-        extract.contractor_name = payload.contractor_name
+        extract.contractor_id = payload.contractor_id if payload.contractor_id else None
         extract.customer_name = payload.customer_name
         extract.job_title = payload.job_title
         db.commit()
@@ -783,8 +845,12 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-
-    extract = db.query(Extract).filter(Extract.id == ext_id).with_for_update().first()
+    extract_result = (db.query(Extract, Contractor, Project)
+                      .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
+                      .outerjoin(Project, Project.id == Extract.project_id)
+                      .filter(Extract.id == ext_id).with_for_update()
+                      .first())
+    extract, contractor, project = extract_result
     if not extract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -807,10 +873,12 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
         extract_id=extract.id,
         updated_at=datetime.now(timezone.utc),
         updated_by=user_id,
-        project_name=extract.project_name,
+        project_name=project.name if project is not None else None,
+        project_code=project.code if project is not None else None,
         contract=extract.contract,
         unit_number=extract.unit_number,
-        contractor_name=extract.contractor_name,
+        contractor_name=contractor.name if contractor is not None else None,
+        contractor_code=contractor.code if contractor is not None else None,
         customer_name=extract.customer_name,
         job_title=extract.job_title,
         sub_total=extract.sub_total,
@@ -971,6 +1039,11 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
+        project_name = extract.project_name
+        project_code = extract.project_code
+        contractor_name = extract.contractor_name
+        contractor_code = extract.contractor_code
+
         categories = db.query(ExtractCategoryHistory).filter(ExtractCategoryHistory.extract_history_id == extract.id).all()
         category_ids = [c.id for c in categories]
         items = db.query(ExtractCategoryItemHistory).filter(ExtractCategoryItemHistory.extract_category_history_id.in_(category_ids)).all()
@@ -983,7 +1056,17 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
             items_by_cat.setdefault(item.extract_category_history_id, []).append(item)
 
     elif type == "active":
-        extract = db.query(Extract).filter(Extract.id == ext_id).first()
+        extract_result = (db.query(Extract, Contractor, Project)
+                   .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
+                   .outerjoin(Project, Project.id == Extract.project_id)
+                   .filter(Extract.id == ext_id).first())
+        extract, contractor, project = extract_result
+
+        project_name = project.name
+        project_code = project.code
+        contractor_name = contractor.name
+        contractor_code = contractor.code
+
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if not extract.approved:
@@ -1001,7 +1084,17 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
             items_by_cat.setdefault(item.category_id, []).append(item)
 
     elif type == "prev_version":
-        extract = db.query(Extract).filter(Extract.id == ext_id).first()
+        extract_result = (db.query(Extract, Contractor, Project)
+                          .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
+                          .outerjoin(Project, Project.id == Extract.project_id)
+                          .filter(Extract.id == ext_id).first())
+        extract, contractor, project = extract_result
+
+        project_name = project.name
+        project_code = project.code
+        contractor_name = contractor.name
+        contractor_code = contractor.code
+
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if not extract.approved:
@@ -1022,7 +1115,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     try:
-        pdf_buffer = generate_extract_pdf(extract, type, categories, items_by_cat, taxes, deductions, payments)
+        pdf_buffer = generate_extract_pdf(extract, project_name, project_code, contractor_name, contractor_code, type, categories, items_by_cat, taxes, deductions, payments)
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

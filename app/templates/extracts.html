@@ -380,6 +380,56 @@ h1, h2, h3 { font-weight: 700; }
 .add-extract-form input:focus,
 .add-extract-form select:focus { outline: none; border-color: var(--steel); }
 
+.code-picker { position: relative; }
+
+.code-picker-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--steel-dark);
+}
+
+.code-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.14);
+}
+
+.code-suggestions[hidden] { display: none; }
+
+.code-suggestion {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  text-align: right;
+}
+
+.code-suggestion:last-child { border-bottom: 0; }
+.code-suggestion:hover,
+.code-suggestion:focus-visible { background: var(--paper); }
+
+.code-suggestions-status {
+  padding: 10px 12px;
+  color: var(--steel-dark);
+  font-size: 14px;
+}
+
 .field-optional {
   font-weight: 400;
   font-size: 14px;
@@ -433,6 +483,8 @@ h1, h2, h3 { font-weight: 700; }
   box-shadow: 0 18px 44px rgba(17, 17, 17, 0.18);
   overflow: hidden;
 }
+
+.modal-card--wide { width: min(760px, 100%); }
 
 .modal-header {
   display: flex;
@@ -491,6 +543,73 @@ h1, h2, h3 { font-weight: 700; }
   opacity: 0.85;
   margin-top: -6px;
 }
+
+.code-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+
+.codes-table-wrap { overflow-x: auto; }
+
+.codes-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+}
+
+.codes-table th,
+.codes-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+
+.codes-table th { color: var(--steel-dark); }
+
+.codes-table input,
+.code-add-form input {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+}
+
+.codes-row-actions {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.codes-row-actions .btn { padding: 8px 12px; font-size: 13px; }
+
+.codes-row-actions .codes-delete {
+  border-color: var(--error);
+  background: var(--error);
+}
+
+.code-add-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.code-add-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.codes-message.is-error { color: var(--error); }
+.codes-message[hidden] { display: none; }
 
 .entry-list {
   display: flex;
@@ -878,6 +997,8 @@ h1, h2, h3 { font-weight: 700; }
 @media (max-width: 760px) {
   main { padding: 32px 18px 64px; overflow-x: hidden; }
   .page-head h1 { font-size: 32px; }
+  .code-add-form { grid-template-columns: 1fr; }
+  .code-add-form .btn { width: 100%; }
   .tabs-nav { gap: 8px; margin-bottom: 28px; }
   .tab-btn { flex: 1; margin-right: 0; padding: 12px 8px; font-size: 17px; }
   .field-row, .field-row-3, .field-row-4, .field-row-5 { grid-template-columns: 1fr; }
@@ -972,6 +1093,11 @@ h1, h2, h3 { font-weight: 700; }
     <h1>المستخلصات</h1>
   </div>
 
+  <div class="code-management-actions">
+    <button type="button" class="btn btn-outline btn-small" data-open-codes="contractors">Contractors codes</button>
+    <button type="button" class="btn btn-outline btn-small" data-open-codes="projects">Projects codes</button>
+  </div>
+
   <div class="tabs-nav" role="tablist">
     <button type="button" class="tab-btn is-active" id="tab-btn-view" role="tab" aria-selected="true" aria-controls="tab-panel-view">التفاصيل و البحث</button>
     <button type="button" class="tab-btn" id="tab-btn-add" role="tab" aria-selected="false" aria-controls="tab-panel-add">اضافة مستخلص</button>
@@ -1002,23 +1128,45 @@ h1, h2, h3 { font-weight: 700; }
           </div>
         </div>
 
-        <div class="search-filter-group" data-filter-name="name">
+        <div class="search-filter-group" data-filter-name="project_name">
           <div class="search-filter-header">
             <label>اسم المشروع</label>
             <button type="button" class="search-row-add-btn">+ إضافة</button>
           </div>
-          <div class="search-values" data-name="name">
-            {% set names = request.query_params.getlist('name') %}
-            {% if names %}
-              {% for value in names %}
+          <div class="search-values" data-name="project_name">
+            {% set project_names = request.query_params.getlist('project_name') %}
+            {% if project_names %}
+              {% for value in project_names %}
               <div class="search-row-input">
-                <input type="text" name="name" value="{{ value }}">
+                <input type="text" name="project_name" value="{{ value }}">
                 <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة اسم المشروع">حذف</button>
               </div>
               {% endfor %}
             {% else %}
               <div class="search-row-input is-base">
-                <input type="text" name="name">
+                <input type="text" name="project_name">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="project_code">
+          <div class="search-filter-header">
+            <label>كود المشروع</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="project_code">
+            {% set project_codes = request.query_params.getlist('project_code') %}
+            {% if project_codes %}
+              {% for value in project_codes %}
+              <div class="search-row-input">
+                <input type="text" name="project_code" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة كود المشروع">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="project_code">
               </div>
             {% endif %}
           </div>
@@ -1068,23 +1216,45 @@ h1, h2, h3 { font-weight: 700; }
           </div>
         </div>
 
-        <div class="search-filter-group" data-filter-name="contractor">
+        <div class="search-filter-group" data-filter-name="contractor_name">
           <div class="search-filter-header">
             <label>اسم المقاول</label>
             <button type="button" class="search-row-add-btn">+ إضافة</button>
           </div>
-          <div class="search-values" data-name="contractor">
-            {% set contractors = request.query_params.getlist('contractor') %}
-            {% if contractors %}
-              {% for value in contractors %}
+          <div class="search-values" data-name="contractor_name">
+            {% set contractor_names = request.query_params.getlist('contractor_name') %}
+            {% if contractor_names %}
+              {% for value in contractor_names %}
               <div class="search-row-input">
-                <input type="text" name="contractor" value="{{ value }}">
+                <input type="text" name="contractor_name" value="{{ value }}">
                 <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة اسم المقاول">حذف</button>
               </div>
               {% endfor %}
             {% else %}
               <div class="search-row-input is-base">
-                <input type="text" name="contractor">
+                <input type="text" name="contractor_name">
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="search-filter-group" data-filter-name="contractor_code">
+          <div class="search-filter-header">
+            <label>كود المقاول</label>
+            <button type="button" class="search-row-add-btn">+ إضافة</button>
+          </div>
+          <div class="search-values" data-name="contractor_code">
+            {% set contractor_codes = request.query_params.getlist('contractor_code') %}
+            {% if contractor_codes %}
+              {% for value in contractor_codes %}
+              <div class="search-row-input">
+                <input type="text" name="contractor_code" value="{{ value }}">
+                <button type="button" class="search-row-remove-btn" aria-label="حذف قيمة كود المقاول">حذف</button>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="search-row-input is-base">
+                <input type="text" name="contractor_code">
               </div>
             {% endif %}
           </div>
@@ -1131,9 +1301,11 @@ h1, h2, h3 { font-weight: 700; }
           <tr>
             <th>ID</th>
             <th>اسم المشروع</th>
+            <th>كود المشروع</th>
             <th>رقم الوحدة</th>
             <th>نوع العمل</th>
             <th>اسم المقاول</th>
+            <th>كود المقاول</th>
             <th>اسم العميل</th>
             <th class="is-numeric">المجموع</th>
             <th class="is-numeric">اجمالي الضرائب</th>
@@ -1148,9 +1320,11 @@ h1, h2, h3 { font-weight: 700; }
           <tr data-extract-id="{{ e.id }}" tabindex="0" role="link" aria-label="فتح المستخلص {{ e.project_name }}">
             <td data-label="رقم المستخلص">{{ e.id }}</td>
             <td class="extract-project" data-label="اسم المشروع">{{ e.project_name }}</td>
+            <td data-label="كود المشروع">{{ e.project_code if e.project_code else "—" }}</td>
             <td data-label="رقم الوحدة">{{ e.unit_number }}</td>
             <td data-label="نوع العمل">{{ e.job_title }}</td>
             <td class="extract-contractor" data-label="اسم المقاول">{{ e.contractor_name if e.contractor_name else "—" }}</td>
+            <td data-label="كود المقاول">{{ e.contractor_code if e.contractor_code else "—" }}</td>
             <td data-label="اسم العميل">{{ e.customer_name if e.customer_name else "—" }}</td>
             <td class="is-numeric" data-label="المجموع">{{ "{:,.2f}".format(e.sub_total) }} EGP</td>
             <td class="is-numeric" data-label="إجمالي الضرائب">{{ "{:,.2f}".format(e.total_taxes) }} EGP</td>
@@ -1174,10 +1348,14 @@ h1, h2, h3 { font-weight: 700; }
   <section class="tab-panel" id="tab-panel-add" role="tabpanel" aria-labelledby="tab-btn-add">
     <form class="add-extract-form" id="add-extract-form" novalidate>
       <div class="field-row-3">
-        <label>
-          اسم المشروع
-          <input type="text" name="project_name" id="project-name" required>
-        </label>
+        <div class="code-picker-field">
+          <label for="project-name">اسم المشروع</label>
+          <div class="code-picker" data-code-picker="projects">
+            <input type="text" name="project_name" id="project-name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="project-suggestions" autocomplete="off" required>
+            <input type="hidden" name="project_id" id="project-id">
+            <div class="code-suggestions" id="project-suggestions" role="listbox" hidden></div>
+          </div>
+        </div>
         <label>
           العقد
           <input type="text" name="contract" id="contract" required>
@@ -1189,10 +1367,14 @@ h1, h2, h3 { font-weight: 700; }
       </div>
 
       <div class="field-row-3">
-        <label>
-          اسم المقاول
-          <input type="text" name="contractor_name" id="contractor-name" required>
-        </label>
+        <div class="code-picker-field">
+          <label for="contractor-name">اسم المقاول</label>
+          <div class="code-picker" data-code-picker="contractors">
+            <input type="text" name="contractor_name" id="contractor-name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="contractor-suggestions" autocomplete="off" required>
+            <input type="hidden" name="contractor_id" id="contractor-id">
+            <div class="code-suggestions" id="contractor-suggestions" role="listbox" hidden></div>
+          </div>
+        </div>
         <label>
           نوع العمل
           <input type="text" name="job_title" id="job-title" required>
@@ -1247,6 +1429,31 @@ h1, h2, h3 { font-weight: 700; }
         <span>اختر ملف المستخلص</span>
         <input type="file" id="xlsx-upload" accept=".xlsx,.xls,.csv" aria-label="Upload extract Excel file">
       </label>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="codes-modal" hidden>
+  <div class="modal-card modal-card--wide" role="dialog" aria-modal="true" aria-labelledby="codes-modal-title">
+    <div class="modal-header">
+      <h2 id="codes-modal-title">Codes</h2>
+      <button type="button" class="modal-close" data-close-codes aria-label="إغلاق">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="codes-message" id="codes-message" role="alert" hidden></p>
+      <div class="codes-table-wrap">
+        <table class="codes-table">
+          <thead>
+            <tr><th>الاسم</th><th>الكود</th><th>الإجراءات</th></tr>
+          </thead>
+          <tbody id="codes-table-body"></tbody>
+        </table>
+      </div>
+      <form class="code-add-form" id="code-add-form">
+        <label>الاسم<input type="text" name="name" required></label>
+        <label>الكود<input type="text" name="code" required></label>
+        <button type="submit" class="btn btn-small">إضافة</button>
+      </form>
     </div>
   </div>
 </div>
@@ -1634,6 +1841,31 @@ const xlsxUpload = document.getElementById('xlsx-upload');
 const xlsxModal = document.getElementById('xlsx-modal');
 const openXlsxModalBtn = document.getElementById('open-xlsx-modal-btn');
 const closeXlsxModalBtn = document.querySelector('.modal-close');
+const codesModal = document.getElementById('codes-modal');
+const codesModalTitle = document.getElementById('codes-modal-title');
+const codesMessage = document.getElementById('codes-message');
+const codesTableBody = document.getElementById('codes-table-body');
+const codeAddForm = document.getElementById('code-add-form');
+const CODES_BASE = '/codes';
+const codeEndpoints = {
+  contractors: {
+    title: 'Contractors codes',
+    list: '/contractors',
+    add: '/contractor_add',
+    update: '/contractor_update/',
+    delete: '/contractor_delete/',
+  },
+  projects: {
+    title: 'Projects codes',
+    list: '/projects',
+    add: '/project_add',
+    update: '/project_update/',
+    delete: '/project_delete/',
+  },
+};
+const codePickerCache = { contractors: null, projects: null };
+const codePickerLoads = { contractors: null, projects: null };
+let activeCodeType = null;
 
 function openXlsxModal() {
   if (!xlsxModal) return;
@@ -1652,9 +1884,284 @@ xlsxModal?.addEventListener('click', (event) => {
   if (event.target === xlsxModal) closeXlsxModal();
 });
 
+function showCodesMessage(text, isError = false) {
+  codesMessage.textContent = text;
+  codesMessage.classList.toggle('is-error', isError);
+  codesMessage.hidden = !text;
+}
+
+async function codesRequest(path, options = {}) {
+  const response = await fetch(`${CODES_BASE}${path}`, {
+    credentials: 'include',
+    ...options,
+  });
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+  return response;
+}
+
+function renderCodeRows(rows) {
+  codesTableBody.replaceChildren();
+  rows.forEach((item) => {
+    const row = document.createElement('tr');
+    row.dataset.codeId = item.id;
+
+    [item.name, item.code].forEach((value, index) => {
+      const cell = document.createElement('td');
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = value ?? '';
+      input.required = true;
+      input.setAttribute('aria-label', index === 0 ? 'الاسم' : 'الكود');
+      input.dataset.codeField = index === 0 ? 'name' : 'code';
+      cell.append(input);
+      row.append(cell);
+    });
+
+    const actions = document.createElement('td');
+    actions.className = 'codes-row-actions';
+    const saveButton = document.createElement('button');
+    saveButton.type = 'button';
+    saveButton.className = 'btn btn-small';
+    saveButton.dataset.codeAction = 'update';
+    saveButton.textContent = 'حفظ';
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'btn btn-small codes-delete';
+    deleteButton.dataset.codeAction = 'delete';
+    deleteButton.textContent = 'حذف';
+    actions.append(saveButton, deleteButton);
+    row.append(actions);
+    codesTableBody.append(row);
+  });
+}
+
+async function getCodePickerItems(type) {
+  if (codePickerCache[type]) return codePickerCache[type];
+  if (!codePickerLoads[type]) {
+    codePickerLoads[type] = codesRequest(codeEndpoints[type].list, { method: 'POST' })
+      .then((response) => response.json())
+      .then((rows) => {
+        if (!Array.isArray(rows)) throw new Error('Invalid response while loading codes.');
+        codePickerCache[type] = rows;
+        return rows;
+      })
+      .finally(() => {
+        codePickerLoads[type] = null;
+      });
+  }
+  return codePickerLoads[type];
+}
+
+function renderCodePicker(picker) {
+  const query = picker.input.value.trim().toLocaleLowerCase();
+  const rows = codePickerCache[picker.type] || [];
+  const matches = rows.filter((item) =>
+    `${item.name ?? ''} ${item.code ?? ''}`.toLocaleLowerCase().includes(query),
+  );
+  picker.options.replaceChildren();
+
+  if (!matches.length) {
+    const status = document.createElement('div');
+    status.className = 'code-suggestions-status';
+    status.textContent = 'لا توجد نتائج مطابقة.';
+    picker.options.append(status);
+    return;
+  }
+
+  matches.forEach((item) => {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'code-suggestion';
+    option.role = 'option';
+    option.textContent = formatCodeLabel(item);
+    option.addEventListener('mousedown', (event) => event.preventDefault());
+    option.addEventListener('click', () => {
+      picker.input.value = formatCodeLabel(item);
+      picker.idInput.value = item.id;
+      picker.input.focus();
+      picker.input.setAttribute('aria-expanded', 'false');
+      picker.options.hidden = true;
+    });
+    picker.options.append(option);
+  });
+}
+
+function formatCodeLabel(item) {
+  return `${item.name} — ${item.code}`;
+}
+
+function initializeCodePicker(type, inputId, idInputId) {
+  const input = document.getElementById(inputId);
+  const idInput = document.getElementById(idInputId);
+  const options = document.getElementById(input.getAttribute('aria-controls'));
+  const picker = { type, input, idInput, options };
+
+  const open = async () => {
+    options.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    if (!codePickerCache[type]) {
+      const status = document.createElement('div');
+      status.className = 'code-suggestions-status';
+      status.textContent = 'جارٍ تحميل القائمة...';
+      options.replaceChildren(status);
+      try {
+        await getCodePickerItems(type);
+      } catch (error) {
+        options.replaceChildren();
+        const errorStatus = document.createElement('div');
+        errorStatus.className = 'code-suggestions-status';
+        errorStatus.textContent = `تعذر تحميل القائمة. ${error.message}`;
+        options.append(errorStatus);
+        return;
+      }
+    }
+    renderCodePicker(picker);
+  };
+
+  input.addEventListener('focus', open);
+  input.addEventListener('input', () => {
+    idInput.value = '';
+    if (codePickerCache[type]) renderCodePicker(picker);
+  });
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown' && !options.hidden) {
+      event.preventDefault();
+      options.querySelector('.code-suggestion')?.focus();
+    } else if (event.key === 'Escape') {
+      options.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+    }
+  });
+  input.addEventListener('blur', () => {
+    window.setTimeout(() => {
+      if (!options.contains(document.activeElement)) {
+        options.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+      }
+    }, 0);
+  });
+
+  return picker;
+}
+
+function hasValidCodeSelection(type, inputId, idInputId) {
+  const name = document.getElementById(inputId).value.trim();
+  const id = document.getElementById(idInputId).value;
+  return Boolean(
+    id &&
+    codePickerCache[type]?.some((item) => String(item.id) === id && formatCodeLabel(item) === name),
+  );
+}
+
+async function loadCodeRows() {
+  const endpoint = codeEndpoints[activeCodeType];
+  const response = await codesRequest(endpoint.list, { method: 'POST' });
+  const rows = await response.json();
+  if (!Array.isArray(rows)) throw new Error('Invalid response while loading codes.');
+  renderCodeRows(rows);
+}
+
+async function openCodesModal(type) {
+  activeCodeType = type;
+  codesModalTitle.textContent = codeEndpoints[type].title;
+  codesModal.hidden = false;
+  codesTableBody.replaceChildren();
+  showCodesMessage('جارٍ تحميل البيانات...');
+  try {
+    await loadCodeRows();
+    showCodesMessage('');
+  } catch (error) {
+    showCodesMessage(`تعذر تحميل البيانات. ${error.message}`, true);
+  }
+}
+
+function closeCodesModal() {
+  codesModal.hidden = true;
+  activeCodeType = null;
+  codeAddForm.reset();
+  showCodesMessage('');
+}
+
+document.querySelectorAll('[data-open-codes]').forEach((button) => {
+  button.addEventListener('click', () => openCodesModal(button.dataset.openCodes));
+});
+
+codesModal.querySelector('[data-close-codes]').addEventListener('click', closeCodesModal);
+codesModal.addEventListener('click', (event) => {
+  if (event.target === codesModal) closeCodesModal();
+});
+
+codeAddForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const fields = new FormData(codeAddForm);
+  const name = fields.get('name').trim();
+  const code = fields.get('code').trim();
+  if (!name || !code) {
+    showCodesMessage('يرجى إدخال الاسم والكود.', true);
+    return;
+  }
+  const submitButton = codeAddForm.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    await codesRequest(codeEndpoints[activeCodeType].add, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, code }),
+    });
+    codeAddForm.reset();
+    codePickerCache[activeCodeType] = null;
+    await loadCodeRows();
+    showCodesMessage('');
+  } catch (error) {
+    showCodesMessage(`تعذرت إضافة العنصر. ${error.message}`, true);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+codesTableBody.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-code-action]');
+  if (!button) return;
+  const row = button.closest('tr[data-code-id]');
+  if (!row) return;
+
+  const action = button.dataset.codeAction;
+  if (action === 'delete' && !window.confirm('هل تريد حذف هذا العنصر؟')) return;
+  const itemId = encodeURIComponent(row.dataset.codeId);
+  const endpoint = codeEndpoints[activeCodeType];
+  button.disabled = true;
+  try {
+    if (action === 'update') {
+      const inputs = [...row.querySelectorAll('[data-code-field]')];
+      if (inputs.some((input) => !input.value.trim())) {
+        showCodesMessage('يرجى إدخال الاسم والكود.', true);
+        button.disabled = false;
+        return;
+      }
+      const payload = Object.fromEntries(inputs.map((input) => [input.dataset.codeField, input.value.trim()]));
+      await codesRequest(`${endpoint.update}${itemId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } else {
+      await codesRequest(`${endpoint.delete}${itemId}`, { method: 'DELETE' });
+    }
+    codePickerCache[activeCodeType] = null;
+    await loadCodeRows();
+    showCodesMessage('');
+  } catch (error) {
+    button.disabled = false;
+    showCodesMessage(`تعذر تنفيذ العملية. ${error.message}`, true);
+  }
+});
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && xlsxModal && !xlsxModal.hidden) {
     closeXlsxModal();
+  }
+  if (event.key === 'Escape' && codesModal && !codesModal.hidden) {
+    closeCodesModal();
   }
 });
 
@@ -2208,6 +2715,8 @@ function collectCategories() {
 const addForm = document.getElementById('add-extract-form');
 const addBtn = document.getElementById('add-extract-btn');
 const addMessage = document.getElementById('add-extract-message');
+initializeCodePicker('projects', 'project-name', 'project-id');
+initializeCodePicker('contractors', 'contractor-name', 'contractor-id');
 
 function showAddMessage(text, type) {
   addMessage.textContent = text;
@@ -2218,10 +2727,10 @@ function showAddMessage(text, type) {
 addForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const projectName = document.getElementById('project-name').value.trim();
+  const projectId = document.getElementById('project-id').value;
   const contract = document.getElementById('contract').value.trim();
   const unitNumber = document.getElementById('unit-number').value.trim();
-  const contractorName = document.getElementById('contractor-name').value.trim();
+  const contractorId = document.getElementById('contractor-id').value;
   const customerName = document.getElementById('customer-name').value.trim();
   const jobTitle = document.getElementById('job-title').value.trim();
 
@@ -2235,8 +2744,15 @@ addForm.addEventListener('submit', async (e) => {
   const deductions = collectDeductions(deductionsList);
   const payments = collectFlatEntries(paymentsList, 'details', 'amount');
 
-  if (!projectName || !contract || !unitNumber || !contractorName || !jobTitle) {
-    showAddMessage('يجب إدخال اسم المشروع والعقد ورقم الوحدة واسم المقاول وعنوان الوظيفة.', 'error');
+  if (!projectId || !contract || !unitNumber || !contractorId || !jobTitle) {
+    showAddMessage('يجب اختيار المشروع والمقاول من القائمتين وإدخال العقد ورقم الوحدة وعنوان الوظيفة.', 'error');
+    return;
+  }
+  if (
+    !hasValidCodeSelection('projects', 'project-name', 'project-id') ||
+    !hasValidCodeSelection('contractors', 'contractor-name', 'contractor-id')
+  ) {
+    showAddMessage('يجب اختيار مشروع ومقاول موجودين من القائمتين قبل الإرسال.', 'error');
     return;
   }
   if (hasInvalidRateEntry(taxesList) || hasInvalidDeductionRateEntry(deductionsList)) {
@@ -2245,10 +2761,10 @@ addForm.addEventListener('submit', async (e) => {
   }
 
   const payload = {
-    project_name: projectName,
+    project_id: Number(projectId),
     contract: contract,
     unit_number: unitNumber,
-    contractor_name: contractorName,
+    contractor_id: Number(contractorId),
     customer_name: customerName || null,
     job_title: jobTitle,
     categories,
