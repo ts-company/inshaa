@@ -139,7 +139,9 @@
         padding: 20px;
       }
 
-      .wordmark { width: min(230px, 100%); }
+      .wordmark {
+        width: min(230px, 100%);
+      }
     }
 
 
@@ -274,6 +276,10 @@
       overflow: hidden;
     }
 
+    body.is-header-edit-mode .project-details {
+      overflow: visible;
+    }
+
     .project-detail {
       display: flex;
       flex-direction: column;
@@ -323,6 +329,109 @@
       background: var(--paper);
       color: var(--ink);
       font: 16px var(--font-body);
+    }
+
+    .project-detail-picker {
+      display: none;
+      position: relative;
+      width: 100%;
+    }
+
+    body.is-header-edit-mode .project-detail-picker {
+      display: block;
+    }
+
+    .project-detail.is-code-picker-open {
+      position: relative;
+      z-index: 40;
+    }
+
+    .header-code-picker-toggle {
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px var(--font-body);
+      text-align: right;
+      cursor: pointer;
+    }
+
+    .header-code-picker-toggle:focus-visible,
+    .header-code-picker-search:focus {
+      outline: none;
+      border-color: var(--steel);
+    }
+
+    .header-code-picker-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      left: 0;
+      z-index: 41;
+      display: flex;
+      max-height: 300px;
+      flex-direction: column;
+      border: 1px solid var(--line-strong);
+      border-radius: 3px;
+      background: var(--white);
+      box-shadow: 0 8px 18px rgba(17, 17, 17, 0.14);
+    }
+
+    .header-code-picker-menu[hidden] {
+      display: none;
+    }
+
+    .header-code-picker-search {
+      width: 100%;
+      min-width: 0;
+      flex: 0 0 auto;
+      padding: 10px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--white);
+      color: var(--ink);
+      font: 15px var(--font-body);
+    }
+
+    .header-code-options {
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .header-code-option {
+      display: block;
+      width: 100%;
+      padding: 9px 10px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      text-align: right;
+      cursor: pointer;
+    }
+
+    .header-code-option:last-child {
+      border-bottom: 0;
+    }
+
+    .header-code-option:hover,
+    .header-code-option:focus-visible {
+      background: var(--paper);
+    }
+
+    .header-code-picker-status {
+      padding: 10px;
+      color: var(--steel-dark);
+      font-size: 14px;
     }
 
     body.is-header-edit-mode .project-detail-value {
@@ -662,7 +771,7 @@
       border: 0;
     }
 
-    .inline-add-item-row + .inline-add-item-row {
+    .inline-add-item-row+.inline-add-item-row {
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid var(--line);
@@ -768,7 +877,7 @@
       padding-bottom: 34px;
     }
 
-    .items-table td.diff-cell-has-previous > .diff-previous-value {
+    .items-table td.diff-cell-has-previous>.diff-previous-value {
       position: absolute;
       right: 14px;
       bottom: 8px;
@@ -783,12 +892,12 @@
       padding-bottom: 24px;
     }
 
-    .summary-line-removable.diff-row-has-previous > span:nth-child(2) {
+    .summary-line-removable.diff-row-has-previous>span:nth-child(2) {
       position: relative;
       align-self: flex-start;
     }
 
-    .summary-line-removable.diff-row-has-previous > span:nth-child(2) > .diff-previous-value {
+    .summary-line-removable.diff-row-has-previous>span:nth-child(2)>.diff-previous-value {
       position: absolute;
       top: 100%;
       right: 0;
@@ -1245,15 +1354,15 @@
       padding: 6px 0;
     }
 
-    .summary-line > span:first-child {
+    .summary-line>span:first-child {
       color: var(--steel-dark);
     }
 
-    .summary-line > span:nth-child(2) {
+    .summary-line>span:nth-child(2) {
       font-weight: 500;
     }
 
-    .summary-line-removable > span:nth-child(2) {
+    .summary-line-removable>span:nth-child(2) {
       display: inline-flex;
       align-items: flex-end;
       justify-content: flex-end;
@@ -1343,7 +1452,7 @@
       display: flex;
     }
 
-.is-history button,
+    .is-history button,
     .is-history .btn,
     .is-history .approval-control input {
       display: none !important;
@@ -1554,7 +1663,7 @@
         gap: 16px;
       }
 
-      .page-head > div,
+      .page-head>div,
       .page-top-row,
       .categories-column,
       .category-block {
@@ -1653,7 +1762,7 @@
   </style>
 </head>
 
-<body data-extract-id="{{ extract.id }}"{% if history %} class="is-history"{% endif %}>
+<body data-extract-id="{{ extract.id }}" {% if history %} class="is-history" {% endif %}>
 
   <header class="site-header">
     <div class="header-inner">
@@ -1675,7 +1784,8 @@
         <span>نسخة قديمة</span>
       </div>
       {% elif type == 'active' %}
-      <div class="prev-version-badge" aria-label="النسخة الحالية" style="background: rgba(11, 77, 114, 0.08); border-color: rgba(11, 77, 114, 0.25); color: #0b4d72;">
+      <div class="prev-version-badge" aria-label="النسخة الحالية"
+        style="background: rgba(11, 77, 114, 0.08); border-color: rgba(11, 77, 114, 0.25); color: #0b4d72;">
         <span>النسخة الحالية</span>
       </div>
       {% if extract.approved %}
@@ -1699,34 +1809,58 @@
         {% endif %}
         <div class="project-details">
           <div class="project-detail">
-            <span class="project-detail-label">اسم المشروع</span>
-            <h1 class="project-detail-value">{{ extract.project_name }}</h1>
-            <input class="project-detail-input" data-header-field="project_name" aria-label="اسم المشروع" value="{{ extract.project_name }}" maxlength="500" required>
+            <span class="project-detail-label" id="project-header-label">المشروع</span>
+            <h1 class="project-detail-value">{{ extract.project_code if extract.project_code else "—" }} - {{ extract.project_name if extract.project_name else "—" }}</h1>
+            <div class="project-detail-picker" data-header-code-picker="projects">
+              <button type="button" class="header-code-picker-toggle" id="project-header-picker-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="project-header-options" aria-labelledby="project-header-label project-header-selection">
+                <span class="header-code-picker-selection" id="project-header-selection">{% if extract.project_name %}{{ extract.project_name }}{% if extract.project_code %} — {{ extract.project_code }}{% endif %}{% else %}اختر المشروع{% endif %}</span>
+                <span aria-hidden="true">⌄</span>
+              </button>
+              <input type="hidden" data-header-field="project_id" id="project-header-id" value="{{ extract.project_id or '' }}">
+              <div class="header-code-picker-menu" hidden>
+                <input type="search" class="header-code-picker-search" placeholder="ابحث بالاسم أو الكود" aria-label="ابحث عن مشروع بالاسم أو الكود" autocomplete="off">
+                <div class="header-code-options" id="project-header-options" role="listbox" aria-labelledby="project-header-label"></div>
+              </div>
+            </div>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">العقد</span>
             <h1 class="project-detail-value">{{ extract.contract }}</h1>
-            <input class="project-detail-input" data-header-field="contract" aria-label="العقد" value="{{ extract.contract }}" maxlength="500" required>
+            <input class="project-detail-input" data-header-field="contract" aria-label="العقد"
+              value="{{ extract.contract }}" maxlength="500" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">رقم الوحدة</span>
             <span class="project-detail-value">{{ extract.unit_number }}</span>
-            <input class="project-detail-input" data-header-field="unit_number" aria-label="رقم الوحدة" value="{{ extract.unit_number }}" maxlength="100" required>
+            <input class="project-detail-input" data-header-field="unit_number" aria-label="رقم الوحدة"
+              value="{{ extract.unit_number }}" maxlength="100" required>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">نوع العمل</span>
             <span class="project-detail-value">{{ extract.job_title }}</span>
-            <input class="project-detail-input" data-header-field="job_title" aria-label="نوع العمل" value="{{ extract.job_title }}" maxlength="500" required>
+            <input class="project-detail-input" data-header-field="job_title" aria-label="نوع العمل"
+              value="{{ extract.job_title }}" maxlength="500" required>
           </div>
           <div class="project-detail">
-            <span class="project-detail-label">اسم المقاول</span>
-            <span class="project-detail-value">{{ extract.contractor_name if extract.contractor_name else "—" }}</span>
-            <input class="project-detail-input" data-header-field="contractor_name" aria-label="اسم المقاول" value="{{ extract.contractor_name }}" maxlength="500" required>
+            <span class="project-detail-label" id="contractor-header-label">المقاول</span>
+            <span class="project-detail-value">{{ extract.contractor_code if extract.contractor_code else "—" }} - {{ extract.contractor_name if extract.contractor_name else "—" }}</span>
+            <div class="project-detail-picker" data-header-code-picker="contractors">
+              <button type="button" class="header-code-picker-toggle" id="contractor-header-picker-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="contractor-header-options" aria-labelledby="contractor-header-label contractor-header-selection">
+                <span class="header-code-picker-selection" id="contractor-header-selection">{% if extract.contractor_name %}{{ extract.contractor_name }}{% if extract.contractor_code %} — {{ extract.contractor_code }}{% endif %}{% else %}اختر المقاول{% endif %}</span>
+                <span aria-hidden="true">⌄</span>
+              </button>
+              <input type="hidden" data-header-field="contractor_id" id="contractor-header-id" value="{{ extract.contractor_id or '' }}">
+              <div class="header-code-picker-menu" hidden>
+                <input type="search" class="header-code-picker-search" placeholder="ابحث بالاسم أو الكود" aria-label="ابحث عن مقاول بالاسم أو الكود" autocomplete="off">
+                <div class="header-code-options" id="contractor-header-options" role="listbox" aria-labelledby="contractor-header-label"></div>
+              </div>
+            </div>
           </div>
           <div class="project-detail">
             <span class="project-detail-label">اسم العميل</span>
             <span class="project-detail-value">{{ extract.customer_name if extract.customer_name else "—" }}</span>
-            <input class="project-detail-input" data-header-field="customer_name" aria-label="اسم العميل" value="{{ extract.customer_name or '' }}" maxlength="500">
+            <input class="project-detail-input" data-header-field="customer_name" aria-label="اسم العميل"
+              value="{{ extract.customer_name or '' }}" maxlength="500">
           </div>
           {% if type == 'history' %}
           <div class="project-detail">
@@ -1742,7 +1876,8 @@
       </div>
 
       <div class="category-edit-actions">
-        {% if type == 'active' and extract.approved and type != 'history' and (user_role == 'super_admin' or "add extracts" in permissions) %}
+        {% if type == 'active' and extract.approved and type != 'history' and (user_role == 'super_admin' or "add
+        extracts" in permissions) %}
         <a href="/system/extracts/create_new_ver/{{ extract.id }}" class="btn btn-primary">انشاء مستخلص جديد</a>
         {% endif %}
         {% if type != 'history' and type != 'prev_version' and not (type == 'active' and extract.approved) %}
@@ -1764,7 +1899,8 @@
         <div class="category-head">
           <h2 class="editable-cell" data-edit-field="category_title" data-edit-type="text">
             <span class="editable-value">{{ cat.title }}</span>
-            <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit category title" title="Edit category title"></button>
+            <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit category title"
+              title="Edit category title"></button>
           </h2>
           <div class="category-head-actions">
             <button type="button" class="btn btn-ghost btn-open-add-item edit-mode-only" data-cat-id="{{ cat.id }}"
@@ -1792,27 +1928,31 @@
             <tr>
               <td class="item-title editable-cell" data-label="بند فرعي" data-edit-field="title" data-edit-type="text">
                 <span class="editable-value">{{ item.title }}</span>
-                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title" title="Edit item title"></button>
+                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit item title"
+                  title="Edit item title"></button>
               </td>
               <td class="editable-cell" data-label="نوع الوحدة" data-edit-field="unit_type" data-edit-type="text">
                 <span class="editable-value">{{ item.unit_type }}</span>
-                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type" title="Edit unit type"></button>
+                <button type="button" class="inline-edit-trigger edit-mode-only" aria-label="Edit unit type"
+                  title="Edit unit type"></button>
               </td>
-              <td class="is-numeric editable-cell" data-label="الكمية" data-item-id="{{ item.id }}" data-edit-field="amount"
-                data-edit-value="{{ item.amount }}" data-edit-step="1" data-edit-min="0">
+              <td class="is-numeric editable-cell" data-label="الكمية" data-item-id="{{ item.id }}"
+                data-edit-field="amount" data-edit-value="{{ item.amount }}" data-edit-step="1" data-edit-min="0">
                 <span class="editable-value">{{ "{:,.2f}".format(item.amount) }}</span>
                 <button type="button" class="inline-edit-trigger" aria-label="Edit amount" title="Edit amount"></button>
               </td>
               <td class="editable-cell" data-label="الفئة" data-item-id="{{ item.id }}" data-edit-field="currency"
                 data-edit-value="{{ item.currency }}" data-edit-step="0.01" data-edit-min="0">
                 <span class="editable-value">{{ item.currency }}</span>
-                <button type="button" class="inline-edit-trigger" aria-label="Edit currency" title="Edit currency"></button>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit currency"
+                  title="Edit currency"></button>
               </td>
-              <td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-item-id="{{ item.id }}" data-edit-field="completion"
-                data-edit-value="{{ item.completion_perc | replace('%', '') | trim }}" data-edit-step="0.01" data-edit-min="1"
-                data-edit-max="100">
+              <td class="is-numeric editable-cell" data-label="نسبة الانجاز" data-item-id="{{ item.id }}"
+                data-edit-field="completion" data-edit-value="{{ item.completion_perc | replace('%', '') | trim }}"
+                data-edit-step="0.01" data-edit-min="1" data-edit-max="100">
                 <span class="editable-value">{{ item.completion_perc }}%</span>
-                <button type="button" class="inline-edit-trigger" aria-label="Edit completion" title="Edit completion"></button>
+                <button type="button" class="inline-edit-trigger" aria-label="Edit completion"
+                  title="Edit completion"></button>
               </td>
               <td class="is-numeric item-total" data-label="الاجمالي">{{ "{:,.2f}".format(item.total) }}</td>
               <td class="is-actions" data-label="">
@@ -1843,7 +1983,8 @@
         <aside class="previous-version-panel" id="extract-previous-version-panel">
           <div class="history-compare-controls">
             <span>مقارنة مع النسخة السابقة:</span>
-            <button type="button" class="btn btn-primary" id="btn-toggle-previous-version-diff" aria-pressed="false" disabled>
+            <button type="button" class="btn btn-primary" id="btn-toggle-previous-version-diff" aria-pressed="false"
+              disabled>
               عرض الفروقات
             </button>
           </div>
@@ -1861,7 +2002,8 @@
             </div>
             <div class="previous-version-column">
               {% if extract.parent_id %}
-              <a class="previous-version-link previous-version-link--next" href="/system/extracts/details/{{ extract.parent_id }}?query=template">
+              <a class="previous-version-link previous-version-link--next"
+                href="/system/extracts/details/{{ extract.parent_id }}?query=template">
                 <span class="previous-version-link-title">النسخة التالية</span>
                 <span class="previous-version-link-subtotal">عرض النسخة التالية</span>
               </a>
@@ -1921,15 +2063,18 @@
           <div class="accounting-display" id="taxes-display">
             {% if extract.taxes %}
             {% for tax in extract.taxes %}
-            <div class="summary-line summary-line-removable" data-accounting-title="{{ tax.title }}" data-accounting-rate="{{ tax.rate }}">
+            <div class="summary-line summary-line-removable" data-accounting-title="{{ tax.title }}"
+              data-accounting-rate="{{ tax.rate }}">
               <span>{{ tax.title }}</span>
-              <span><span class="tax-rate">{{ tax.rate * 100 }}</span><span class="tax-amount">EGP {{ "{:,.2f}".format(tax.amount) }}</span></span>
+              <span><span class="tax-rate">{{ tax.rate * 100 }}</span><span class="tax-amount">EGP {{
+                  "{:,.2f}".format(tax.amount) }}</span></span>
             </div>
             {% endfor %}
             {% else %}<p class="summary-empty">لا توجد ضرائب</p>{% endif %}
           </div>
           <div class="accounting-editor" id="taxes-editor"></div>
-          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="tax">اضافة ضريبة</button>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="tax">اضافة
+            ضريبة</button>
           <div class="summary-line is-subtotal">
             <span>مجموع الضرائب</span>
             <span>{{ "{:,.2f}".format(extract.total_taxes) }} EGP</span>
@@ -1943,7 +2088,9 @@
           <div class="accounting-display" id="deductions-display">
             {% if extract.deductions %}
             {% for ded in extract.deductions %}
-            <div class="summary-line summary-line-removable" data-accounting-title="{{ ded.title }}" data-accounting-rate="{% if ded.rate is not none %}{{ ded.rate }}{% endif %}" data-accounting-amount="{% if ded.amount is not none %}{{ ded.amount }}{% endif %}">
+            <div class="summary-line summary-line-removable" data-accounting-title="{{ ded.title }}"
+              data-accounting-rate="{% if ded.rate is not none %}{{ ded.rate }}{% endif %}"
+              data-accounting-amount="{% if ded.amount is not none %}{{ ded.amount }}{% endif %}">
               <span>{{ ded.title }}</span>
               <span>
                 {% if ded.rate is not none %}
@@ -1958,7 +2105,8 @@
             {% else %}<p class="summary-empty">لا توجد خصومات</p>{% endif %}
           </div>
           <div class="accounting-editor" id="deductions-editor"></div>
-          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="deduction">اضافة خصم</button>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="deduction">اضافة
+            خصم</button>
           <div class="summary-line is-subtotal">
             <span>مجموع الخصومات</span>
             <span>{{ "{:,.2f}".format(extract.total_deductions) }} EGP</span>
@@ -1972,17 +2120,21 @@
           <div class="accounting-display" id="payments-display">
             {% if extract.previously_paid %}
             {% for pp in extract.previously_paid %}
-            <div class="summary-line summary-line-removable" data-accounting-details="{{ pp.details }}" data-accounting-amount="{{ pp.amount }}"><span>{{ pp.details }}</span><span>{{ "{:,.2f}".format(pp.amount) }} EGP</span></div>
+            <div class="summary-line summary-line-removable" data-accounting-details="{{ pp.details }}"
+              data-accounting-amount="{{ pp.amount }}"><span>{{ pp.details }}</span><span>{{ "{:,.2f}".format(pp.amount)
+                }} EGP</span></div>
             {% endfor %}
             {% else %}<p class="summary-empty">لا توجد مدفوعات سابقة</p>{% endif %}
           </div>
           <div class="accounting-editor" id="payments-editor"></div>
-          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="payment">اضافة دفع</button>
+          <button type="button" class="btn btn-ghost-mini accounting-add-row" data-accounting-add="payment">اضافة
+            دفع</button>
         </div>
 
         <div class="summary-line is-subtotal">
           <span>اجمالي الاستقطاعات</span>
-          <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments + extract.total_taxes) }} EGP</span>
+          <span>{{ "{:,.2f}".format(extract.total_deductions + extract.total_payments + extract.total_taxes) }}
+            EGP</span>
         </div>
 
         <div class="summary-line is-grand-total">
@@ -1994,14 +2146,15 @@
 
     <label class="approval-control" for="extract-approved">
       {% if (user_role == 'super_admin' or "generate pdf" in permissions) and (
-        type == 'history' or
-        type == 'prev_version' or
-        (type == 'active' and extract.approved == true)
+      type == 'history' or
+      type == 'prev_version' or
+      (type == 'active' and extract.approved == true)
       ) %}
       <a class="btn btn-primary" href="/system/extracts/generate_pdf/{{ extract.id }}?type={{ type }}">Generate PDF</a>
       {% endif %}
 
-      {% if (user_role == 'super_admin' or "approve extracts" in permissions) and type != 'history' and type != 'prev_version' %}
+      {% if (user_role == 'super_admin' or "approve extracts" in permissions) and type != 'history' and type !=
+      'prev_version' %}
       <span class="approval-toggle">
         <input type="checkbox" id="extract-approved" {% if extract.approved %}checked{% endif %}>
         <span>الموافقة</span>
@@ -2071,8 +2224,8 @@
           <input type="number" id="item-currency" name="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-            <label for="item-completion">نسبة الانجاز</label>
-            <input type="number" id="item-completion" name="completion_perc" step="0.01" min="1" max="100" required>
+          <label for="item-completion">نسبة الانجاز</label>
+          <input type="number" id="item-completion" name="completion_perc" step="0.01" min="1" max="100" required>
         </div>
 
         <div class="modal-actions">
@@ -2189,8 +2342,8 @@
           <input type="number" data-field="currency" step="0.01" min="0" required>
         </div>
         <div class="field">
-            <label>نسبة الانجاز</label>
-            <input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required>
+          <label>نسبة الانجاز</label>
+          <input type="number" data-field="completion_perc" step="0.01" min="1" max="100" required>
         </div>
       </div>
     </div>
@@ -2332,7 +2485,7 @@
 
       function nullableNumbersDiffer(first, second) {
         if (first === null || first === undefined || first === '' ||
-            second === null || second === undefined || second === '') {
+          second === null || second === undefined || second === '') {
           return !(first === null || first === undefined || first === '') ||
             !(second === null || second === undefined || second === '');
         }
@@ -3188,10 +3341,167 @@
         error.classList.add('is-visible');
       }
 
+      const headerCodeEndpoints = {
+        projects: '/codes/projects',
+        contractors: '/codes/contractors',
+      };
+      const headerCodeCache = { projects: null, contractors: null };
+      const headerCodeLoads = { projects: null, contractors: null };
+
+      function formatHeaderCodeLabel(item) {
+        return `${item.name ?? ''} — ${item.code ?? ''}`;
+      }
+
+      async function getHeaderCodeItems(type) {
+        if (headerCodeCache[type]) return headerCodeCache[type];
+        if (!headerCodeLoads[type]) {
+          headerCodeLoads[type] = fetch(headerCodeEndpoints[type], {
+            method: 'POST',
+            credentials: 'include',
+          })
+            .then(function (response) {
+              if (!response.ok) throw new Error('Request failed with status ' + response.status);
+              return response.json();
+            })
+            .then(function (rows) {
+              if (!Array.isArray(rows)) throw new Error('Invalid response while loading codes.');
+              headerCodeCache[type] = rows;
+              return rows;
+            })
+            .finally(function () {
+              headerCodeLoads[type] = null;
+            });
+        }
+        return headerCodeLoads[type];
+      }
+
+      function renderHeaderCodeOptions(picker) {
+        const query = picker.search.value.trim().toLocaleLowerCase();
+        const matches = (headerCodeCache[picker.type] || []).filter(function (item) {
+          return `${item.name ?? ''} ${item.code ?? ''}`.toLocaleLowerCase().includes(query);
+        });
+        picker.options.replaceChildren();
+
+        if (!matches.length) {
+          const status = document.createElement('div');
+          status.className = 'header-code-picker-status';
+          status.textContent = 'لا توجد نتائج مطابقة.';
+          picker.options.append(status);
+          return;
+        }
+
+        matches.forEach(function (item) {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'header-code-option';
+          option.role = 'option';
+          option.textContent = formatHeaderCodeLabel(item);
+          option.addEventListener('click', function () {
+            picker.selection.textContent = formatHeaderCodeLabel(item);
+            picker.idInput.value = item.id;
+            picker.search.value = '';
+            closeHeaderCodePicker(picker);
+            picker.toggle.focus();
+          });
+          picker.options.append(option);
+        });
+      }
+
+      function closeHeaderCodePicker(picker) {
+        picker.menu.hidden = true;
+        picker.toggle.setAttribute('aria-expanded', 'false');
+        picker.card.classList.remove('is-code-picker-open');
+      }
+
+      function initializeHeaderCodePicker(type, toggleId, idInputId) {
+        const toggle = document.getElementById(toggleId);
+        const container = toggle.closest('[data-header-code-picker]');
+        const menu = container.querySelector('.header-code-picker-menu');
+        const search = menu.querySelector('.header-code-picker-search');
+        const options = menu.querySelector('.header-code-options');
+        const idInput = document.getElementById(idInputId);
+        const selection = toggle.querySelector('.header-code-picker-selection');
+        const picker = {
+          type,
+          toggle,
+          container,
+          card: container.closest('.project-detail'),
+          menu,
+          search,
+          options,
+          idInput,
+          selection,
+        };
+
+        const open = async function () {
+          menu.hidden = false;
+          toggle.setAttribute('aria-expanded', 'true');
+          picker.card.classList.add('is-code-picker-open');
+          search.focus();
+          if (!headerCodeCache[type]) {
+            const status = document.createElement('div');
+            status.className = 'header-code-picker-status';
+            status.textContent = 'جارٍ تحميل القائمة...';
+            options.replaceChildren(status);
+            try {
+              await getHeaderCodeItems(type);
+            } catch (error) {
+              options.replaceChildren();
+              const errorStatus = document.createElement('div');
+              errorStatus.className = 'header-code-picker-status';
+              errorStatus.textContent = 'تعذر تحميل القائمة. ' + error.message;
+              options.append(errorStatus);
+              return;
+            }
+          }
+          renderHeaderCodeOptions(picker);
+        };
+
+        toggle.addEventListener('click', function () {
+          if (menu.hidden) open();
+          else closeHeaderCodePicker(picker);
+        });
+        search.addEventListener('input', function () {
+          if (headerCodeCache[type]) renderHeaderCodeOptions(picker);
+        });
+        search.addEventListener('keydown', function (event) {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            options.querySelector('.header-code-option')?.focus();
+          } else if (event.key === 'Escape') {
+            closeHeaderCodePicker(picker);
+            toggle.focus();
+          }
+        });
+        options.addEventListener('keydown', function (event) {
+          if (event.key === 'Escape') {
+            closeHeaderCodePicker(picker);
+            toggle.focus();
+          }
+        });
+        document.addEventListener('click', function (event) {
+          if (!container.contains(event.target)) closeHeaderCodePicker(picker);
+        });
+        container.addEventListener('focusout', function () {
+          window.setTimeout(function () {
+            if (!container.contains(document.activeElement)) closeHeaderCodePicker(picker);
+          }, 0);
+        });
+
+        return picker;
+      }
+
+      const projectHeaderPicker = initializeHeaderCodePicker('projects', 'project-header-picker-toggle', 'project-header-id');
+      const contractorHeaderPicker = initializeHeaderCodePicker('contractors', 'contractor-header-picker-toggle', 'contractor-header-id');
+
       if (btnEnterHeaderEdit) {
         btnEnterHeaderEdit.addEventListener('click', function () {
           clearHeaderEditError();
-          headerEditSnapshot = headerFields.map(function (field) { return field.value; });
+          headerEditSnapshot = {
+            values: headerFields.map(function (field) { return field.value; }),
+            projectLabel: projectHeaderPicker.selection.textContent,
+            contractorLabel: contractorHeaderPicker.selection.textContent,
+          };
           document.body.classList.add('is-header-edit-mode');
         });
       }
@@ -3200,9 +3510,13 @@
         btnCancelHeaderEdit.addEventListener('click', function () {
           if (headerEditSnapshot !== null) {
             headerFields.forEach(function (field, index) {
-              field.value = headerEditSnapshot[index];
+              field.value = headerEditSnapshot.values[index];
             });
+            projectHeaderPicker.selection.textContent = headerEditSnapshot.projectLabel;
+            contractorHeaderPicker.selection.textContent = headerEditSnapshot.contractorLabel;
           }
+          closeHeaderCodePicker(projectHeaderPicker);
+          closeHeaderCodePicker(contractorHeaderPicker);
           headerEditSnapshot = null;
           clearHeaderEditError();
           document.body.classList.remove('is-header-edit-mode');
@@ -3214,11 +3528,13 @@
           if (!document.body.classList.contains('is-header-edit-mode')) return;
           const payload = {};
           headerFields.forEach(function (field) {
-            payload[field.dataset.headerField] = field.value.trim();
+            const name = field.dataset.headerField;
+            const value = field.value.trim();
+            payload[name] = name === 'project_id' || name === 'contractor_id' ? Number(value) : value;
           });
-          const requiredHeaderFields = ['project_name', 'contract', 'unit_number', 'contractor_name', 'job_title'];
+          const requiredHeaderFields = ['project_id', 'contract', 'unit_number', 'contractor_id', 'job_title'];
           if (requiredHeaderFields.some(function (field) { return !payload[field]; })) {
-            showHeaderEditError('برجاء ملء جميع بيانات المشروع المطلوبة');
+            showHeaderEditError('برجاء ملء جميع البيانات');
             return;
           }
 

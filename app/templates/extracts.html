@@ -392,21 +392,61 @@ h1, h2, h3 { font-weight: 700; }
   color: var(--steel-dark);
 }
 
-.code-suggestions {
+.code-picker-toggle {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+  text-align: right;
+  cursor: pointer;
+}
+
+.code-picker-toggle:focus-visible,
+.code-picker-search:focus { outline: none; border-color: var(--steel); }
+
+.code-picker-menu {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
   left: 0;
   z-index: 30;
-  max-height: 240px;
-  overflow-y: auto;
+  display: flex;
+  max-height: 320px;
+  flex-direction: column;
   border: 1px solid var(--line-strong);
   border-radius: 3px;
   background: var(--white);
   box-shadow: 0 8px 18px rgba(17, 17, 17, 0.14);
 }
 
-.code-suggestions[hidden] { display: none; }
+.code-picker-menu[hidden] { display: none; }
+
+.code-picker-search {
+  width: 100%;
+  flex: 0 0 auto;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  padding: 12px;
+}
+
+.code-suggestions {
+  min-height: 0;
+  overflow-y: auto;
+}
 
 .code-suggestion {
   display: block;
@@ -551,13 +591,23 @@ h1, h2, h3 { font-weight: 700; }
   margin: 0 0 24px;
 }
 
-.codes-table-wrap { overflow-x: auto; }
+.codes-table-wrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
 
 .codes-table {
   width: 100%;
-  min-width: 520px;
+  min-width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
+
+.codes-table .codes-column-name { width: 26%; }
+.codes-table .codes-column-code { width: 26%; }
+.codes-table .codes-column-count { width: 18%; }
+.codes-table .codes-column-actions { width: 30%; }
 
 .codes-table th,
 .codes-table td {
@@ -566,10 +616,15 @@ h1, h2, h3 { font-weight: 700; }
   text-align: right;
 }
 
+.codes-table td:not(.codes-row-actions) { overflow-wrap: anywhere; }
+
 .codes-table th { color: var(--steel-dark); }
 
+.codes-table .codes-column-actions-header { text-align: left; }
+
 .codes-table input,
-.code-add-form input {
+.code-add-form input,
+.codes-filter input {
   width: 100%;
   min-width: 0;
   padding: 9px 10px;
@@ -582,8 +637,9 @@ h1, h2, h3 { font-weight: 700; }
 
 .codes-row-actions {
   display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
-  white-space: nowrap;
 }
 
 .codes-row-actions .btn { padding: 8px 12px; font-size: 13px; }
@@ -598,12 +654,27 @@ h1, h2, h3 { font-weight: 700; }
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
   gap: 10px;
   align-items: end;
+  margin-bottom: 18px;
 }
 
 .code-add-form label {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.code-add-form .btn {
+  align-self: end;
+  height: 42px;
+}
+
+.codes-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--steel-dark);
   font-size: 14px;
   font-weight: 600;
 }
@@ -1094,8 +1165,10 @@ h1, h2, h3 { font-weight: 700; }
   </div>
 
   <div class="code-management-actions">
-    <button type="button" class="btn btn-outline btn-small" data-open-codes="contractors">Contractors codes</button>
-    <button type="button" class="btn btn-outline btn-small" data-open-codes="projects">Projects codes</button>
+    {% if user_role == 'super_admin' %}
+      <button type="button" class="btn btn-outline btn-small" data-open-codes="contractors">المقاولون</button>
+      <button type="button" class="btn btn-outline btn-small" data-open-codes="projects">المشاريع</button>
+    {% endif %}
   </div>
 
   <div class="tabs-nav" role="tablist">
@@ -1319,7 +1392,7 @@ h1, h2, h3 { font-weight: 700; }
           {% for e in extracts %}
           <tr data-extract-id="{{ e.id }}" tabindex="0" role="link" aria-label="فتح المستخلص {{ e.project_name }}">
             <td data-label="رقم المستخلص">{{ e.id }}</td>
-            <td class="extract-project" data-label="اسم المشروع">{{ e.project_name }}</td>
+            <td class="extract-project" data-label="اسم المشروع">{{ e.project_name if e.project_name else "—" }}</td>
             <td data-label="كود المشروع">{{ e.project_code if e.project_code else "—" }}</td>
             <td data-label="رقم الوحدة">{{ e.unit_number }}</td>
             <td data-label="نوع العمل">{{ e.job_title }}</td>
@@ -1349,11 +1422,17 @@ h1, h2, h3 { font-weight: 700; }
     <form class="add-extract-form" id="add-extract-form" novalidate>
       <div class="field-row-3">
         <div class="code-picker-field">
-          <label for="project-name">اسم المشروع</label>
+          <label id="project-picker-label">اسم المشروع</label>
           <div class="code-picker" data-code-picker="projects">
-            <input type="text" name="project_name" id="project-name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="project-suggestions" autocomplete="off" required>
+            <button type="button" class="code-picker-toggle" id="project-picker-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="project-suggestions" aria-labelledby="project-picker-label project-picker-value">
+              <span class="code-picker-selection" id="project-picker-value">اختر المشروع</span>
+              <span aria-hidden="true">⌄</span>
+            </button>
             <input type="hidden" name="project_id" id="project-id">
-            <div class="code-suggestions" id="project-suggestions" role="listbox" hidden></div>
+            <div class="code-picker-menu" id="project-picker-menu" hidden>
+              <input type="search" class="code-picker-search" id="project-picker-search" placeholder="ابحث بالاسم أو الكود" aria-label="ابحث عن مشروع بالاسم أو الكود" autocomplete="off">
+              <div class="code-suggestions" id="project-suggestions" role="listbox" aria-labelledby="project-picker-label"></div>
+            </div>
           </div>
         </div>
         <label>
@@ -1368,11 +1447,17 @@ h1, h2, h3 { font-weight: 700; }
 
       <div class="field-row-3">
         <div class="code-picker-field">
-          <label for="contractor-name">اسم المقاول</label>
+          <label id="contractor-picker-label">اسم المقاول</label>
           <div class="code-picker" data-code-picker="contractors">
-            <input type="text" name="contractor_name" id="contractor-name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="contractor-suggestions" autocomplete="off" required>
+            <button type="button" class="code-picker-toggle" id="contractor-picker-toggle" aria-haspopup="listbox" aria-expanded="false" aria-controls="contractor-suggestions" aria-labelledby="contractor-picker-label contractor-picker-value">
+              <span class="code-picker-selection" id="contractor-picker-value">اختر المقاول</span>
+              <span aria-hidden="true">⌄</span>
+            </button>
             <input type="hidden" name="contractor_id" id="contractor-id">
-            <div class="code-suggestions" id="contractor-suggestions" role="listbox" hidden></div>
+            <div class="code-picker-menu" id="contractor-picker-menu" hidden>
+              <input type="search" class="code-picker-search" id="contractor-picker-search" placeholder="ابحث بالاسم أو الكود" aria-label="ابحث عن مقاول بالاسم أو الكود" autocomplete="off">
+              <div class="code-suggestions" id="contractor-suggestions" role="listbox" aria-labelledby="contractor-picker-label"></div>
+            </div>
           </div>
         </div>
         <label>
@@ -1440,20 +1525,30 @@ h1, h2, h3 { font-weight: 700; }
       <button type="button" class="modal-close" data-close-codes aria-label="إغلاق">×</button>
     </div>
     <div class="modal-body">
-      <p class="codes-message" id="codes-message" role="alert" hidden></p>
-      <div class="codes-table-wrap">
-        <table class="codes-table">
-          <thead>
-            <tr><th>الاسم</th><th>الكود</th><th>الإجراءات</th></tr>
-          </thead>
-          <tbody id="codes-table-body"></tbody>
-        </table>
-      </div>
       <form class="code-add-form" id="code-add-form">
         <label>الاسم<input type="text" name="name" required></label>
         <label>الكود<input type="text" name="code" required></label>
         <button type="submit" class="btn btn-small">إضافة</button>
       </form>
+      <label class="codes-filter" for="codes-filter">
+        بحث
+        <input type="search" id="codes-filter" placeholder="اكتب الاسم أو الكود" autocomplete="off">
+      </label>
+      <p class="codes-message" id="codes-message" role="alert" hidden></p>
+      <div class="codes-table-wrap">
+        <table class="codes-table">
+          <colgroup>
+            <col class="codes-column-name">
+            <col class="codes-column-code">
+            <col class="codes-column-count">
+            <col class="codes-column-actions">
+          </colgroup>
+          <thead>
+            <tr><th>الاسم</th><th>الكود</th><th>عدد المستخلصات</th><th class="codes-column-actions-header">الإجراءات</th></tr>
+          </thead>
+          <tbody id="codes-table-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -1846,17 +1941,18 @@ const codesModalTitle = document.getElementById('codes-modal-title');
 const codesMessage = document.getElementById('codes-message');
 const codesTableBody = document.getElementById('codes-table-body');
 const codeAddForm = document.getElementById('code-add-form');
+const codesFilter = document.getElementById('codes-filter');
 const CODES_BASE = '/codes';
 const codeEndpoints = {
   contractors: {
-    title: 'Contractors codes',
+    title: 'المقاولون',
     list: '/contractors',
     add: '/contractor_add',
     update: '/contractor_update/',
     delete: '/contractor_delete/',
   },
   projects: {
-    title: 'Projects codes',
+    title: 'المشاريع',
     list: '/projects',
     add: '/project_add',
     update: '/project_update/',
@@ -1904,35 +2000,90 @@ function renderCodeRows(rows) {
   rows.forEach((item) => {
     const row = document.createElement('tr');
     row.dataset.codeId = item.id;
+    row.dataset.codeName = item.name ?? '';
+    row.dataset.codeCode = item.code ?? '';
 
-    [item.name, item.code].forEach((value, index) => {
+    [['name', item.name], ['code', item.code]].forEach(([field, value]) => {
       const cell = document.createElement('td');
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.value = value ?? '';
-      input.required = true;
-      input.setAttribute('aria-label', index === 0 ? 'الاسم' : 'الكود');
-      input.dataset.codeField = index === 0 ? 'name' : 'code';
-      cell.append(input);
+      cell.dataset.codeCell = field;
+      cell.textContent = value ?? '';
       row.append(cell);
     });
 
+    const extractsCount = document.createElement('td');
+    extractsCount.className = 'codes-extracts-count';
+    extractsCount.textContent = String(item.extracts_count);
+    row.append(extractsCount);
+
     const actions = document.createElement('td');
     actions.className = 'codes-row-actions';
+    row.append(actions);
+    renderCodeRowActions(row);
+    codesTableBody.append(row);
+  });
+}
+
+function filterCodeRows() {
+  const query = codesFilter.value.trim().toLocaleLowerCase();
+  codesTableBody.querySelectorAll('tr[data-code-id]').forEach((row) => {
+    const name = row.querySelector('[data-code-field="name"]')?.value ?? row.dataset.codeName;
+    const code = row.querySelector('[data-code-field="code"]')?.value ?? row.dataset.codeCode;
+    row.hidden = !`${name} ${code}`.toLocaleLowerCase().includes(query);
+  });
+}
+
+function renderCodeRowActions(row, editing = false) {
+  const actions = row.querySelector('.codes-row-actions');
+  actions.replaceChildren();
+
+  if (editing) {
     const saveButton = document.createElement('button');
     saveButton.type = 'button';
     saveButton.className = 'btn btn-small';
     saveButton.dataset.codeAction = 'update';
     saveButton.textContent = 'حفظ';
-    const deleteButton = document.createElement('button');
-    deleteButton.type = 'button';
-    deleteButton.className = 'btn btn-small codes-delete';
-    deleteButton.dataset.codeAction = 'delete';
-    deleteButton.textContent = 'حذف';
-    actions.append(saveButton, deleteButton);
-    row.append(actions);
-    codesTableBody.append(row);
+    const cancelButton = document.createElement('button');
+    cancelButton.type = 'button';
+    cancelButton.className = 'btn btn-small btn-outline';
+    cancelButton.dataset.codeAction = 'cancel';
+    cancelButton.textContent = 'إلغاء';
+    actions.append(saveButton, cancelButton);
+    return;
+  }
+
+  const editButton = document.createElement('button');
+  editButton.type = 'button';
+  editButton.className = 'btn btn-small btn-outline';
+  editButton.dataset.codeAction = 'edit';
+  editButton.textContent = 'تعديل';
+  const deleteButton = document.createElement('button');
+  deleteButton.type = 'button';
+  deleteButton.className = 'btn btn-small codes-delete';
+  deleteButton.dataset.codeAction = 'delete';
+  deleteButton.textContent = 'حذف';
+  actions.append(editButton, deleteButton);
+}
+
+function setCodeRowEditing(row, editing) {
+  const cells = [...row.querySelectorAll('[data-code-cell]')];
+  if (!editing) {
+    cells.forEach((cell) => {
+      cell.textContent = cell.dataset.codeCell === 'name' ? row.dataset.codeName : row.dataset.codeCode;
+    });
+    renderCodeRowActions(row);
+    return;
+  }
+
+  cells.forEach((cell) => {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = cell.textContent;
+    input.required = true;
+    input.setAttribute('aria-label', cell.dataset.codeCell === 'name' ? 'الاسم' : 'الكود');
+    input.dataset.codeField = cell.dataset.codeCell;
+    cell.replaceChildren(input);
   });
+  renderCodeRowActions(row, true);
 }
 
 async function getCodePickerItems(type) {
@@ -1953,7 +2104,7 @@ async function getCodePickerItems(type) {
 }
 
 function renderCodePicker(picker) {
-  const query = picker.input.value.trim().toLocaleLowerCase();
+  const query = picker.search.value.trim().toLocaleLowerCase();
   const rows = codePickerCache[picker.type] || [];
   const matches = rows.filter((item) =>
     `${item.name ?? ''} ${item.code ?? ''}`.toLocaleLowerCase().includes(query),
@@ -1974,13 +2125,12 @@ function renderCodePicker(picker) {
     option.className = 'code-suggestion';
     option.role = 'option';
     option.textContent = formatCodeLabel(item);
-    option.addEventListener('mousedown', (event) => event.preventDefault());
     option.addEventListener('click', () => {
-      picker.input.value = formatCodeLabel(item);
+      picker.selection.textContent = formatCodeLabel(item);
       picker.idInput.value = item.id;
-      picker.input.focus();
-      picker.input.setAttribute('aria-expanded', 'false');
-      picker.options.hidden = true;
+      picker.search.value = '';
+      closeCodePicker(picker);
+      picker.toggle.focus();
     });
     picker.options.append(option);
   });
@@ -1990,15 +2140,25 @@ function formatCodeLabel(item) {
   return `${item.name} — ${item.code}`;
 }
 
-function initializeCodePicker(type, inputId, idInputId) {
-  const input = document.getElementById(inputId);
+function closeCodePicker(picker) {
+  picker.menu.hidden = true;
+  picker.toggle.setAttribute('aria-expanded', 'false');
+}
+
+function initializeCodePicker(type, toggleId, idInputId) {
+  const toggle = document.getElementById(toggleId);
   const idInput = document.getElementById(idInputId);
-  const options = document.getElementById(input.getAttribute('aria-controls'));
-  const picker = { type, input, idInput, options };
+  const container = toggle.closest('.code-picker');
+  const menu = container.querySelector('.code-picker-menu');
+  const search = menu.querySelector('.code-picker-search');
+  const options = document.getElementById(toggle.getAttribute('aria-controls'));
+  const selection = toggle.querySelector('.code-picker-selection');
+  const picker = { type, toggle, idInput, container, menu, search, options, selection };
 
   const open = async () => {
-    options.hidden = false;
-    input.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    toggle.setAttribute('aria-expanded', 'true');
+    search.focus();
     if (!codePickerCache[type]) {
       const status = document.createElement('div');
       status.className = 'code-suggestions-status';
@@ -2018,38 +2178,48 @@ function initializeCodePicker(type, inputId, idInputId) {
     renderCodePicker(picker);
   };
 
-  input.addEventListener('focus', open);
-  input.addEventListener('input', () => {
-    idInput.value = '';
+  toggle.addEventListener('click', () => {
+    if (menu.hidden) {
+      open();
+    } else {
+      closeCodePicker(picker);
+    }
+  });
+  search.addEventListener('input', () => {
     if (codePickerCache[type]) renderCodePicker(picker);
   });
-  input.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowDown' && !options.hidden) {
+  search.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
       event.preventDefault();
       options.querySelector('.code-suggestion')?.focus();
     } else if (event.key === 'Escape') {
-      options.hidden = true;
-      input.setAttribute('aria-expanded', 'false');
+      closeCodePicker(picker);
+      toggle.focus();
     }
   });
-  input.addEventListener('blur', () => {
+  toggle.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !menu.hidden) {
+      closeCodePicker(picker);
+    }
+  });
+  document.addEventListener('click', (event) => {
+    if (!container.contains(event.target)) closeCodePicker(picker);
+  });
+  container.addEventListener('focusout', () => {
     window.setTimeout(() => {
-      if (!options.contains(document.activeElement)) {
-        options.hidden = true;
-        input.setAttribute('aria-expanded', 'false');
-      }
+      if (!container.contains(document.activeElement)) closeCodePicker(picker);
     }, 0);
   });
 
   return picker;
 }
 
-function hasValidCodeSelection(type, inputId, idInputId) {
-  const name = document.getElementById(inputId).value.trim();
+function hasValidCodeSelection(type, toggleId, idInputId) {
+  const label = document.getElementById(toggleId).querySelector('.code-picker-selection').textContent.trim();
   const id = document.getElementById(idInputId).value;
   return Boolean(
     id &&
-    codePickerCache[type]?.some((item) => String(item.id) === id && formatCodeLabel(item) === name),
+    codePickerCache[type]?.some((item) => String(item.id) === id && formatCodeLabel(item) === label),
   );
 }
 
@@ -2057,14 +2227,18 @@ async function loadCodeRows() {
   const endpoint = codeEndpoints[activeCodeType];
   const response = await codesRequest(endpoint.list, { method: 'POST' });
   const rows = await response.json();
-  if (!Array.isArray(rows)) throw new Error('Invalid response while loading codes.');
+  if (!Array.isArray(rows) || rows.some((item) => !item || !Number.isInteger(item.extracts_count))) {
+    throw new Error('Invalid response while loading codes.');
+  }
   renderCodeRows(rows);
+  filterCodeRows();
 }
 
 async function openCodesModal(type) {
   activeCodeType = type;
   codesModalTitle.textContent = codeEndpoints[type].title;
   codesModal.hidden = false;
+  codesFilter.value = '';
   codesTableBody.replaceChildren();
   showCodesMessage('جارٍ تحميل البيانات...');
   try {
@@ -2085,6 +2259,7 @@ function closeCodesModal() {
 document.querySelectorAll('[data-open-codes]').forEach((button) => {
   button.addEventListener('click', () => openCodesModal(button.dataset.openCodes));
 });
+codesFilter.addEventListener('input', filterCodeRows);
 
 codesModal.querySelector('[data-close-codes]').addEventListener('click', closeCodesModal);
 codesModal.addEventListener('click', (event) => {
@@ -2126,7 +2301,18 @@ codesTableBody.addEventListener('click', async (event) => {
   if (!row) return;
 
   const action = button.dataset.codeAction;
-  if (action === 'delete' && !window.confirm('هل تريد حذف هذا العنصر؟')) return;
+  if (action === 'edit') {
+    setCodeRowEditing(row, true);
+    return;
+  }
+  if (action === 'cancel') {
+    setCodeRowEditing(row, false);
+    return;
+  }
+  if (
+    action === 'delete' &&
+    !window.confirm(`هل تريد حذف "${row.dataset.codeName}" (${row.dataset.codeCode})؟`)
+  ) return;
   const itemId = encodeURIComponent(row.dataset.codeId);
   const endpoint = codeEndpoints[activeCodeType];
   button.disabled = true;
@@ -2715,8 +2901,8 @@ function collectCategories() {
 const addForm = document.getElementById('add-extract-form');
 const addBtn = document.getElementById('add-extract-btn');
 const addMessage = document.getElementById('add-extract-message');
-initializeCodePicker('projects', 'project-name', 'project-id');
-initializeCodePicker('contractors', 'contractor-name', 'contractor-id');
+initializeCodePicker('projects', 'project-picker-toggle', 'project-id');
+initializeCodePicker('contractors', 'contractor-picker-toggle', 'contractor-id');
 
 function showAddMessage(text, type) {
   addMessage.textContent = text;
@@ -2749,8 +2935,8 @@ addForm.addEventListener('submit', async (e) => {
     return;
   }
   if (
-    !hasValidCodeSelection('projects', 'project-name', 'project-id') ||
-    !hasValidCodeSelection('contractors', 'contractor-name', 'contractor-id')
+    !hasValidCodeSelection('projects', 'project-picker-toggle', 'project-id') ||
+    !hasValidCodeSelection('contractors', 'contractor-picker-toggle', 'contractor-id')
   ) {
     showAddMessage('يجب اختيار مشروع ومقاول موجودين من القائمتين قبل الإرسال.', 'error');
     return;

@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, UploadFile, File, status
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from app.models.users_model import User
 from app.core.auth import validate_user
 from app.models.extracts.contranctors import Contractor
 from app.models.extracts.projects import Project
+from app.models.extracts.extracts import Extract
 from app.database import get_db
 from app.schemas.contractors import AddContractor, UpdateContractor
 from app.schemas.projects import AddProject, UpdateProject
@@ -20,14 +22,30 @@ def get_contractors(request: Request, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    contractors = db.query(Contractor).all()
+    rows = (
+        db.query(
+            Contractor.id,
+            Contractor.name,
+            Contractor.code,
+            func.count(Extract.id).label("extracts_count"),
+        )
+        .outerjoin(
+            Extract,
+            (Extract.contractor_id == Contractor.id) & (Extract.is_active.is_(True)),
+        )
+        .group_by(Contractor.id, Contractor.name, Contractor.code)
+        .order_by(Contractor.id)
+        .all()
+    )
+
     return [
         {
-            "id": c.id,
-            "name": c.name,
-            "code": c.code
+            "id": r.id,
+            "name": r.name,
+            "code": r.code,
+            "extracts_count": r.extracts_count,
         }
-        for c in contractors
+        for r in rows
     ]
 
 
@@ -104,14 +122,30 @@ def get_projects(request: Request, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    projects = db.query(Project).all()
+    rows = (
+        db.query(
+            Project.id,
+            Project.name,
+            Project.code,
+            func.count(Extract.id).label("extracts_count"),
+        )
+        .outerjoin(
+            Extract,
+            (Extract.project_id == Project.id) & (Extract.is_active.is_(True)),
+        )
+        .group_by(Project.id, Project.name, Project.code)
+        .order_by(Project.id)
+        .all()
+    )
+
     return [
         {
-            "id": p.id,
-            "name": p.name,
-            "code": p.code
+            "id": r.id,
+            "name": r.name,
+            "code": r.code,
+            "extracts_count": r.extracts_count,
         }
-        for p in projects
+        for r in rows
     ]
 
 

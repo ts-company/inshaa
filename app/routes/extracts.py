@@ -110,7 +110,7 @@ def get_extracts(
         for row in query.order_by(Extract.id.desc()).all()
     ]
 
-    return templates.TemplateResponse("extracts.html", {"request": request, "extracts": extracts})
+    return templates.TemplateResponse("extracts.html", {"request": request, "extracts": extracts, "user_role": user_role})
 
 
 @router.post("/get_summary")
@@ -229,10 +229,12 @@ def get_details(request: Request, ext_id: int, query: str, db: Session = Depends
 
     output = {
             "id": extract.id,
+            "project_id": extract.project_id,
             "project_name": project.name if project is not None else None,
             "project_code": project.code if project is not None else None,
             "contract": extract.contract,
             "unit_number": extract.unit_number,
+            "contractor_id": extract.contractor_id,
             "contractor_name": contractor.name if contractor is not None else None,
             "contractor_code": contractor.code if contractor is not None else None,
             "customer_name": extract.customer_name,
@@ -632,8 +634,9 @@ def add_cat(request: Request, ext_id: int, payload:AddExtractCategories, db: Ses
     extract_result = (db.query(Extract, Contractor, Project)
                .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
                .outerjoin(Project, Project.id == Extract.project_id)
-               .filter(Extract.id == ext_id).with_for_update()
+               .filter(Extract.id == ext_id).with_for_update(of=Extract)
                .first())
+
     extract, contractor, project = extract_result
 
     if not extract:
@@ -784,11 +787,16 @@ def add_cat(request: Request, ext_id: int, payload: EditExtractHeaders, db: Sess
             if not permission:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
+    project = db.query(Project).filter(Project.id == payload.project_id).first()
+    contractor = db.query(Contractor).filter(Contractor.id == payload.contractor_id).first()
+    if not project or not contractor:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contractor or project not found")
+
     try:
-        extract.project_id = payload.project_id if payload.project_id else None
+        extract.project_id = project.id
         extract.contract = payload.contract
         extract.unit_number = payload.unit_number
-        extract.contractor_id = payload.contractor_id if payload.contractor_id else None
+        extract.contractor_id = contractor.id
         extract.customer_name = payload.customer_name
         extract.job_title = payload.job_title
         db.commit()
@@ -848,7 +856,7 @@ def add_tax(request: Request, ext_id: int, payload: UpdateAccounting, db: Sessio
     extract_result = (db.query(Extract, Contractor, Project)
                       .outerjoin(Contractor, Contractor.id == Extract.contractor_id)
                       .outerjoin(Project, Project.id == Extract.project_id)
-                      .filter(Extract.id == ext_id).with_for_update()
+                      .filter(Extract.id == ext_id).with_for_update(of=Extract)
                       .first())
     extract, contractor, project = extract_result
     if not extract:
@@ -1040,9 +1048,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
         project_name = extract.project_name
-        project_code = extract.project_code
         contractor_name = extract.contractor_name
-        contractor_code = extract.contractor_code
 
         categories = db.query(ExtractCategoryHistory).filter(ExtractCategoryHistory.extract_history_id == extract.id).all()
         category_ids = [c.id for c in categories]
@@ -1063,9 +1069,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         extract, contractor, project = extract_result
 
         project_name = project.name
-        project_code = project.code
         contractor_name = contractor.name
-        contractor_code = contractor.code
 
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -1091,9 +1095,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         extract, contractor, project = extract_result
 
         project_name = project.name
-        project_code = project.code
         contractor_name = contractor.name
-        contractor_code = contractor.code
 
         if not extract:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
@@ -1115,7 +1117,7 @@ def del_payment(request: Request, ext_id: int, type: str, db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST)
 
     try:
-        pdf_buffer = generate_extract_pdf(extract, project_name, project_code, contractor_name, contractor_code, type, categories, items_by_cat, taxes, deductions, payments)
+        pdf_buffer = generate_extract_pdf(extract, project_name, contractor_name, type, categories, items_by_cat, taxes, deductions, payments)
     except RuntimeError:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

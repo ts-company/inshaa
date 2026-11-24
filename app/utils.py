@@ -12,8 +12,8 @@ from reportlab.lib.units import cm
 from reportlab.lib.enums import TA_RIGHT, TA_LEFT, TA_CENTER
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.platypus import Image as RLImage
-from reportlab.lib.pagesizes import letter
 from reportlab.platypus import KeepTogether
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from io import BytesIO
@@ -149,7 +149,7 @@ def ar_wrap(text, font_name="Arabic", font_size=9, max_width=100) -> str:
     return "<br/>".join(ar(line) for line in lines)
 
 
-def generate_extract_pdf(extract, project_name, project_code, contractor_name, contractor_code, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
+def generate_extract_pdf(extract, project_name, contractor_name, type, categories, items_by_cat, taxes, dedutions, payments) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -161,9 +161,6 @@ def generate_extract_pdf(extract, project_name, project_code, contractor_name, c
     story = []
 
     # --- Arabic paragraph styles ---
-    title_style = ParagraphStyle(
-        "title_ar", parent=styles["Title"], fontName="Arabic-Bold", alignment=TA_RIGHT
-    )
     normal_style = ParagraphStyle(
         "normal_ar", parent=styles["Normal"], fontName="Arabic", fontSize=11,
         leading=15, alignment=TA_RIGHT, wordWrap="RTL"
@@ -195,7 +192,7 @@ def generate_extract_pdf(extract, project_name, project_code, contractor_name, c
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
 
     header_table = Table(
-        [[logo]],
+        [[logo, ""]],
         colWidths=[4 * cm, 12 * cm]
     )
     header_table.setStyle(TableStyle([
@@ -209,8 +206,7 @@ def generate_extract_pdf(extract, project_name, project_code, contractor_name, c
 
     proj_col_width = 9 * cm
     proj_details_data = [
-        [Paragraph(f"{ar(contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(contractor_code)} : {ar('كود المقاول')}", normal_style)],
-        [Paragraph(f"{ar(project_name or '-')} : {ar('اسم المشروع')}", normal_style), Paragraph(f"{ar(project_code)} : {ar('كود المشروع')}", normal_style)],
+        [Paragraph(f"{ar(contractor_name or '-')} : {ar('اسم المقاول')}", normal_style), Paragraph(f"{ar(project_name)} : {ar('اسم المشروع')}", normal_style)],
         [Paragraph(f"{ar(extract.customer_name or '-')} : {ar('اسم العميل')}", normal_style), Paragraph(f"{ar(extract.contract or '-')} : {ar('العقد')}", normal_style)],
         [Paragraph(f"{ar(extract.job_title)} : {ar('نوع العمل')}", normal_style), Paragraph(f"{ar(extract.unit_number)} : {ar('رقم الوحدة')}", normal_style)],
     ]
@@ -387,20 +383,20 @@ def generate_extract_pdf(extract, project_name, project_code, contractor_name, c
     buffer.seek(0)
     return buffer
 
+
 def generate_summary_pdf(extracts) -> BytesIO:
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
-        pagesize=letter,
+        pagesize=landscape(letter),
         topMargin=1.5 * cm,
         bottomMargin=1.5 * cm,
+        leftMargin=1.5 * cm,
+        rightMargin=1.5 * cm,
     )
     styles = getSampleStyleSheet()
     story = []
 
-    title_style = ParagraphStyle(
-        "title_ar", parent=styles["Title"], fontName="Arabic-Bold", alignment=TA_RIGHT
-    )
     cell_style = ParagraphStyle(
         "cell_ar", parent=styles["Normal"], fontName="Arabic", fontSize=9,
         leading=13, alignment=TA_RIGHT, wordWrap="RTL"
@@ -411,9 +407,8 @@ def generate_summary_pdf(extracts) -> BytesIO:
 
     logo_path = os.path.join(BASE_DIR, "static", "pdf_logo.png")
     logo = RLImage(logo_path, width=7 * cm, height=2 * cm)
-    header_text = Paragraph(ar("ملخص"), title_style)
 
-    header_table = Table([[logo, header_text]], colWidths=[4 * cm, 12 * cm])
+    header_table = Table([[logo, ""]], colWidths=[7 * cm, doc.width - 7 * cm])
     header_table.setStyle(TableStyle([
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (0, 0), (0, 0), "CENTER"),
@@ -422,7 +417,7 @@ def generate_summary_pdf(extracts) -> BytesIO:
     story.append(header_table)
     story.append(Spacer(1, 16))
 
-    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "كود المقاول",  "اسم المقاول", "كود المشروع", "اسم المشروع", "ID"]
+    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "كود المقاول", "اسم المقاول", "كود المشروع", "اسم المشروع", "ID"]
     table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
     for row in extracts:
@@ -438,11 +433,16 @@ def generate_summary_pdf(extracts) -> BytesIO:
             Paragraph(f"{row.Extract.id}", cell_style),
         ])
 
+    # relative column widths (cm), scaled to fill the page width exactly
+    base = [2.5, 2.5, 2, 3, 3, 3, 3, 3, 1.5]
+    scale = doc.width / (sum(base) * cm)
+    col_widths = [w * cm * scale for w in base]
+
     table = Table(
         table_data,
-        colWidths=[2.5 * cm, 2.5 * cm, 2 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm, 3 * cm, 1.5 * cm],
+        colWidths=col_widths,
         repeatRows=1,
-        hAlign="CENTER"
+        hAlign="CENTER",
     )
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
