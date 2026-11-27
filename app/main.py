@@ -10,7 +10,7 @@ from app.core.security import hash_password
 from app.config import BASE_DIR
 from app.models.users_model import User
 from app.utils import generate_url
-from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup, codes
+from app.routes import login, home, dashboard, users, page, extracts, hr_management, backup, codes, project_dashboard
 
 load_dotenv()
 
@@ -41,6 +41,7 @@ app.include_router(extracts.router)
 app.include_router(hr_management.router)
 app.include_router(backup.router)
 app.include_router(codes.router)
+app.include_router(project_dashboard.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):

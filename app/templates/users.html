@@ -868,6 +868,7 @@ main {
           <option value="hr management">الموارد البشرية</option>
           <option value="view edits">اظهار التعديلات</option>
           <option value="edit headers">تعديل العناوين</option>
+          <option value="manage dashboards">ادارة اللوحات</option>
         </select>
       </label>
       <button type="submit" class="btn btn-small">اضافة</button>
@@ -885,7 +886,7 @@ main {
 
 const API_BASE = '/system';
 const USERS_BASE = `${API_BASE}/users`;
-const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits', 'edit headers'];
+const PERMISSION_OPTIONS = ['manage users', 'add extracts', 'delete extracts', 'approve extracts', 'edit extracts', 'accounting', 'generate pdf', 'hr management', 'view edits', 'edit headers', 'manage dashboards'];
 
 // ===== Add user =====
 const addForm = document.getElementById('add-user-form');

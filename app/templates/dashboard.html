@@ -505,6 +505,155 @@ main {
 .modal-actions .btn-primary:hover { background: #B9151B; border-color: #B9151B; }
 .modal-actions .btn-primary:disabled { opacity: 0.6; cursor: default; }
 
+/* ===== Project dashboards drawer ===== */
+.project-dashboards-overlay {
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.project-dashboards-panel {
+  width: min(440px, 100%);
+  max-width: 440px;
+  height: 100%;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 24px 24px;
+}
+
+.project-dashboards-panel .modal-head { flex: 0 0 auto; }
+
+.dashboard-upload-controls {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.dashboard-upload-btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #D71920;
+  background: #D71920;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.dashboard-upload-btn:hover { background: #B9151B; border-color: #B9151B; }
+.dashboard-upload-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.dashboard-list-status {
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+}
+
+.dashboard-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 2px 2px 0;
+}
+
+.dashboard-list-item + .dashboard-list-item { margin-top: 10px; }
+
+.dashboard-list-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.dashboard-list-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  padding-inline-end: 56px;
+  border: 1px solid var(--line);
+  background: #FBFAF7;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.dashboard-list-link:hover {
+  border-color: #D71920;
+  background: #FFFFFF;
+}
+
+.dashboard-list-actions {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  z-index: 2;
+}
+
+.dashboard-list-options {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--steel);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dashboard-list-options::-webkit-details-marker { display: none; }
+.dashboard-list-actions[open] .dashboard-list-options,
+.dashboard-list-options:hover { color: #D71920; }
+
+.dashboard-list-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline-end: 0;
+  z-index: 2;
+  min-width: 128px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  background: #FFFFFF;
+}
+
+.dashboard-delete-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: #FFFFFF;
+  color: #D71920;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.dashboard-delete-btn:hover:not(:disabled) {
+  background: #D71920;
+  color: #FFFFFF;
+}
+
+.dashboard-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.dashboard-upload-limit {
+  margin: 8px 0 0;
+  color: var(--steel-dark);
+  font-size: 13px;
+}
+
+.dashboard-list-name { font-weight: 600; line-height: 1.3; }
+.dashboard-list-date { color: var(--steel-dark); font-size: 13px; }
+
+@media (max-width: 640px) {
+  .project-dashboards-panel { padding: 26px 20px 20px; }
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
   .header-inner { position: relative; padding: 16px 20px; gap: 14px; }
@@ -623,6 +772,17 @@ main {
         Restore Database
       </button>
       {% endif %}
+      {% if user_role == 'super_admin' or "manage dashboards" in permissions %}
+      <button type="button" class="header-action-btn" id="project-dashboards-btn" aria-haspopup="dialog" aria-controls="project-dashboards-modal">
+        <span class="header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 5.5h6l2 2h8v11H4z"></path>
+            <path d="M4 9.5h16"></path>
+          </svg>
+        </span>
+        Project dashboards
+      </button>
+      {% endif %}
       <button type="button" class="settings-btn" id="settings-btn">
         <span class="header-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -700,6 +860,27 @@ main {
   <p>© 2026 Inshaa</p>
 </footer>
 
+{% if user_role == 'super_admin' or "manage dashboards" in permissions %}
+<!-- Project dashboards drawer -->
+<div class="modal-overlay project-dashboards-overlay" id="project-dashboards-modal" role="dialog" aria-modal="true" aria-labelledby="project-dashboards-title" hidden>
+  <div class="modal project-dashboards-panel">
+    <div class="modal-head">
+      <h2 id="project-dashboards-title">Project dashboards</h2>
+      <button type="button" class="modal-close" id="project-dashboards-close" aria-label="Close project dashboards">&times;</button>
+    </div>
+    {% if user_role == 'super_admin' or "manage dashboards" in permissions %}
+    <div class="dashboard-upload-controls">
+      <button type="button" class="dashboard-upload-btn" id="dashboard-upload-btn">Upload dashboard</button>
+      <input type="file" id="dashboard-upload-file" name="file" hidden>
+      <p class="dashboard-upload-limit">Maximum upload size: 25 MB.</p>
+    </div>
+    {% endif %}
+    <p class="modal-msg dashboard-list-status" id="project-dashboards-status" role="status" aria-live="polite"></p>
+    <ul class="dashboard-list" id="project-dashboards-list" aria-label="Project dashboards"></ul>
+  </div>
+</div>
+{% endif %}
+
 <!-- Account settings modal -->
 <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
   <div class="modal">
@@ -771,6 +952,13 @@ const restoreForm = document.getElementById('restore-form');
 const restoreFile = document.getElementById('restore-file');
 const restoreMsg = document.getElementById('restore-msg');
 const restoreSubmit = document.getElementById('restore-submit');
+const projectDashboardsBtn = document.getElementById('project-dashboards-btn');
+const projectDashboardsModal = document.getElementById('project-dashboards-modal');
+const projectDashboardsClose = document.getElementById('project-dashboards-close');
+const projectDashboardsStatus = document.getElementById('project-dashboards-status');
+const projectDashboardsList = document.getElementById('project-dashboards-list');
+const dashboardUploadBtn = document.getElementById('dashboard-upload-btn');
+const dashboardUploadFile = document.getElementById('dashboard-upload-file');
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const headerActions = document.getElementById('header-actions');
 
@@ -807,10 +995,212 @@ if (restoreBtn) {
   restoreForm.addEventListener('submit', handleRestoreSubmit);
 }
 
+if (projectDashboardsBtn) {
+  projectDashboardsBtn.addEventListener('click', openProjectDashboards);
+  projectDashboardsClose.addEventListener('click', closeProjectDashboards);
+  projectDashboardsModal.addEventListener('click', (e) => {
+    if (e.target === projectDashboardsModal) closeProjectDashboards();
+  });
+}
+
+if (dashboardUploadBtn && dashboardUploadFile) {
+  dashboardUploadBtn.addEventListener('click', () => dashboardUploadFile.click());
+  dashboardUploadFile.addEventListener('change', handleDashboardUpload);
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !settingsModal.hidden) closeModal();
   if (e.key === 'Escape' && !restoreModal.hidden) closeRestoreModal();
+  if (e.key === 'Escape' && projectDashboardsModal && !projectDashboardsModal.hidden) closeProjectDashboards();
 });
+
+function openProjectDashboards() {
+  projectDashboardsModal.hidden = false;
+  projectDashboardsClose.focus();
+  loadProjectDashboards();
+}
+
+function closeProjectDashboards() {
+  projectDashboardsModal.hidden = true;
+  projectDashboardsBtn.focus();
+}
+
+async function loadProjectDashboards() {
+  projectDashboardsList.replaceChildren();
+  projectDashboardsStatus.className = 'modal-msg dashboard-list-status';
+  projectDashboardsStatus.textContent = 'Loading project dashboards…';
+
+  try {
+    const response = await fetch('/project_dashboard/', {
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(payload && payload.detail ? payload.detail : 'Unable to load project dashboards.');
+    }
+    if (!Array.isArray(payload)) {
+      throw new Error('The project dashboards response was invalid.');
+    }
+    if (payload.length === 0) {
+      projectDashboardsStatus.textContent = 'No project dashboards have been uploaded yet.';
+      return true;
+    }
+
+    payload.forEach((dashboard) => {
+      const id = Number(dashboard && dashboard.id);
+      if (!Number.isSafeInteger(id) || id < 1) {
+        throw new Error('A project dashboard entry has an invalid ID.');
+      }
+
+      const item = document.createElement('li');
+      item.className = 'dashboard-list-item';
+      const link = document.createElement('a');
+      link.className = 'dashboard-list-link';
+      link.href = `/project_dashboard/details/${id}`;
+
+      const name = document.createElement('span');
+      name.className = 'dashboard-list-name';
+      const projectName = dashboard.project_name || 'Untitled project';
+      name.textContent = projectName;
+
+      const uploadedAt = document.createElement('span');
+      uploadedAt.className = 'dashboard-list-date';
+      const uploadedDate = dashboard.uploaded_at ? new Date(dashboard.uploaded_at) : null;
+      uploadedAt.textContent = uploadedDate && !Number.isNaN(uploadedDate.getTime())
+        ? uploadedDate.toLocaleString()
+        : 'Upload date unavailable';
+
+      link.append(name, uploadedAt);
+      const actions = document.createElement('details');
+      actions.className = 'dashboard-list-actions';
+
+      const optionsButton = document.createElement('summary');
+      optionsButton.className = 'dashboard-list-options';
+      optionsButton.setAttribute('aria-label', `Options for ${projectName}`);
+      const optionsIcon = document.createElement('span');
+      optionsIcon.textContent = '⋮';
+      optionsIcon.setAttribute('aria-hidden', 'true');
+      optionsButton.append(optionsIcon);
+
+      const menu = document.createElement('div');
+      menu.className = 'dashboard-list-menu';
+      const deleteButton = document.createElement('button');
+      deleteButton.type = 'button';
+      deleteButton.className = 'dashboard-delete-btn';
+      deleteButton.textContent = 'Delete';
+      deleteButton.setAttribute('aria-label', `Delete ${projectName}`);
+      deleteButton.addEventListener('click', () => {
+        actions.open = false;
+        handleDashboardDelete(id, projectName, deleteButton);
+      });
+
+      menu.append(deleteButton);
+      actions.append(optionsButton, menu);
+      item.append(link, actions);
+      projectDashboardsList.append(item);
+    });
+
+    projectDashboardsStatus.textContent = '';
+    return true;
+  } catch (error) {
+    projectDashboardsList.replaceChildren();
+    projectDashboardsStatus.classList.add('is-error');
+    projectDashboardsStatus.textContent = error instanceof Error
+      ? error.message
+      : 'Unable to load project dashboards.';
+    return false;
+  }
+}
+
+async function handleDashboardDelete(dashboardId, projectName, button) {
+  if (!window.confirm(`Delete "${projectName}"? This action cannot be undone.`)) return;
+
+  button.disabled = true;
+  projectDashboardsStatus.className = 'modal-msg dashboard-list-status';
+  projectDashboardsStatus.textContent = `Deleting ${projectName}…`;
+
+  try {
+    const response = await fetch(`/project_dashboard/delete/${dashboardId}`, {
+      method: 'DELETE',
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json' }
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(payload && typeof payload.detail === 'string'
+        ? payload.detail
+        : 'Unable to delete the dashboard.');
+    }
+    if (!payload || payload.success !== true) {
+      throw new Error('The server did not confirm dashboard deletion.');
+    }
+
+    const refreshed = await loadProjectDashboards();
+    if (refreshed) {
+      projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-success';
+      projectDashboardsStatus.textContent = `Deleted "${projectName}".`;
+    } else {
+      const refreshError = projectDashboardsStatus.textContent;
+      projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-error';
+      projectDashboardsStatus.textContent = `Dashboard deleted, but the list could not be refreshed. ${refreshError}`;
+    }
+  } catch (error) {
+    projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-error';
+    projectDashboardsStatus.textContent = error instanceof Error
+      ? error.message
+      : 'Unable to delete the dashboard.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function handleDashboardUpload() {
+  const file = dashboardUploadFile.files[0];
+  if (!file) return;
+
+  dashboardUploadBtn.disabled = true;
+  projectDashboardsStatus.className = 'modal-msg dashboard-list-status';
+  projectDashboardsStatus.textContent = `Uploading ${file.name}…`;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('/project_dashboard/upload', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData
+    });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      throw new Error(payload && typeof payload.detail === 'string'
+        ? payload.detail
+        : 'Unable to upload the dashboard file.');
+    }
+
+    const refreshed = await loadProjectDashboards();
+    if (refreshed) {
+      projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-success';
+      projectDashboardsStatus.textContent = 'Dashboard uploaded successfully.';
+    } else {
+      const refreshError = projectDashboardsStatus.textContent;
+      projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-error';
+      projectDashboardsStatus.textContent = `Upload succeeded, but the dashboard list could not be refreshed. ${refreshError}`;
+    }
+  } catch (error) {
+    projectDashboardsStatus.className = 'modal-msg dashboard-list-status is-error';
+    projectDashboardsStatus.textContent = error instanceof Error
+      ? error.message
+      : 'Unable to upload the dashboard file.';
+  } finally {
+    dashboardUploadBtn.disabled = false;
+    dashboardUploadFile.value = '';
+  }
+}
 
 function openModal() {
   settingsMsg.textContent = '';
