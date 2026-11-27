@@ -45,18 +45,4 @@ app.include_router(project_dashboard.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
-
-    admin = db.query(User).filter(User.role == "super_admin").first()
-    if not admin:
-        admin = User(
-            first_name="Ahmed",
-            last_name="Tarek",
-            username="admin",
-            password=hash_password("123"),
-            role="super_admin",
-            is_active=True
-        )
-        db.add(admin)
-        db.commit()
-
     return templates.TemplateResponse("home.html", {"request": request, "hero_video_url": generate_url("hero", "video")})
