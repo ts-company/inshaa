@@ -230,7 +230,7 @@ def generate_extract_pdf(extract, project_name, contractor_name, type, categorie
         Spacer(1, 12),
     ]))
 
-    col_widths = [3 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 8 * cm, 1 * cm]
+    col_widths = [3 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 8 * cm, 1 * cm]
     title_col_width = col_widths[-2]
     unit_col_width = col_widths[-3]
 
@@ -417,7 +417,7 @@ def generate_summary_pdf(extracts) -> BytesIO:
     story.append(header_table)
     story.append(Spacer(1, 16))
 
-    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "كود المقاول", "اسم المقاول", "كود المشروع", "اسم المشروع", "ID"]
+    headers = ["الصافي", "الاجمالي", "رقم الوحدة", "نوع العمل", "اسم المقاول", "اسم المشروع", "ID"]
     table_data = [[Paragraph(ar(h), header_style) for h in headers]]
 
     for row in extracts:
@@ -426,15 +426,13 @@ def generate_summary_pdf(extracts) -> BytesIO:
             Paragraph(f"{row.Extract.sub_total}", cell_style),
             Paragraph(ar(row.Extract.unit_number), cell_style),
             Paragraph(ar(row.Extract.job_title), cell_style),
-            Paragraph(ar(row.contractor_code or "-"), cell_style),
             Paragraph(ar(row.contractor_name or "-"), cell_style),
-            Paragraph(ar(row.project_code or "-"), cell_style),
             Paragraph(ar(row.project_name or "-"), cell_style),
             Paragraph(f"{row.Extract.id}", cell_style),
         ])
 
     # relative column widths (cm), scaled to fill the page width exactly
-    base = [2.5, 2.5, 2, 3, 3, 3, 3, 3, 1.5]
+    base = [2.5, 2.5, 2, 4, 3, 3, 1.5]
     scale = doc.width / (sum(base) * cm)
     col_widths = [w * cm * scale for w in base]
 

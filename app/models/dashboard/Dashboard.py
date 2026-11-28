@@ -1,6 +1,6 @@
 import gzip
 import json
-from sqlalchemy import Integer, Column, Date, DateTime, Text, func
+from sqlalchemy import Integer, Column, Date, DateTime, Text, func, ForeignKey
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import LargeBinary, TypeDecorator
 from app.database import Base
@@ -34,6 +34,8 @@ class Dashboard(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     filename = Column(Text)
     uploaded_at = Column(DateTime(timezone=True), nullable=False)
+    notes = Column(Text, nullable=True)
+    last_edited = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     xer_version = Column(Text)
     export_date = Column(Date)
     export_type = Column(Text)

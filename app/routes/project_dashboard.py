@@ -17,6 +17,7 @@ from app.models.permissions_model import Permission
 from app.core.auth import validate_user
 from app.database import get_db
 from app.config import BASE_DIR
+from app.schemas.project_dashboard import AddNotes
 
 router = APIRouter(prefix="/project_dashboard")
 
@@ -1116,7 +1117,8 @@ def get_project_details(request: Request, dashboard_id: int, db: Session = Depen
         if not permission:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    dashboard = db.query(Dashboard).filter(Dashboard.id == dashboard_id).first()
+    dashboard_result = db.query(Dashboard, User).outerjoin(User, User.id == Dashboard.last_edited).filter(Dashboard.id == dashboard_id).first()
+    dashboard, last_editor = dashboard_result
     if not dashboard:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
@@ -1147,6 +1149,8 @@ def get_project_details(request: Request, dashboard_id: int, db: Session = Depen
         "title": dashboard.project_name or dashboard.filename or f"Project Dashboard #{dashboard.id}",
         "subtitle": " · ".join(f"{label}: {value}" for label, value in metadata if value),
         "description": " · ".join(f"{label}: {value}" for label, value in details if value),
+        "notes": dashboard.notes,
+        "last_edited": f"{last_editor.first_name} {last_editor.last_name}" if last_editor is not None else None
     }
 
     return templates.TemplateResponse(
@@ -1261,4 +1265,33 @@ def upload_project_file(request: Request, dashboard_id: int, db: Session = Depen
     except SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return {"success": True}
+
+
+@router.patch("/add_notes/{dashboard_id}")
+def add_notes(request: Request, payload: AddNotes, dashboard_id: int, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    user_id, _ = validate_user(token)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if user.role != "super_admin":
+        permission = db.query(Permission).filter(Permission.user_id == user_id,
+                                                 Permission.type == "manage dashboards").first()
+        if not permission:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+    dashboard = db.query(Dashboard).filter(Dashboard.id == dashboard_id).first()
+    if not dashboard:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    try:
+        dashboard.notes = payload.text
+        dashboard.last_edited = user_id
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     return {"success": True}

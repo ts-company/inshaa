@@ -2311,7 +2311,7 @@ codesTableBody.addEventListener('click', async (event) => {
   }
   if (
     action === 'delete' &&
-    !window.confirm(`هل تريد حذف "${row.dataset.codeName}" (${row.dataset.codeCode})؟`)
+    !window.confirm(`هل تريد حذف "${row.dataset.codeName}" (${row.dataset.codeCode})؟ سيتم حذفه من جميع المستخلصات المرتبطة به أيضًا.`)
   ) return;
   const itemId = encodeURIComponent(row.dataset.codeId);
   const endpoint = codeEndpoints[activeCodeType];
