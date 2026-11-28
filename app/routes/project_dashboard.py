@@ -2,7 +2,8 @@ import json
 import math
 import re
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
+from graphlib import TopologicalSorter
 from pathlib import PurePath
 from typing import Any, Dict, List, Optional, Tuple
 from zoneinfo import ZoneInfo
@@ -52,15 +53,27 @@ TRADE_PATTERNS = (
     (re.compile(r"mason|demolit", re.I), TRADE_NAMES[0]),
     (re.compile(r"insulat|waterproof", re.I), TRADE_NAMES[1]),
     (re.compile(r"plumb|cistern|drain", re.I), TRADE_NAMES[2]),
-    (re.compile(r"\bhvac\b|air.?condition|duct|ventilat", re.I), TRADE_NAMES[3]),
-    (re.compile(r"electric|electrical|light current", re.I), TRADE_NAMES[4]),
+    (re.compile(r"\bhvac\b|\bac\b|air.?condition|air.?grille|duct|ventilat|exhaust fan", re.I), TRADE_NAMES[3]),
+    (re.compile(r"electric|electrical|light current|wiring device|intercom|lightning fixture", re.I), TRADE_NAMES[4]),
     (re.compile(r"plaster|render|screed", re.I), TRADE_NAMES[5]),
     (re.compile(r"gypsum", re.I), TRADE_NAMES[6]),
     (re.compile(r"paint|putty|primer|sealer", re.I), TRADE_NAMES[7]),
-    (re.compile(r"floor|tile|ceramic|marble|wallpaper|\bspc\b|\bhdf\b", re.I), TRADE_NAMES[8]),
     (re.compile(r"door|window", re.I), TRADE_NAMES[9]),
-    (re.compile(r"joinery|countertop|cabinet|wooden shelf|glass", re.I), TRADE_NAMES[10]),
+    (re.compile(r"joinery|countertop|cabinet|wooden shelf|wooden drawer|wall niche|wall cladding|glass", re.I), TRADE_NAMES[10]),
     (re.compile(r"elevator|\blift\b", re.I), TRADE_NAMES[11]),
+)
+FLOORING_ITEM_PATTERNS = (
+    (re.compile(r"\bspc\s+flooring\b", re.I), "SPC Flooring"),
+    (re.compile(r"\bhdf\s+flooring\b", re.I), "HDF Flooring"),
+    (re.compile(r"wallpaper", re.I), "Wallpaper"),
+    (re.compile(r"ceramic\s+flooring\s+under\s+finishing\s+floor", re.I),
+     "Ceramic · Floor under finishing"),
+    (re.compile(r"wall\s+ceramic\s+tiles?\s+for\s+bathroom", re.I),
+     "Ceramic · Bathroom walls"),
+    (re.compile(r"floor\s+ceramic\s+tiles?", re.I), "Ceramic · Bathroom floors"),
+    (re.compile(r"pushhammered\s+marble", re.I), "Marble · Pushhammered"),
+    (re.compile(r"imported\s+marble\s+for\s+stairs", re.I),
+     "Marble · Imported (stairs)"),
 )
 WORK_CATEGORIES = {
     "P": TRADE_NAMES[7],
@@ -93,6 +106,12 @@ def _xer_date(value: Any) -> Optional[date]:
 
 
 def _dashboard_progress(task: Dict[str, str]) -> float:
+    if task.get("complete_pct_type") == "CP_Drtn":
+        target_duration = _number(task.get("target_drtn_hr_cnt"))
+        remaining_duration = _number(task.get("remain_drtn_hr_cnt"))
+        if target_duration and target_duration > 0 and remaining_duration is not None:
+            return min(1.0, max(0.0, 1 - remaining_duration / target_duration))
+
     value = _number(task.get("phys_complete_pct"))
     if value is not None:
         if value > 1:
@@ -201,7 +220,239 @@ def _planned_progress(
     return min(1.0, max(0.0, (data_date - start).days / duration))
 
 
+def _xer_datetime(value: Any) -> Optional[datetime]:
+    if not value:
+        return None
+    text = str(value).strip()
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        parsed_date = _xer_date(text)
+        return datetime.combine(parsed_date, time()) if parsed_date else None
+    return parsed.replace(tzinfo=None) if parsed.tzinfo else parsed
+
+
+def _calendar_periods(calendar: Dict[str, Any], day: date) -> List[Tuple[int, int]]:
+    day_number = ((day.weekday() + 1) % 7) + 1
+    return calendar["exceptions"].get(day, calendar["weekly"].get(day_number, []))
+
+
+def _align_to_work_time(
+    calendar: Dict[str, Any],
+    value: datetime,
+    forward: bool = True,
+) -> datetime:
+    current_day = value.date()
+    for _ in range(3660):
+        periods = _calendar_periods(calendar, current_day)
+        if forward:
+            for begin, end in periods:
+                period_start = datetime.combine(current_day, time()) + timedelta(minutes=begin)
+                period_end = datetime.combine(current_day, time()) + timedelta(minutes=end)
+                candidate = max(value, period_start)
+                if candidate < period_end:
+                    return candidate
+            current_day += timedelta(days=1)
+            value = datetime.combine(current_day, time())
+        else:
+            for begin, end in reversed(periods):
+                period_start = datetime.combine(current_day, time()) + timedelta(minutes=begin)
+                period_end = datetime.combine(current_day, time()) + timedelta(minutes=end)
+                candidate = min(value, period_end)
+                if candidate > period_start:
+                    return candidate
+            current_day -= timedelta(days=1)
+            value = datetime.combine(current_day, time(23, 59, 59))
+    raise ValueError("XER calendar has no working time within ten years")
+
+
+def _add_working_hours(
+    calendar: Dict[str, Any],
+    value: datetime,
+    hours: float,
+) -> datetime:
+    if hours < 0:
+        return _subtract_working_hours(calendar, value, -hours)
+
+    current = _align_to_work_time(calendar, value)
+    remaining = hours * 60
+    if remaining == 0:
+        return current
+
+    for _ in range(3660):
+        for begin, end in _calendar_periods(calendar, current.date()):
+            period_start = datetime.combine(current.date(), time()) + timedelta(minutes=begin)
+            period_end = datetime.combine(current.date(), time()) + timedelta(minutes=end)
+            start = max(current, period_start)
+            if start >= period_end:
+                continue
+            available = (period_end - start).total_seconds() / 60
+            if remaining <= available:
+                return start + timedelta(minutes=remaining)
+            remaining -= available
+        current = _align_to_work_time(
+            calendar,
+            datetime.combine(current.date() + timedelta(days=1), time()),
+        )
+    raise ValueError("XER activity duration exceeds ten years of calendar time")
+
+
+def _subtract_working_hours(
+    calendar: Dict[str, Any],
+    value: datetime,
+    hours: float,
+) -> datetime:
+    current = _align_to_work_time(calendar, value, forward=False)
+    remaining = hours * 60
+    if remaining == 0:
+        return current
+
+    for _ in range(3660):
+        for begin, end in reversed(_calendar_periods(calendar, current.date())):
+            period_start = datetime.combine(current.date(), time()) + timedelta(minutes=begin)
+            period_end = datetime.combine(current.date(), time()) + timedelta(minutes=end)
+            stop = min(current, period_end)
+            if stop <= period_start:
+                continue
+            available = (stop - period_start).total_seconds() / 60
+            if remaining <= available:
+                return stop - timedelta(minutes=remaining)
+            remaining -= available
+        previous_day = current.date() - timedelta(days=1)
+        current = _align_to_work_time(
+            calendar,
+            datetime.combine(previous_day, time(23, 59, 59)),
+            forward=False,
+        )
+    raise ValueError("XER relationship lag exceeds ten years of calendar time")
+
+
+def _working_hours_between(
+    calendar: Dict[str, Any],
+    start: datetime,
+    finish: datetime,
+) -> float:
+    if finish <= start:
+        return 0.0
+    total_minutes = 0.0
+    current_day = start.date()
+    while current_day <= finish.date():
+        for begin, end in _calendar_periods(calendar, current_day):
+            period_start = datetime.combine(current_day, time()) + timedelta(minutes=begin)
+            period_end = datetime.combine(current_day, time()) + timedelta(minutes=end)
+            total_minutes += max(
+                0.0,
+                (min(finish, period_end) - max(start, period_start)).total_seconds() / 60,
+            )
+        current_day += timedelta(days=1)
+    return total_minutes / 60
+
+
+def _rebuild_baseline_schedule(
+    tables: Dict[str, Any],
+    tasks: List[Dict[str, str]],
+    calendars: Dict[str, Dict[str, Any]],
+    project: Dict[str, str],
+) -> Dict[str, Tuple[datetime, datetime]]:
+    project_start = _xer_datetime(project.get("plan_start_date"))
+    if not project_start:
+        raise ValueError("XER project has no valid planned start date")
+    project_calendar_id = project.get("clndr_id")
+    if project_calendar_id not in calendars:
+        raise ValueError("XER project calendar is missing")
+
+    tasks_by_id = {
+        task.get("task_id"): task
+        for task in tasks
+        if task.get("task_id")
+    }
+    if len(tasks_by_id) != len(tasks):
+        raise ValueError("XER activities have missing or duplicate IDs")
+
+    calendar_ids = {}
+    durations = {}
+    for task_id, task in tasks_by_id.items():
+        calendar_id = task.get("clndr_id") or project_calendar_id
+        duration = _number(task.get("target_drtn_hr_cnt"))
+        if calendar_id not in calendars:
+            raise ValueError(f"XER activity {task_id} has no valid calendar")
+        if duration is None or duration < 0:
+            raise ValueError(f"XER activity {task_id} has no valid original duration")
+        calendar_ids[task_id] = calendar_id
+        durations[task_id] = duration
+
+    predecessors = {task_id: set() for task_id in tasks_by_id}
+    incoming = defaultdict(list)
+    for relationship in tables.get("TASKPRED", []):
+        predecessor_id = relationship.get("pred_task_id")
+        successor_id = relationship.get("task_id")
+        if predecessor_id not in tasks_by_id or successor_id not in tasks_by_id:
+            raise ValueError("XER activity relationship references an unknown activity")
+        predecessors[successor_id].add(predecessor_id)
+        incoming[successor_id].append(relationship)
+
+    order = TopologicalSorter(predecessors).static_order()
+    starts: Dict[str, datetime] = {}
+    finishes: Dict[str, datetime] = {}
+    for task_id in order:
+        task = tasks_by_id[task_id]
+        calendar = calendars[calendar_ids[task_id]]
+        duration = durations[task_id]
+        candidate = _align_to_work_time(calendar, project_start)
+        if task.get("cstr_type") == "CS_MSO":
+            constraint_date = _xer_datetime(task.get("cstr_date"))
+            if constraint_date:
+                candidate = max(candidate, _align_to_work_time(calendar, constraint_date))
+
+        for relationship in incoming[task_id]:
+            predecessor_id = relationship["pred_task_id"]
+            predecessor_start = starts[predecessor_id]
+            predecessor_finish = finishes[predecessor_id]
+            lag_calendar = calendars[calendar_ids[predecessor_id]]
+            lag = _number(relationship.get("lag_hr_cnt")) or 0.0
+            relationship_type = relationship.get("pred_type")
+            if relationship_type == "PR_FS":
+                bound = _add_working_hours(lag_calendar, predecessor_finish, lag)
+            elif relationship_type == "PR_SS":
+                bound = _add_working_hours(lag_calendar, predecessor_start, lag)
+            elif relationship_type == "PR_FF":
+                required_finish = (
+                    predecessor_finish
+                    if lag == 0
+                    else _add_working_hours(lag_calendar, predecessor_finish, lag)
+                )
+                bound = _subtract_working_hours(calendar, required_finish, duration)
+            elif relationship_type == "PR_SF":
+                required_finish = (
+                    predecessor_start
+                    if lag == 0
+                    else _add_working_hours(lag_calendar, predecessor_start, lag)
+                )
+                bound = _subtract_working_hours(calendar, required_finish, duration)
+            else:
+                raise ValueError(f"XER contains unsupported relationship type {relationship_type!r}")
+            candidate = max(candidate, bound)
+
+        start = _align_to_work_time(calendar, candidate)
+        starts[task_id] = start
+        finishes[task_id] = _add_working_hours(calendar, start, duration)
+
+    return {
+        task_id: (starts[task_id], finishes[task_id])
+        for task_id in tasks_by_id
+    }
+
+
+def _flooring_item_name(name: str) -> Optional[str]:
+    for pattern, item_name in FLOORING_ITEM_PATTERNS:
+        if pattern.search(name):
+            return item_name
+    return None
+
+
 def _activity_trade(name: str) -> str:
+    if _flooring_item_name(name):
+        return TRADE_NAMES[8]
     for pattern, trade in TRADE_PATTERNS:
         if pattern.search(name):
             return trade
@@ -332,19 +583,38 @@ def build_dashboard_data(data: Any) -> Dict[str, Any]:
     } if use_branches else {}
 
     header = data.get("header")
-    data_date = _xer_date(header.get("export_date")) if isinstance(header, dict) else None
+    project_rows = tables.get("PROJECT", [])
+    project = project_rows[0] if isinstance(project_rows, list) and project_rows else None
+    project_data_date = _xer_datetime(project.get("last_recalc_date")) if project else None
+    data_date_time = project_data_date or (
+        _xer_datetime(header.get("export_date")) if isinstance(header, dict) else None
+    )
+    data_date = data_date_time.date() if data_date_time else None
     calendar_rows = tables.get("CALENDAR", [])
     if not isinstance(calendar_rows, list):
         raise ValueError("XER export contains an invalid calendar table")
     calendars_by_id = {
-        row.get("clndr_id"): row
+        row.get("clndr_id"): _parse_xer_calendar(row)
         for row in calendar_rows
         if isinstance(row, dict) and row.get("clndr_id")
     }
+    baseline_schedules = (
+        _rebuild_baseline_schedule(tables, tasks, calendars_by_id, project)
+        if project
+        else {}
+    )
     task_schedules = {
         task.get("task_id"): (
-            _xer_date(task.get("target_start_date")),
-            _xer_date(task.get("target_end_date")),
+            (
+                baseline_schedules[task.get("task_id")][0].date(),
+                baseline_schedules[task.get("task_id")][1].date(),
+            )
+            if task.get("task_id") in baseline_schedules
+            else (
+                _xer_date(task.get("target_start_date")),
+                _xer_date(task.get("target_end_date")),
+            )
+        ) + (
             task.get("clndr_id"),
         )
         for task in tasks
@@ -365,7 +635,7 @@ def build_dashboard_data(data: Any) -> Dict[str, Any]:
             if calendar_id in calendars_by_id
         }
         for calendar_id in used_calendar_ids:
-            calendar = _parse_xer_calendar(calendars_by_id[calendar_id])
+            calendar = calendars_by_id[calendar_id]
             calendar_prefixes[calendar_id] = _calendar_prefix(
                 calendar,
                 schedule_start,
@@ -417,25 +687,42 @@ def build_dashboard_data(data: Any) -> Dict[str, Any]:
             ),
         )
         forecast_finish = _xer_date(task.get("early_end_date")) or finish
-        budget = _number(task.get("target_cost"))
-        if not budget:
-            budget = assignment_costs.get(task_id, 0.0)
+        budget = assignment_costs.get(task_id)
+        if budget is None or budget == 0:
+            budget = _number(task.get("target_cost"))
         budget = max(0.0, budget or 0.0)
-        plan = _planned_progress(
-            start,
-            finish,
-            data_date,
-            progress,
-            calendar_prefixes.get(calendar_id),
-        )
+        if task_id in baseline_schedules and data_date_time:
+            baseline_start, baseline_finish = baseline_schedules[task_id]
+            calendar = calendars_by_id[calendar_id or project.get("clndr_id")]
+            duration = _working_hours_between(calendar, baseline_start, baseline_finish)
+            elapsed = _working_hours_between(
+                calendar,
+                baseline_start,
+                min(baseline_finish, data_date_time),
+            )
+            plan = (
+                min(1.0, max(0.0, elapsed / duration))
+                if duration > 0
+                else (1.0 if data_date_time >= baseline_finish else 0.0)
+            )
+        else:
+            plan = _planned_progress(
+                start,
+                finish,
+                data_date,
+                progress,
+                calendar_prefixes.get(calendar_id),
+            )
         trade = _activity_trade(name)
         category = next(
             (key for key, category_trade in WORK_CATEGORIES.items() if category_trade == trade),
             None,
         )
+        item_name = _flooring_item_name(name) or name
         records.append(
             {
                 "name": str(name),
+                "item_name": item_name,
                 "g": group_index,
                 "villa": villa,
                 "component": component,
@@ -483,7 +770,7 @@ def build_dashboard_data(data: Any) -> Dict[str, Any]:
     item_names = {
         category: sorted(
             {
-                record["name"]
+                record["item_name"]
                 for record in records
                 if record["component"] == "c" and record["category"] == category
             }
@@ -499,7 +786,7 @@ def build_dashboard_data(data: Any) -> Dict[str, Any]:
         for record in unit_tasks:
             trade_tasks[record["trade"]].append(record)
             if record["category"]:
-                totals = items[record["category"]][record["name"]]
+                totals = items[record["category"]][record["item_name"]]
                 totals[0] += record["b"]
                 totals[1] += record["e"]
 

@@ -1,7 +1,7 @@
 import math
 import os
 import unittest
-from datetime import date
+from datetime import date, datetime
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
@@ -9,6 +9,7 @@ from app.routes.project_dashboard import (
     _calendar_prefix,
     _parse_xer_calendar,
     _planned_progress,
+    _rebuild_baseline_schedule,
     build_dashboard_data,
     parse_xer,
 )
@@ -85,7 +86,41 @@ class BuildDashboardDataTests(unittest.TestCase):
         self.assertEqual(payload["gr"][0]["c"]["b"], 300.0)
         self.assertEqual(payload["v"][0]["n"], "Villa 21 Left")
         self.assertEqual(payload["v"][0]["it"]["P"][0], ["Interior Painting", 100.0, 50.0])
-        self.assertEqual(payload["v"][0]["it"]["F"][0], ["Floor Ceramic Tiles", 200.0, 60.0])
+        self.assertEqual(
+            payload["v"][0]["it"]["F"][0],
+            ["Ceramic · Bathroom floors", 200.0, 60.0],
+        )
+
+    def test_flooring_excludes_activities_that_only_mention_a_floor_location(self):
+        task_names = (
+            "Install of Wiring Devices For First Floor",
+            "Floor Plumping First Fix Works",
+            "Air Grilles Installation For Ground Floor",
+            "Marble Countertop For Bathroom",
+        )
+        self.xer_data["tables"]["TASK"].extend(
+            {
+                "task_id": str(104 + index),
+                "wbs_id": "3",
+                "task_name": name,
+                "target_cost": "50",
+                "phys_complete_pct": "0.5",
+            }
+            for index, name in enumerate(task_names)
+        )
+
+        payload = build_dashboard_data(self.xer_data)
+        villa = payload["v"][0]
+        flooring_trade = next(
+            trade for trade in villa["tr"] if trade[0] == "Flooring, Tiles & Marble"
+        )
+
+        self.assertEqual(flooring_trade[6], 200.0)
+        self.assertEqual(payload["itn"]["F"], ["Ceramic · Bathroom floors"])
+        self.assertEqual(
+            villa["it"]["F"],
+            [["Ceramic · Bathroom floors", 200.0, 60.0]],
+        )
 
     def test_group_level_construction_stays_out_of_villa_totals(self):
         self.xer_data["tables"]["TASK"].append(
@@ -117,6 +152,37 @@ class BuildDashboardDataTests(unittest.TestCase):
 
         self.assertEqual(trade_status["Painting"], "In Progress")
         self.assertEqual(trade_status["Flooring, Tiles & Marble"], "Waiting")
+
+    def test_duration_complete_progress_uses_remaining_duration(self):
+        task = {
+            "complete_pct_type": "CP_Drtn",
+            "phys_complete_pct": "0",
+            "target_drtn_hr_cnt": "24",
+            "remain_drtn_hr_cnt": "15.6",
+        }
+
+        payload = build_dashboard_data(
+            {
+                "header": {"export_date": "2026-11-05"},
+                "tables": {
+                    "PROJWBS": self.xer_data["tables"]["PROJWBS"],
+                    "TASK": [
+                        {
+                            **task,
+                            "task_id": "101",
+                            "wbs_id": "3",
+                            "task_name": "Interior Painting",
+                            "target_cost": "100",
+                            "target_start_date": "2026-11-01",
+                            "target_end_date": "2026-11-10",
+                        }
+                    ],
+                    "TASKRSRC": [],
+                },
+            }
+        )
+
+        self.assertEqual(payload["v"][0]["e"], 35.0)
 
     def test_chart_ready_data_replaces_non_finite_numbers(self):
         payload = {
@@ -174,6 +240,105 @@ class BuildDashboardDataTests(unittest.TestCase):
         )
 
         self.assertEqual(progress, 0.5)
+
+    def test_baseline_schedule_uses_original_durations_and_predecessor_lag_calendar(self):
+        six_day_calendar = {
+            "weekly": {
+                day: ([(8 * 60, 16 * 60)] if day != 6 else [])
+                for day in range(1, 8)
+            },
+            "exceptions": {},
+        }
+        seven_day_calendar = {
+            "weekly": {
+                day: [(8 * 60, 16 * 60)]
+                for day in range(1, 8)
+            },
+            "exceptions": {},
+        }
+        schedule = _rebuild_baseline_schedule(
+            {
+                "TASKPRED": [
+                    {
+                        "pred_task_id": "1",
+                        "task_id": "2",
+                        "pred_type": "PR_FS",
+                        "lag_hr_cnt": "8",
+                    }
+                ]
+            },
+            [
+                {"task_id": "1", "clndr_id": "six", "target_drtn_hr_cnt": "8"},
+                {"task_id": "2", "clndr_id": "seven", "target_drtn_hr_cnt": "8"},
+            ],
+            {"six": six_day_calendar, "seven": seven_day_calendar},
+            {
+                "clndr_id": "six",
+                "plan_start_date": "2026-11-05 08:00",
+            },
+        )
+
+        self.assertEqual(
+            schedule["1"],
+            (datetime(2026, 11, 5, 8), datetime(2026, 11, 5, 16)),
+        )
+        self.assertEqual(
+            schedule["2"],
+            (datetime(2026, 11, 8, 8), datetime(2026, 11, 8, 16)),
+        )
+
+    def test_baseline_planned_value_uses_project_data_date(self):
+        separator = "\x7f\x7f"
+        calendar_data = separator.join(
+            [
+                "(0||CalendarData()(",
+                "  (0||DaysOfWeek()(",
+                "    (0||1()())",
+                "    (0||2()( (0||0(s|08:00|f|16:00)())))",
+                "    (0||3()( (0||0(s|08:00|f|16:00)())))",
+                "    (0||4()( (0||0(s|08:00|f|16:00)())))",
+                "    (0||5()( (0||0(s|08:00|f|16:00)())))",
+                "    (0||6()( (0||0(s|08:00|f|16:00)())))",
+                "    (0||7()())))",
+                "  (0||Exceptions()())",
+            ]
+        )
+        data = {
+            "header": {"export_date": "2027-01-01"},
+            "tables": {
+                "PROJECT": [
+                    {
+                        "clndr_id": "workweek",
+                        "plan_start_date": "2026-11-02 08:00",
+                        "last_recalc_date": "2026-11-03 08:00",
+                    }
+                ],
+                "PROJWBS": self.xer_data["tables"]["PROJWBS"],
+                "TASK": [
+                    {
+                        "task_id": "101",
+                        "wbs_id": "3",
+                        "task_name": "Interior Painting",
+                        "target_drtn_hr_cnt": "16",
+                        "clndr_id": "workweek",
+                        "target_cost": "",
+                        "phys_complete_pct": "0",
+                        "target_start_date": "2026-12-01",
+                        "target_end_date": "2026-12-02",
+                    }
+                ],
+                "TASKRSRC": [{"task_id": "101", "target_cost": "100"}],
+                "TASKPRED": [],
+                "CALENDAR": [
+                    {"clndr_id": "workweek", "clndr_data": calendar_data}
+                ],
+            },
+        }
+
+        payload = build_dashboard_data(data)
+
+        self.assertEqual(payload["t"]["p"], 50.0)
+        self.assertEqual(payload["v"][0]["bl"], "03-Nov-26")
 
     def test_xer_parser_preserves_unknown_and_empty_table_schemas(self):
         header_fields = [
